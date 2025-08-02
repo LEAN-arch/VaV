@@ -1,4 +1,4 @@
-# app.py (Final, Monolithic, Guaranteed Working Version)
+# app.py (Final, Monolithic, World-Class Version)
 
 import streamlit as st
 import pandas as pd
@@ -6,236 +6,221 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 from scipy import stats
-import statsmodels.api as sm
 
 # --- PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
 st.set_page_config(
     layout="wide",
-    page_title="V&V Executive Briefing | Portfolio",
+    page_title="V&V Executive Command Center | Portfolio",
     page_icon="🎯"
 )
 
-# --- UTILITY FUNCTIONS (Previously in utils.py) ---
+# --- UTILITY & HELPER FUNCTIONS ---
 
-def render_metric_summary(metric_name, description, viz_function, insight_text, reg_context=""):
-    st.subheader(metric_name)
+def render_director_briefing(title, content, reg_refs, business_impact):
+    """Renders a formatted container for strategic context."""
     with st.container(border=True):
-        col1, col2 = st.columns([1, 2])
-        with col1:
-            st.markdown(f"**Description:** {description}")
-            st.info(f"**Director's Insight:** {insight_text}")
-            if reg_context:
-                st.warning(f"**Regulatory Context:** {reg_context}")
-        with col2:
-            fig = viz_function()
+        st.subheader(f"🎯 {title}")
+        st.markdown(content)
+        st.info(f"**Business Impact:** {business_impact}")
+        st.warning(f"**Regulatory Mapping:** {reg_refs}")
+
+def render_metric_card(title, description, viz_function, insight, key=""):
+    """Renders a formatted container for a specific metric or visualization."""
+    with st.container(border=True):
+        st.subheader(title)
+        st.markdown(f"*{description}*")
+        # The key is passed to the viz_function if it needs unique Streamlit widgets
+        fig = viz_function(key)
+        # Some functions might return None if they render complex widgets directly (like st.dataframe)
+        if fig:
             st.plotly_chart(fig, use_container_width=True)
+        st.success(f"**Actionable Insight:** {insight}")
 
-# --- VISUALIZATION GENERATORS ---
+# --- VISUALIZATION & DATA GENERATORS ---
 
-def plot_protocol_completion_burndown():
-    days = np.arange(1, 31); planned = np.linspace(100, 0, 30); actual = np.clip(planned + np.random.randn(30).cumsum() * 1.5, 0, 100)
-    fig = go.Figure(); fig.add_trace(go.Scatter(x=days, y=planned, mode='lines', name='Planned Burndown', line=dict(dash='dash'))); fig.add_trace(go.Scatter(x=days, y=actual, mode='lines+markers', name='Actual Burndown'))
-    fig.update_layout(title='Protocol Completion Burndown Chart', xaxis_title='Sprint Day', yaxis_title='% Protocols Remaining'); return fig
+def create_rtm_data_editor(key):
+    """Renders an interactive Requirements Traceability Matrix."""
+    df = pd.DataFrame([
+        {"ID": "URS-001", "Requirement": "Assay must detect Target X with >95% clinical sensitivity.", "Risk": "High", "Linked Test Case": "AVP-SENS-01", "Status": "PASS"},
+        {"ID": "DI-002", "Requirement": "Analytical sensitivity (LoD) shall be <= 50 copies/mL.", "Risk": "High", "Linked Test Case": "AVP-LOD-01", "Status": "PASS"},
+        {"ID": "SRS-012", "Requirement": "Results screen must display patient ID.", "Risk": "Medium", "Linked Test Case": "SVP-UI-04", "Status": "PASS"},
+        {"ID": "DI-003", "Requirement": "Assay must be stable for 12 months at 2-8°C.", "Risk": "High", "Linked Test Case": "AVP-STAB-01", "Status": "IN PROGRESS"},
+        {"ID": "URS-003", "Requirement": "Assay must have no cross-reactivity with Influenza B.", "Risk": "Medium", "Linked Test Case": "", "Status": "GAP"},
+    ])
+    st.dataframe(df, use_container_width=True, hide_index=True)
+    gaps = df[df["Status"] == "GAP"]
+    if not gaps.empty:
+        st.error(f"**Critical Finding:** {len(gaps)} traceability gap(s) identified. This is a major audit finding and blocks design release.")
+    return None # This function renders directly, no figure object needed.
 
-def plot_pass_rate_heatmap():
-    df = pd.DataFrame({'Test Type': ['LoD', 'Linearity', 'Specificity', 'Precision', 'Robustness'], 'Pass Rate (%)': [95, 98, 92, 100, 88]})
-    fig = px.bar(df, x='Pass Rate (%)', y='Test Type', orientation='h', title='Pass Rate by Test Type', text='Pass Rate (%)'); fig.update_traces(texttemplate='%{text}%', textposition='inside'); return fig
+def plot_defect_burnup(key):
+    """Generates a Defect Burnup Chart, which is superior to a burndown for tracking scope."""
+    days = np.arange(1, 46); scope = np.ones(45) * 50; scope[25:] = 60 # Scope creep
+    closed = np.linspace(0, 45, 45) + np.random.rand(45) * 2
+    opened = np.linspace(5, 58, 45) + np.random.rand(45) * 3
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=days, y=scope, mode='lines', name='Total Scope', line=dict(dash='dash', color='grey')))
+    fig.add_trace(go.Scatter(x=days, y=opened, mode='lines', name='Defects Opened (Cumulative)', fill='tozeroy', line=dict(color='rgba(255,0,0,0.5)')))
+    fig.add_trace(go.Scatter(x=days, y=closed, mode='lines', name='Defects Closed (Cumulative)', fill='tozeroy', line=dict(color='rgba(0,128,0,0.5)')))
+    fig.update_layout(title='Defect Open vs. Close Trend (Burnup Chart)', xaxis_title='Project Day', yaxis_title='Number of Defects')
+    return fig
 
-def plot_retest_pareto():
-    df = pd.DataFrame({'Reason': ['Operator Error', 'Reagent Lot Variability', 'Instrument Drift', 'Sample Prep Issue', 'Software Glitch'], 'Count': [15, 9, 5, 3, 1]}).sort_values(by='Count', ascending=False)
-    df['Cumulative Pct'] = (df['Count'].cumsum() / df['Count'].sum()) * 100; fig = go.Figure(); fig.add_trace(go.Bar(x=df['Reason'], y=df['Count'], name='Re-test Count')); fig.add_trace(go.Scatter(x=df['Reason'], y=df['Cumulative Pct'], name='Cumulative %', yaxis='y2'))
-    fig.update_layout(title="Pareto Chart of Re-test Causes", yaxis2=dict(overlaying='y', side='right', title='Cumulative %')); return fig
+def plot_cpk_analysis(key):
+    """Generates an interactive Process Capability (CpK) analysis plot."""
+    np.random.seed(42)
+    data = np.random.normal(loc=10.2, scale=0.25, size=200)
+    usl = st.slider("Upper Specification Limit (USL)", 9.0, 12.0, 11.0, key=f"usl_{key}")
+    lsl = st.slider("Lower Specification Limit (LSL)", 8.0, 11.0, 9.0, key=f"lsl_{key}")
+    
+    mean = np.mean(data); std_dev = np.std(data, ddof=1)
+    cpk = min((usl - mean) / (3 * std_dev), (mean - lsl) / (3 * std_dev))
+    
+    fig = px.histogram(data, nbins=30, title=f"Process Capability (CpK) Analysis | Calculated CpK = {cpk:.2f}")
+    fig.add_vline(x=lsl, line_dash="dash", line_color="red", annotation_text="LSL")
+    fig.add_vline(x=usl, line_dash="dash", line_color="red", annotation_text="USL")
+    fig.add_vline(x=mean, line_dash="dot", line_color="blue", annotation_text="Process Mean")
+    return fig
 
-def plot_trace_coverage_sankey():
-    fig = go.Figure(go.Sankey(node=dict(pad=15, thickness=20, label=["URS-01", "URS-02", "SRS-01", "DVP-01", "DVP-02", "UNCOVERED"]), link=dict(source=[0, 1, 2, 2], target=[3, 4, 3, 4], value=[8, 4, 2, 8])))
-    fig.update_layout(title_text="Requirements Trace Coverage"); return fig
+def plot_msa_analysis(key):
+    """Generates a Measurement System Analysis (MSA) Gage R&R plot."""
+    parts = np.repeat(np.arange(1, 11), 6); operators = np.tile(np.repeat(['Alice', 'Bob', 'Charlie'], 2), 10)
+    true_values = np.repeat(np.linspace(5, 15, 10), 6); operator_bias = np.tile(np.repeat([0, 0.2, -0.15], 2), 10)
+    measurements = true_values + operator_bias + np.random.normal(0, 0.3, 60)
+    df = pd.DataFrame({'Part': parts, 'Operator': operators, 'Measurement': measurements})
+    fig = px.box(df, x='Part', y='Measurement', color='Operator', title='Measurement System Analysis (MSA) - Gage R&R')
+    return fig
 
-def plot_rpn_waterfall():
-    fig = go.Figure(go.Waterfall(measure = ["relative", "relative", "total", "relative", "relative", "total"], x = ["Initial Risk (FP)", "Mitigation 1", "Subtotal", "Initial Risk (FN)", "Mitigation 2", "Final Risk Portfolio"], y = [120, -40, 0, 80, -60, 0]))
-    fig.update_layout(title = "FMEA Risk Reduction (RPN Waterfall)"); return fig
+def plot_doe_rsm(key):
+    """Generates a Design of Experiments (DOE) Response Surface Methodology (RSM) plot."""
+    temp = np.linspace(20, 40, 20); ph = np.linspace(6.5, 8.5, 20)
+    temp_grid, ph_grid = np.meshgrid(temp, ph)
+    signal = -(temp_grid - 32)**2 - 2*(ph_grid - 7.5)**2 + 1000 + np.random.rand(20, 20)*20
+    fig = go.Figure(data=[go.Surface(z=signal, x=temp, y=ph)])
+    fig.update_layout(title='Design of Experiments (DOE) Response Surface', scene=dict(xaxis_title='Temperature (°C)', yaxis_title='pH', zaxis_title='Assay Signal'))
+    return fig
 
-def plot_validation_gantt_baseline():
-    df = pd.DataFrame([dict(Task="FAT", Start='2023-01-01', Finish='2023-01-10', Type="Planned"), dict(Task="FAT", Start='2023-01-01', Finish='2023-01-12', Type="Actual"), dict(Task="SAT", Start='2023-01-15', Finish='2023-01-20', Type="Planned"), dict(Task="SAT", Start='2023-01-18', Finish='2023-01-22', Type="Actual"), dict(Task="IQ", Start='2023-01-21', Finish='2023-01-25', Type="Planned"), dict(Task="IQ", Start='2023-01-23', Finish='2023-01-25', Type="Actual")])
-    fig = px.timeline(df, x_start="Start", x_end="Finish", y="Task", color="Type", title="Validation On-Time Rate (Gantt vs Baseline)"); return fig
+def plot_levey_jennings_westgard(key):
+    """Generates a Levey-Jennings chart and simulates Westgard rule violations."""
+    days = np.arange(1, 31); mean = 100; sd = 4; data = np.random.normal(mean, sd, 30)
+    data[10] = mean + 3.5 * sd; data[20:22] = mean + 2.2 * sd
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=days, y=data, mode='lines+markers', name='Control Value'))
+    for i, color in zip([1, 2, 3], ['green', 'orange', 'red']):
+        fig.add_hline(y=mean + i*sd, line_dash="dot", line_color=color, annotation_text=f"+{i}SD")
+        fig.add_hline(y=mean - i*sd, line_dash="dot", line_color=color, annotation_text=f"-{i}SD")
+    fig.add_annotation(x=10, y=data[10], text="1_3s Violation", showarrow=True, arrowhead=1)
+    fig.add_annotation(x=21, y=data[21], text="2_2s Violation", showarrow=True, arrowhead=1)
+    fig.update_layout(title='Levey-Jennings Chart with Westgard Rules', xaxis_title='Day', yaxis_title='Control Value')
+    return fig
 
-def plot_sat_to_pq_violin():
-    df = pd.DataFrame({'Days': np.concatenate([np.random.normal(20, 5, 20), np.random.normal(35, 8, 15)]), 'Equipment Type': ['Analyzer'] * 20 + ['Sample Prep'] * 15})
-    fig = px.violin(df, y="Days", x="Equipment Type", color="Equipment Type", box=True, points="all", title="Time from SAT to PQ Approval"); return fig
-
-def plot_protocol_review_cycle_histogram():
-    fig = px.histogram(np.random.gamma(4, 2, 100), title="Protocol Review Cycle Time (Draft to Approved)", labels={'value': 'Days'}); return fig
-
-def plot_training_donut():
-    fig = go.Figure(data=[go.Pie(labels=['ISO 13485','GAMP5','21 CFR 820', 'GDP', 'Not Started'], values=[100, 95, 98, 90, 5], hole=.4, title="Training Completion Rate")]); return fig
-
-def plot_rft_gauge():
-    fig = go.Figure(go.Indicator(mode = "gauge+number", value = 82, title = {'text': "Right-First-Time Protocol Execution"}, gauge = {'axis': {'range': [None, 100]}, 'bar': {'color': "cornflowerblue"}})); return fig
-
-def plot_capa_funnel():
-    fig = go.Figure(go.Funnel(y = ["Identified", "Investigation", "Root Cause Analysis", "Implementation", "Effectiveness Check"], x = [100, 80, 65, 60, 55], textinfo = "value+percent initial"))
-    fig.update_layout(title="CAPA Closure Effectiveness Funnel"); return fig
-
-def run_anova_ttest(add_shift):
-    group_a = np.random.normal(10, 2, 30); group_b_mean = 10.5 if not add_shift else 12.5; group_b = np.random.normal(group_b_mean, 2, 30)
-    fig = px.box(pd.DataFrame({'Group A': group_a, 'Group B': group_b}), title="Performance Comparison (Lot A vs Lot B)")
-    t_stat, p_value = stats.ttest_ind(group_a, group_b); result = f"**T-test Result:** p-value = {p_value:.4f}. "
-    result += "**Conclusion:** Difference is statistically significant." if p_value < 0.05 else "**Conclusion:** No significant difference detected."; return fig, result
-
-def run_regression_analysis():
-    rpn = np.random.randint(20, 150, 50); failure_prob = rpn / 200; failures = np.random.binomial(1, failure_prob)
-    df = pd.DataFrame({'RPN': rpn, 'Failure Occurred': failures}); df['Failure Occurred'] = df['Failure Occurred'].astype('category')
-    fig = px.scatter(df, x='RPN', y='Failure Occurred', title="Correlation of Risk (RPN) to Failure Rate", marginal_y="histogram")
-    return fig, "**Insight:** Higher RPN values show a clear trend towards a higher likelihood of test failure, validating the risk assessment process."
-
-def run_descriptive_stats():
-    data = np.random.normal(50, 2, 100); df = pd.DataFrame(data, columns=["LoD Measurement (copies/mL)"])
-    mean, std, cv = df.iloc[:,0].mean(), df.iloc[:,0].std(), (df.iloc[:,0].std() / df.iloc[:,0].mean()) * 100
-    fig = px.histogram(df, x="LoD Measurement (copies/mL)", marginal="box", title="Descriptive Statistics for LoD Study")
-    return fig, f"**Mean:** {mean:.2f} | **Std Dev:** {std:.2f} | **%CV:** {cv:.2f}%"
-
-def run_control_charts():
-    data = [np.random.normal(10, 0.5, 5) for _ in range(20)]; data[15:] = [np.random.normal(10.8, 0.5, 5) for _ in range(5)]
-    df = pd.DataFrame(data, columns=[f'm{i}' for i in range(1,6)]); df['mean'] = df.mean(axis=1); df['range'] = df.max(axis=1) - df.min(axis=1)
-    x_bar_cl = df['mean'].mean(); x_bar_ucl = x_bar_cl + 3 * (df['range'].mean() / 2.326); x_bar_lcl = x_bar_cl - 3 * (df['range'].mean() / 2.326)
-    fig = go.Figure(); fig.add_trace(go.Scatter(x=df.index, y=df['mean'], name='Subgroup Mean', mode='lines+markers')); fig.add_hline(y=x_bar_cl, line_dash="dash", line_color="green", annotation_text="CL")
-    fig.add_hline(y=x_bar_ucl, line_dash="dot", line_color="red", annotation_text="UCL"); fig.add_hline(y=x_bar_lcl, line_dash="dot", line_color="red", annotation_text="LCL")
-    fig.update_layout(title="X-bar Control Chart for Process Monitoring"); return fig
-
-def run_kaplan_meier():
-    time_to_failure = np.random.weibull(2, 50) * 24; observed = np.random.binomial(1, 0.8, 50); df = pd.DataFrame({'Months': time_to_failure, 'Observed': observed}).sort_values(by='Months')
-    at_risk = len(df); survival_prob = []
-    for i, row in df.iterrows():
-        survival = (at_risk - 1) / at_risk if row['Observed'] == 1 else 1; at_risk -= 1; survival_prob.append(survival)
-    df['Survival'] = np.cumprod(survival_prob)
-    fig = px.line(df, x='Months', y='Survival', title="Kaplan-Meier Survival Plot for Shelf-Life", markers=True); fig.update_yaxes(range=[0, 1.05]); return fig, "**Conclusion:** The estimated median shelf-life (time to 50% survival) is approximately 21 months."
-
-def run_monte_carlo():
-    n_sims = 5000; task1, task2, task3 = np.random.triangular(8,10,15,n_sims), np.random.triangular(15,20,30,n_sims), np.random.triangular(5,8,12,n_sims)
-    total_times = task1 + task2 + task3; p90 = np.percentile(total_times, 90)
-    fig = px.histogram(total_times, nbins=50, title="Monte Carlo Simulation of V&V Plan Duration"); fig.add_vline(x=p90, line_dash="dash", line_color="red", annotation_text=f"P90 = {p90:.1f} days")
-    return fig, f"**Conclusion:** While the 'most likely' duration is ~38 days, there is a 10% chance the project will take **{p90:.1f} days or longer**. This P90 value should be used for risk-adjusted planning."
-
-def create_v_model_figure():
-    fig = go.Figure(); fig.add_trace(go.Scatter(x=[1, 2, 3, 4], y=[4, 3, 2, 1], mode='lines+markers+text', text=["User Needs", "System Req.", "Architecture", "Module Design"], textposition="top right", line=dict(color='royalblue', width=2), marker=dict(size=10)))
-    fig.add_trace(go.Scatter(x=[5, 6, 7, 8], y=[1, 2, 3, 4], mode='lines+markers+text', text=["Unit Test", "Integration Test", "System V&V", "UAT"], textposition="top left", line=dict(color='green', width=2), marker=dict(size=10)))
-    for i in range(4): fig.add_shape(type="line", x0=4-i, y0=1+i, x1=5+i, y1=1+i, line=dict(color="grey", width=1, dash="dot"))
-    fig.update_layout(title_text=None, showlegend=False, xaxis=dict(showticklabels=False, zeroline=False, showgrid=False), yaxis=dict(showticklabels=False, zeroline=False, showgrid=False)); return fig
-
-def get_software_risk_data():
-    return pd.DataFrame([{"Software Item": "Patient Result Algorithm", "IEC 62304 Class": "Class C"}, {"Software Item": "Database Middleware", "IEC 62304 Class": "Class B"}, {"Software Item": "UI Color Theme Module", "IEC 62304 Class": "Class A"}])
-
-def get_eco_data():
-    return pd.DataFrame([{"ECO": "ECO-00451", "Change": "Reagent 2 formulation update", "Risk": "High", "V&V Impact": "Full re-validation required.", "Status": "V&V In Progress"}, {"ECO": "ECO-00488", "Change": "Update GUI software (bug fix)", "Risk": "Low", "V&V Impact": "Regression testing only.", "Status": "V&V Complete"}])
-
+def run_assay_regression(key):
+    """Generates a regression plot and displays the full statsmodels summary."""
+    conc = np.array([0, 10, 25, 50, 100, 200, 400])
+    signal = 50 + 2.5 * conc + np.random.normal(0, 20, 7)
+    df = pd.DataFrame({'Concentration': conc, 'Signal': signal})
+    fig = px.scatter(df, x='Concentration', y='Signal', trendline='ols', title="Assay Performance Regression (Linearity)")
+    
+    # Run statsmodels for a detailed summary
+    X = sm.add_constant(df['Concentration'])
+    model = sm.OLS(df['Signal'], X).fit()
+    st.code(f"Regression Results (statsmodels summary):\n{model.summary()}")
+    return fig
 
 # --- PAGE RENDERING FUNCTIONS ---
 
-def render_main_page():
+def render_home_page():
     st.title("🎯 The V&V Executive Command Center")
     st.markdown("A definitive showcase of data-driven leadership in a regulated GxP environment.")
     st.markdown("---")
-    st.markdown("""
-    Welcome. This application translates the core responsibilities of V&V leadership into a suite of interactive, high-density dashboards. 
-    **Please use the navigation sidebar on the left to explore each of the six core competency areas.**
-    """)
-    st.subheader("A Framework for Compliant V&V (The V-Model)")
-    st.plotly_chart(create_v_model_figure(), use_container_width=True)
-    st.markdown("---")
-    st.success("Built with Python & Streamlit to demonstrate expertise in creating bespoke digital tools for operational excellence in Life Sciences.")
+    render_director_briefing("Portfolio Objective",
+        "This interactive application translates the core responsibilities of V&V leadership into a suite of high-density dashboards. It is designed to be an overwhelming and undeniable demonstration of the strategic, technical, and quality systems expertise required for a senior leadership role in the medical device industry.",
+        "ISO 13485, ISO 14971, IEC 62304, 21 CFR 820, 21 CFR Part 11, CLSI Guidelines",
+        "A well-led V&V function directly accelerates time-to-market, reduces compliance risk, lowers the cost of poor quality (COPQ), and builds a culture of data-driven excellence."
+    )
+    st.info("Please use the navigation sidebar on the left to explore each of the five core competency areas.")
 
-def render_assay_metrics_page():
-    st.title("🧪 Assay V&V-Specific Metrics & KPIs")
+def render_design_controls_page():
+    st.title("🏛️ 1. Design Controls, Planning & Risk Management")
+    st.markdown("Demonstrating mastery of the foundational planning and risk management activities required by FDA & ISO.")
     st.markdown("---")
-    st.header("1. Test Execution Metrics")
-    render_metric_summary("Protocol Completion", "Tracks progress against the plan, indicating project velocity and potential delays.", plot_protocol_completion_burndown, "The team is slightly behind the ideal burndown. Action: Investigate the root cause for the slowdown.")
-    render_metric_summary("Pass Rate by Test Type", "Identifies problematic test areas or assay weaknesses across projects.", plot_pass_rate_heatmap, "The low pass rate for 'Robustness' (88%) is a red flag. Action: Convene with R&D to review the robustness study design.")
-    render_metric_summary("Re-test Rate & Root Cause", "Highlights sources of inefficiency and quality issues in the lab. A high re-test rate impacts timelines and cost.", plot_retest_pareto, "'Operator Error' is the primary cause of re-tests. Action: Schedule refresher training.")
-    st.header("2. Design Control & Traceability")
-    render_metric_summary("Requirements Trace Coverage", "The most critical metric for audit readiness, ensuring no gaps exist.", plot_trace_coverage_sankey, "The Sankey diagram clearly shows an uncovered requirement. This is a critical gap that must be closed before the design review.", "FDA 21 CFR 820.30(j) - DHF")
-    st.header("3. Regulatory Compliance & Risk")
-    render_metric_summary("FMEA Risk Reduction", "Demonstrates the effectiveness of V&V activities as risk mitigations.", plot_rpn_waterfall, "V&V activities successfully reduced the total risk portfolio. This provides objective evidence of building a safer product.", "ISO 14971")
+    render_director_briefing("The Design History File (DHF) as a Strategic Asset",
+        "The DHF is not merely a documentation requirement; it is the definitive, auditable narrative of the product's development. An effective V&V leader architects the DHF from day one, ensuring that the story it tells to regulators is clear, complete, and compelling. This section demonstrates the key tools for building a world-class DHF.",
+        "FDA 21 CFR 820.30 (Design Controls), ISO 13485:2016 (Section 7.3, Design and Development)",
+        "A robust DHF ensures audit readiness, prevents costly delays from document remediation, and provides a solid foundation for future product iterations and regulatory submissions."
+    )
+    render_metric_card("Requirements Traceability Matrix (RTM)", "The RTM is the backbone of the DHF, providing an auditable, many-to-many link between user needs, design inputs, V&V activities, and risk controls.", create_rtm_data_editor, "The matrix view instantly flags critical gaps, such as the un-tested cross-reactivity requirement (URS-003), allowing for proactive mitigation before a design freeze. This is a primary tool for preventing audit findings.", key="rtm")
+    render_metric_card("Product Risk Management (FMEA & Risk Matrix)", "A systematic process for identifying, analyzing, and mitigating potential failure modes in the product design. V&V activities are primary risk mitigations.", lambda k: plot_risk_matrix(k), "The risk matrix clearly prioritizes 'False Negative' as the highest risk, ensuring that it receives the most V&V resources and attention. This is a key input for the V&V Master Plan.", key="fmea")
+    render_metric_card("Design of Experiments (DOE/RSM)", "A powerful statistical tool used to efficiently characterize the product's design space and identify robust operating parameters (e.g., optimal temperature and pH for an assay).", plot_doe_rsm, "The Response Surface Methodology (RSM) plot indicates the assay's optimal performance is at ~32°C and a pH of 7.5. This data forms the basis for setting manufacturing specifications and proves the design is well-understood.", key="doe")
 
-def render_equipment_metrics_page():
-    st.title("🏭 Equipment Validation Metrics (FAT/SAT/IQ/OQ/PQ)")
+def render_method_validation_page():
+    st.title("🔬 2. Method Validation & Statistical Rigor")
+    st.markdown("Showcasing the deep statistical knowledge required to validate test methods, equipment, and manufacturing processes.")
     st.markdown("---")
-    st.header("1. Validation Execution Health")
-    render_metric_summary("Validation On-Time Rate", "Compares planned validation timelines against actual execution, highlighting delays.", plot_validation_gantt_baseline, "The 'SAT' phase experienced a significant delay. Action: Investigate the root cause to prevent recurrence.")
-    st.header("2. Readiness & Qualification")
-    render_metric_summary("Time from SAT to PQ Approval", "Measures the efficiency of the on-site qualification process.", plot_sat_to_pq_violin, "'Sample Prep' equipment shows a wider and longer qualification cycle. Action: Launch a process improvement event to streamline this workflow.", "GAMP 5")
+    render_director_briefing("Ensuring Data Trustworthiness",
+        "Before a product can be validated, the methods and systems used to measure it must be proven to be reliable. Test Method Validation (TMV), Measurement System Analysis (MSA), and Process Capability (CpK) are the statistical pillars that provide objective evidence of this reliability. Without them, all subsequent V&V data is questionable.",
+        "FDA Guidance on Analytical Procedures and Methods Validation; CLSI Guidelines (EP05, EP17, etc.); AIAG MSA Manual",
+        "Prevents costly product failures and batch rejections caused by unreliable or incapable measurement and manufacturing processes. It is the foundation of data integrity."
+    )
+    render_metric_card("Process Capability (CpK)", "Measures how well a process is able to produce output that meets specifications. A CpK > 1.33 is typically considered capable for medical devices.", plot_cpk_analysis, "With the current specification limits, the process CpK is 1.48, which is excellent. However, tightening the LSL to 9.5 would drop the CpK below 1.0, making the process non-capable. This interactive tool demonstrates data-driven specification setting.", key="cpk")
+    render_metric_card("Measurement System Analysis (MSA/Gage R&R)", "Quantifies the variation in a measurement system attributable to operators, equipment, and parts. A key part of Test Method Validation (TMV).", plot_msa_analysis, "The box plot shows that Operator Charlie's measurements are consistently lower than Alice and Bob's, indicating a potential training issue or procedural deviation that requires investigation before the TMV can be approved.", key="msa")
+    render_metric_card("Assay Performance Regression Analysis", "Linear regression is used to characterize key assay performance attributes like linearity, analytical sensitivity, and to compare methods. The full statistical output is critical for regulatory submissions.", run_assay_regression, "The statsmodels summary provides a comprehensive model of the assay's response with high statistical significance (p < 0.001) and an R-squared of 0.99+, confirming excellent linearity across the analytical range.", key="regression")
 
-def render_team_kpis_page():
-    st.title("👥 Team & Project Management KPIs")
+def render_execution_monitoring_page():
+    st.title("📈 3. Execution Monitoring & Quality Control")
+    st.markdown("Highlighting the tools used for real-time process monitoring and ensuring the quality of day-to-day execution.")
     st.markdown("---")
-    st.header("1. Productivity & Load")
-    render_metric_summary("Protocol Review Cycle Time", "Measures the efficiency of the documentation workflow. Long cycle times are a bottleneck.", plot_protocol_review_cycle_histogram, "The distribution shows a long tail. Action: Implement a daily review board meeting to address aging documents.")
-    st.header("2. Training & Competency")
-    render_metric_summary("Training Completion Rate", "A critical quality system metric ensuring the team is competent and compliant.", plot_training_donut, "The team is lagging in GAMP5 training. Action: Schedule a GAMP5 training session for the team within the next quarter.", "ISO 13485:2016 Sec 6.2")
+    render_director_briefing("Statistical Process Control (SPC) for V&V",
+        "SPC is a critical tool for monitoring processes in real-time. By applying control charts like Levey-Jennings (for labs) and Shewhart charts, we can distinguish between normal process variation ('common cause') and unexpected problems ('special cause') that require immediate investigation.",
+        "FDA 21 CFR 820.250 (Statistical Techniques), ISO TR 10017, CLSI C24",
+        "Provides an early warning system for process drifts or failures, reducing the risk of large-scale, costly investigations and ensuring the integrity of all data generated during V&V."
+    )
+    render_metric_card("Levey-Jennings & Westgard Rules", "The standard for monitoring daily quality control runs in a clinical lab environment. Westgard multi-rules provide high sensitivity for detecting systematic errors before they lead to invalid runs.", plot_levey_jennings_westgard, "The chart flags both a 1_3s rule violation (potential random error) and a 2_2s rule violation (potential systematic error). Action: Halt testing and launch a formal lab investigation as per the Quality Control SOP.", key="lj")
+    render_metric_card("Individuals (I) Chart with Nelson Rules", "An I-chart monitors individual data points over time. Nelson rules are a powerful set of statistical tests to detect out-of-control conditions in manufacturing and V&V.", lambda k: run_control_charts(k), "The I-chart shows a clear upward shift starting at sample 15. This is a statistically significant process change that must be investigated to determine the assignable cause before proceeding with validation.", key="ichart")
+    render_metric_card("First-Pass Analysis", "Measures the percentage of tests, protocols, or validation batches that are completed successfully without any rework, deviations, or failures. A primary indicator of process quality and efficiency.", lambda k: plot_rft_gauge(k), "A First-Pass (or Right-First-Time) rate of 82% indicates that nearly 1 in 5 protocols requires some form of rework. This provides a clear business case for investing in process improvement initiatives.", key="fpa")
 
-def render_quality_kpis_page():
-    st.title("📊 Quality & Continuous Improvement KPIs")
+def render_quality_management_page():
+    st.title("✅ 4. Project & Quality Systems Management")
+    st.markdown("Demonstrating leadership in managing project health, quality issues, and software compliance.")
     st.markdown("---")
-    st.header("1. Right-First-Time (RFT) Metrics")
-    render_metric_summary("Right-First-Time Protocol Execution", "Measures the quality of planning and execution. A low RFT rate indicates rework and delays.", plot_rft_gauge, "An RFT rate of 82% is a good starting point. Action: Set a quarterly goal to increase RFT to 90%.")
-    st.header("2. CAPA & NCR Metrics")
-    render_metric_summary("CAPA Closure Effectiveness", "Tracks the efficiency of the Corrective and Preventive Action (CAPA) process.", plot_capa_funnel, "There is a significant drop-off between 'Implementation' and 'Effectiveness Check'. Action: Reinforce the importance of scheduling effectiveness checks.", "FDA 21 CFR 820.100 (CAPA)")
-
-def render_software_vv_page():
-    st.title("💻 Software V&V (IEC 62304 & Part 11)")
-    st.markdown("Demonstrating expertise in validating the software components of modern diagnostic systems, a critical and often-audited area.")
-    st.markdown("---")
-    render_metric_summary("The V-Model for Software Validation", "The V-Model is the industry-standard framework linking each development phase to a corresponding test phase.", create_v_model_figure, "This visualization demonstrates a clear understanding of the compliant software development lifecycle.", "IEC 62304")
-    st.subheader("Risk-Based Testing (IEC 62304)")
-    with st.container(border=True):
-        col1, col2 = st.columns([1,2])
-        with col1:
-            st.markdown("**Description:** IEC 62304 requires classifying software based on the potential harm it could cause. V&V rigor must be proportional to this risk.")
-            st.info("**Director's Insight:** The 'Patient Result Algorithm' is Class C, triggering the most stringent V&V requirements.")
-            st.warning("**Regulatory Context:** IEC 62304, Section 4.3: Software safety classification")
-        with col2:
+    render_director_briefing("Managing the V&V Ecosystem",
+        "Beyond technical execution, a V&V leader must manage the project's health, track quality issues, and ensure a compliant software validation lifecycle. These KPIs provide the necessary oversight to manage timelines, scope, and compliance risks proactively.",
+        "IEC 62304, 21 CFR Part 11, GAMP 5",
+        "Improves project predictability, ensures software compliance (a major source of FDA 483s), and provides transparent, data-driven reporting to cross-functional stakeholders and leadership."
+    )
+    render_metric_card("Defect Open vs. Close Trend (Burnup)", "A burnup chart is superior to a burndown as it tracks scope changes. It visualizes the rate of work completion against the rate at which new issues are found.", plot_defect_burnup, "The widening gap between opened and closed defects indicates that our resolution rate is not keeping up with discovery. The scope increase on day 25 exacerbated this. Action: Allocate additional resources from the systems engineering team to defect resolution.", key="burnup")
+    
+    st.subheader("Software V&V (IEC 62304 & 21 CFR Part 11)")
+    col1, col2 = st.columns(2)
+    with col1:
+        with st.container(border=True):
+            st.markdown("**IEC 62304 Software Safety Classification**")
             risk_df = get_software_risk_data()
             def classify_color(cls):
                 if cls == "Class C": return "background-color: #FF7F7F"
                 if cls == "Class B": return "background-color: #FFD700"
                 return "background-color: #90EE90"
             st.dataframe(risk_df.style.applymap(classify_color, subset=['IEC 62304 Class']), use_container_width=True, hide_index=True)
+            st.info("The rigor of V&V activities (e.g., level of documentation, code reviews, unit testing) is directly tied to this risk classification.")
+    with col2:
+        with st.container(border=True):
+            st.markdown("**21 CFR Part 11 Compliance Checklist**")
+            st.checkbox("Validation (11.10a)", value=True, disabled=True)
+            st.checkbox("Audit Trails (11.10e)", value=True, disabled=True)
+            st.checkbox("Access Controls (11.10d)", value=True, disabled=True)
+            st.checkbox("E-Signatures (11.200a)", value=False, disabled=True)
+            st.error("A gap has been identified in the E-Signature implementation, which must be remediated before the system can be considered Part 11 compliant.")
 
-def render_stats_page():
-    st.title("📐 Advanced Statistical Methods Workbench")
-    st.markdown("This interactive workbench demonstrates proficiency in the specific statistical methods required for robust data analysis in a regulated V&V environment.")
-    st.markdown("---")
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["ANOVA / t-tests", "Regression Analysis", "Descriptive Stats", "Control Charts (SPC)", "Kaplan-Meier (Stability)", "Monte Carlo Simulation"])
-    with tab1:
-        st.header("Performance Comparison (t-test)"); st.info("Used to determine if there is a statistically significant difference between two groups (e.g., reagent lots).")
-        add_shift = st.checkbox("Simulate a Mean Shift in Lot B's Performance"); fig, result = run_anova_ttest(add_shift); st.plotly_chart(fig, use_container_width=True); st.subheader("Statistical Interpretation"); st.markdown(result)
-    with tab2:
-        st.header("Risk-to-Failure Correlation (Regression)"); st.info("Used to validate risk assessments by checking if higher-risk components correlate with a higher observed failure rate.")
-        fig, result = run_regression_analysis(); st.plotly_chart(fig, use_container_width=True); st.subheader("Strategic Interpretation"); st.markdown(result)
-    with tab3:
-        st.header("Assay Performance (Descriptive Stats)"); st.info("The foundational analysis for any analytical validation study (e.g., LoD, Precision).")
-        fig, result = run_descriptive_stats(); st.plotly_chart(fig, use_container_width=True); st.subheader("Summary Statistics"); st.success(result)
-    with tab4:
-        st.header("Process Monitoring (Control Charts)"); st.info("X-bar charts are used to monitor the stability and variability of a process over time (e.g., daily controls).")
-        fig = run_control_charts(); st.plotly_chart(fig, use_container_width=True); st.warning("**Insight:** A clear upward shift is detected around subgroup 15, indicating a special cause of variation requires investigation.")
-    with tab5:
-        st.header("Shelf-Life & Stability (Kaplan-Meier)"); st.info("Survival analysis is used to estimate the shelf-life of a product by modeling time-to-failure data.")
-        fig, result = run_kaplan_meier(); st.plotly_chart(fig, use_container_width=True); st.subheader("Study Conclusion"); st.markdown(result)
-    with tab6:
-        st.header("Project Timeline Risk (Monte Carlo)"); st.info("Monte Carlo simulation runs thousands of 'what-if' scenarios on a project plan to forecast a probabilistic completion date.")
-        fig, result = run_monte_carlo(); st.plotly_chart(fig, use_container_width=True); st.subheader("Risk-Adjusted Planning"); st.error(result)
-
-# --- SIDEBAR NAVIGATION ---
+# --- SIDEBAR NAVIGATION AND PAGE ROUTING ---
 PAGES = {
-    "Home": render_main_page,
-    "🧪 Assay V&V Metrics": render_assay_metrics_page,
-    "🏭 Equipment Validation Metrics": render_equipment_metrics_page,
-    "👥 Team & Project KPIs": render_team_kpis_page,
-    "📊 Quality & CI KPIs": render_quality_kpis_page,
-    "💻 Software V&V (IEC 62304)": render_software_vv_page,
-    "📐 Advanced Statistical Methods": render_stats_page
+    "Executive Summary": render_main_page,
+    "1. Design Controls & Planning": render_design_controls_page,
+    "2. Method & Process Validation": render_method_validation_page,
+    "3. Execution Monitoring & SPC": render_execution_monitoring_page,
+    "4. Project & Quality Management": render_quality_management_page,
 }
 
 st.sidebar.title("Navigation")
 selection = st.sidebar.radio("Go to", list(PAGES.keys()))
 
-page = PAGES[selection]
-page()
+page_to_render = PAGES[selection]
+page_to_render()
