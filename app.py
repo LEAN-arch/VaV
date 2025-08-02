@@ -13,6 +13,10 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, accuracy_score
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from statsmodels.tsa.arima.model import ARIMA
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 # --- PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
 st.set_page_config(
     layout="wide",
@@ -42,7 +46,129 @@ def render_metric_card(title, description, viz_function, insight, reg_context, k
         st.success(f"**Actionable Insight:** {insight}")
 
 # --- VISUALIZATION & DATA GENERATORS ---
+def run_requirement_risk_nlp_model(key):
+    """
+    Uses NLP to classify the risk of a requirement based on its text.
+    Demonstrates proactive risk identification at the earliest stage.
+    """
+    reqs = [
+        "The system shall process samples in under 5 minutes.", # Clear
+        "The assay must have a clinical sensitivity of 95% for Target A.", # Clear
+        "The user interface should be intuitive and easy to use.", # Ambiguous
+        "Results must be displayed quickly after the run is complete.", # Ambiguous
+        "The software must not crash during normal operation.", # Clear
+        "The system shall be robust against common user errors.", # Ambiguous
+        "Analytical sensitivity (LoD) shall be <= 25 copies/mL.", # Clear
+    ]
+    labels = [0, 0, 1, 1, 0, 1, 0] # 0 = Low Risk, 1 = High Risk (Ambiguous)
+    df = pd.DataFrame({'Requirement': reqs, 'Risk_Label': labels})
+
+    # AI/ML Model: TF-IDF Vectorizer + Logistic Regression
+    tfidf = TfidfVectorizer(stop_words='english')
+    X = tfidf.fit_transform(df['Requirement'])
+    y = df['Risk_Label']
+    model = LogisticRegression(random_state=42).fit(X, y)
+
+    # Predict probabilities for visualization
+    df['Risk_Probability'] = model.predict_proba(X)[:, 1]
+    df['Status'] = df['Risk_Label'].apply(lambda x: 'High Risk (Ambiguous)' if x == 1 else 'Low Risk (Clear)')
+    
+    fig = px.bar(df.sort_values('Risk_Probability'), 
+                 x='Risk_Probability', y='Requirement', color='Status', 
+                 orientation='h', title='AI-Powered Requirement Clarity & Risk Analysis',
+                 color_discrete_map={'High Risk (Ambiguous)': 'red', 'Low Risk (Clear)': 'blue'})
+    fig.update_layout(xaxis_title="Predicted Ambiguity Risk Score")
+    return fig
+
+def run_cqa_forecasting_model(key):
+    """
+    Uses a time-series forecasting model (ARIMA) to predict future CQA values.
+    """
+    np.random.seed(42)
+    # Generate stable time-series data with a slight upward trend
+    dates = pd.date_range(start="2023-01-01", periods=100)
+    data = 10 + np.random.randn(100).cumsum() * 0.05 + np.linspace(0, 1.5, 100)
+    ts = pd.Series(data, index=dates)
+    
+    # AI/ML Model: ARIMA (AutoRegressive Integrated Moving Average)
+    model = ARIMA(ts, order=(5,1,0)).fit()
+    forecast = model.get_forecast(steps=30)
+    forecast_df = forecast.summary_frame()
+    
+    # Visualization
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=ts.index, y=ts, mode='lines', name='Historical Data'))
+    fig.add_trace(go.Scatter(x=forecast_df.index, y=forecast_df['mean'], mode='lines', name='Forecast', line=dict(color='red')))
+    fig.add_trace(go.Scatter(x=forecast_df.index, y=forecast_df['mean_ci_lower'], fill='tonexty', mode='lines', line_color='rgba(255,0,0,0.1)', name='95% Confidence Interval'))
+    fig.add_trace(go.Scatter(x=forecast_df.index, y=forecast_df['mean_ci_upper'], fill='tonexty', mode='lines', line_color='rgba(255,0,0,0.1)', name='95% Confidence Interval'))
+    fig.add_hline(y=12.5, line_dash="dash", line_color="orange", annotation_text="Upper Spec Limit")
+    fig.update_layout(title='AI-Powered Forecast of Critical Quality Attribute (CQA)', yaxis_title='CQA Value')
+    return fig
+
+def run_defect_root_cause_model(key):
+    """
+    Uses NLP to automatically classify defect reports into root cause categories.
+    """
+    defects = [
+        "Pointer exception in data processing module when sample ID is null.", # Code
+        "The system requirement for sample throughput is physically impossible to meet.", # Requirement
+        "UI hangs when the user clicks 'Start' before the reagent is loaded.", # Code
+        "The plastic housing for the sensor cracked after 100 cycles.", # Hardware
+        "Requirement URS-015 is in direct conflict with URS-021.", # Requirement
+        "Incorrect driver version for the pump controller was deployed.", # Integration
+        "The third-party API for LIS is returning a 500 error intermittently.", # Integration
+        "Off-by-one error in the loop that calculates final concentration.", # Code
+    ]
+    labels = ["Coding Error", "Requirement Issue", "Coding Error", "Hardware Issue", "Requirement Issue", "Integration Issue", "Integration Issue", "Coding Error"]
+    df = pd.DataFrame({'Defect_Description': defects, 'Root_Cause': labels})
+
+    tfidf = TfidfVectorizer(stop_words='english')
+    X_train, X_test, y_train, y_test = train_test_split(df['Defect_Description'], df['Root_Cause'], test_size=0.3, random_state=42)
+    X_train_vec = tfidf.fit_transform(X_train)
+    
+    model = RandomForestClassifier(random_state=42).fit(X_train_vec, y_train)
+    
+    # For visualization, we'll just show the classified distribution
+    df['Predicted_Cause'] = model.predict(tfidf.transform(df['Defect_Description']))
+    cause_counts = df['Predicted_Cause'].value_counts().reset_index()
+    
+    fig = px.pie(cause_counts, values='count', names='Predicted_Cause', title='AI-Predicted Defect Root Cause Distribution')
+    return fig
+
+def run_sentiment_analysis_model(key):
+    """
+    Applies sentiment analysis to complaint free-text to gauge customer frustration.
+    """
+    complaint_docs = [
+        "The reagent cartridge was leaking from the bottom seal upon opening the box.", # Neutral
+        "This is the third time this month a leaky pack has ruined a run. This is unacceptable and costing us a fortune!", # Negative
+        "Error code 503 appeared on screen, the manual is not clear on this.", # Neutral
+        "I cannot believe you released software with such an obvious calibration bug. I've wasted two days on this. Absolutely terrible.", # Negative
+        "The machine is making a loud grinding noise.", # Neutral
+        "The new user interface is fantastic, much easier to use than the old version. Great job!", # Positive
+    ] * 3
+    
+    # AI/ML Tool: VADER for sentiment analysis
+    analyzer = SentimentIntensityAnalyzer()
+    sentiments = []
+    for doc in complaint_docs:
+        vs = analyzer.polarity_scores(doc)
+        if vs['compound'] >= 0.05:
+            sentiments.append('Positive')
+        elif vs['compound'] <= -0.05:
+            sentiments.append('Negative')
+        else:
+            sentiments.append('Neutral')
+    
+    sentiment_counts = pd.Series(sentiments).value_counts().reset_index()
+    
+    fig = px.bar(sentiment_counts, x='index', y='count', color='index',
+                 title='AI-Powered Complaint Sentiment Analysis',
+                 color_discrete_map={'Negative': 'red', 'Neutral': 'grey', 'Positive': 'green'})
+    fig.update_layout(xaxis_title="Sentiment", yaxis_title="Number of Complaints")
+    return fig
 # --- NEW AI/ML VISUALIZATION & DATA GENERATORS ---
+
 
 def plot_multivariate_anomaly_detection(key):
     """
