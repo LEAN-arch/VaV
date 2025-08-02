@@ -105,11 +105,18 @@ def plot_levey_jennings_westgard(key):
     return fig
 
 def run_assay_regression(key):
-    conc = np.array([0, 10, 25, 50, 100, 200, 400]); signal = 50 + 2.5 * conc + np.random.normal(0, 20, 7)
+    # FIX: Increased sample size from 7 to 8 to satisfy the statsmodels omni_normtest requirement (>=8 samples).
+    conc = np.array([0, 10, 25, 50, 100, 200, 300, 400])
+    signal = 50 + 2.5 * conc + np.random.normal(0, 20, 8) # Match sample size
+    
     df = pd.DataFrame({'Concentration': conc, 'Signal': signal})
     fig = px.scatter(df, x='Concentration', y='Signal', trendline='ols', title="Assay Performance Regression (Linearity)")
-    X = sm.add_constant(df['Concentration']); model = sm.OLS(df['Signal'], X).fit()
+    
+    X = sm.add_constant(df['Concentration'])
+    model = sm.OLS(df['Signal'], X).fit()
+    
     st.code(f"Regression Results (statsmodels summary):\n{model.summary()}")
+    
     return fig
 
 def plot_risk_matrix(key):
