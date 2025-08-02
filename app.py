@@ -1,4 +1,4 @@
-# app.py (Final, Monolithic, Guaranteed Working Version)
+# app.py (Final, Monolithic, World-Class Version with ALL Content Restored)
 
 import streamlit as st
 import pandas as pd
@@ -30,9 +30,7 @@ def render_metric_card(title, description, viz_function, insight, key=""):
     with st.container(border=True):
         st.subheader(title)
         st.markdown(f"*{description}*")
-        # The key is passed to the viz_function if it needs unique Streamlit widgets
         fig = viz_function(key)
-        # Some functions might return None if they render complex widgets directly (like st.dataframe)
         if fig:
             st.plotly_chart(fig, use_container_width=True)
         st.success(f"**Actionable Insight:** {insight}")
@@ -112,7 +110,6 @@ def run_assay_regression(key):
     st.code(f"Regression Results (statsmodels summary):\n{model.summary()}")
     return fig
 
-# --- THE FIX: The missing functions are now included ---
 def plot_risk_matrix(key):
     severity = [9, 10, 6, 8, 7, 5]; probability = [3, 2, 4, 3, 5, 1]
     risk_level = [s * p for s, p in zip(severity, probability)]
@@ -134,7 +131,58 @@ def get_software_risk_data():
 
 def plot_rft_gauge(key):
     fig = go.Figure(go.Indicator(mode = "gauge+number", value = 82, title = {'text': "Right-First-Time Protocol Execution"}, gauge = {'axis': {'range': [None, 100]}, 'bar': {'color': "cornflowerblue"}})); return fig
+
+# --- STATISTICAL METHODS FUNCTIONS (RESTORED) ---
+def run_anova_ttest(key):
+    st.info("Used to determine if there is a statistically significant difference between two groups (e.g., reagent lots).")
+    add_shift = st.checkbox("Simulate a Mean Shift in Lot B's Performance", key=f"anova_{key}")
+    group_a = np.random.normal(10, 2, 30); group_b_mean = 10.5 if not add_shift else 12.5; group_b = np.random.normal(group_b_mean, 2, 30)
+    fig = px.box(pd.DataFrame({'Group A': group_a, 'Group B': group_b}), title="Performance Comparison (Lot A vs Lot B)")
+    t_stat, p_value = stats.ttest_ind(group_a, group_b); result = f"**T-test Result:** p-value = {p_value:.4f}. "
+    result += "**Conclusion:** Difference is statistically significant." if p_value < 0.05 else "**Conclusion:** No significant difference detected."
+    st.plotly_chart(fig, use_container_width=True); st.subheader("Statistical Interpretation"); st.markdown(result)
+    return None
+
+def run_regression_analysis_stat(key):
+    st.info("Used to validate risk assessments by checking if higher-risk components correlate with a higher observed failure rate.")
+    rpn = np.random.randint(20, 150, 50); failure_prob = rpn / 200; failures = np.random.binomial(1, failure_prob)
+    df = pd.DataFrame({'RPN': rpn, 'Failure Occurred': failures}); df['Failure Occurred'] = df['Failure Occurred'].astype('category')
+    fig = px.scatter(df, x='RPN', y='Failure Occurred', title="Correlation of Risk (RPN) to Failure Rate", marginal_y="histogram")
+    st.plotly_chart(fig, use_container_width=True); st.subheader("Strategic Interpretation"); st.markdown("**Insight:** Higher RPN values show a clear trend towards a higher likelihood of test failure, validating the risk assessment process.")
+    return None
+
+def run_descriptive_stats_stat(key):
+    st.info("The foundational analysis for any analytical validation study (e.g., LoD, Precision).")
+    data = np.random.normal(50, 2, 100); df = pd.DataFrame(data, columns=["LoD Measurement (copies/mL)"])
+    mean, std, cv = df.iloc[:,0].mean(), df.iloc[:,0].std(), (df.iloc[:,0].std() / df.iloc[:,0].mean()) * 100
+    fig = px.histogram(df, x="LoD Measurement (copies/mL)", marginal="box", title="Descriptive Statistics for LoD Study")
+    st.plotly_chart(fig, use_container_width=True); st.subheader("Summary Statistics"); st.success(f"**Mean:** {mean:.2f} | **Std Dev:** {std:.2f} | **%CV:** {cv:.2f}%")
+    return None
+
+def run_control_charts_stat(key):
+    st.info("X-bar charts are used to monitor the stability and variability of a process over time (e.g., daily controls).")
+    fig = run_control_charts(key); st.plotly_chart(fig, use_container_width=True); st.warning("**Insight:** A clear upward shift is detected around subgroup 15, indicating a special cause of variation requires investigation.")
+    return None
     
+def run_kaplan_meier_stat(key):
+    st.info("Survival analysis is used to estimate the shelf-life of a product by modeling time-to-failure data.")
+    time_to_failure = np.random.weibull(2, 50) * 24; observed = np.random.binomial(1, 0.8, 50); df = pd.DataFrame({'Months': time_to_failure, 'Observed': observed}).sort_values(by='Months')
+    at_risk = len(df); survival_prob = []
+    for i, row in df.iterrows():
+        survival = (at_risk - 1) / at_risk if row['Observed'] == 1 else 1; at_risk -= 1; survival_prob.append(survival)
+    df['Survival'] = np.cumprod(survival_prob)
+    fig = px.line(df, x='Months', y='Survival', title="Kaplan-Meier Survival Plot for Shelf-Life", markers=True); fig.update_yaxes(range=[0, 1.05]); 
+    st.plotly_chart(fig, use_container_width=True); st.subheader("Study Conclusion"); st.markdown("**Conclusion:** The estimated median shelf-life (time to 50% survival) is approximately 21 months.")
+    return None
+
+def run_monte_carlo_stat(key):
+    st.info("Monte Carlo simulation runs thousands of 'what-if' scenarios on a project plan to forecast a probabilistic completion date.")
+    n_sims = 5000; task1, task2, task3 = np.random.triangular(8,10,15,n_sims), np.random.triangular(15,20,30,n_sims), np.random.triangular(5,8,12,n_sims)
+    total_times = task1 + task2 + task3; p90 = np.percentile(total_times, 90)
+    fig = px.histogram(total_times, nbins=50, title="Monte Carlo Simulation of V&V Plan Duration"); fig.add_vline(x=p90, line_dash="dash", line_color="red", annotation_text=f"P90 = {p90:.1f} days")
+    st.plotly_chart(fig, use_container_width=True); st.subheader("Risk-Adjusted Planning"); st.error(f"**Conclusion:** While the 'most likely' duration is ~38 days, there is a 10% chance the project will take **{p90:.1f} days or longer**. This P90 value should be used for risk-adjusted planning.")
+    return None
+
 # --- PAGE RENDERING FUNCTIONS ---
 
 def render_main_page():
@@ -200,7 +248,6 @@ def render_quality_management_page():
         with st.container(border=True):
             st.markdown("**IEC 62304 Software Safety Classification**")
             risk_df = get_software_risk_data()
-            # FIX: Use Styler.map instead of the deprecated Styler.applymap
             def classify_color(cls):
                 if cls == "Class C": return "background-color: #FF7F7F"
                 if cls == "Class B": return "background-color: #FFD700"
@@ -216,6 +263,19 @@ def render_quality_management_page():
             st.checkbox("E-Signatures (11.200a)", value=False, disabled=True)
             st.error("Gap identified in E-Signature implementation, which must be remediated before the system can be considered Part 11 compliant.")
 
+# --- THE FIX: The missing page function is now included ---
+def render_stats_page():
+    st.title("📐 5. Advanced Statistical Methods Workbench")
+    st.markdown("This interactive workbench demonstrates proficiency in the specific statistical methods required for robust data analysis in a regulated V&V environment.")
+    st.markdown("---")
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["ANOVA / t-tests", "Regression Analysis", "Descriptive Stats", "Control Charts (SPC)", "Kaplan-Meier (Stability)", "Monte Carlo Simulation"])
+    with tab1: render_metric_card("Performance Comparison", "", lambda k: run_anova_ttest(k), "", key="anova")
+    with tab2: render_metric_card("Risk-to-Failure Correlation", "", lambda k: run_regression_analysis_stat(k), "", key="regr")
+    with tab3: render_metric_card("Assay Performance", "", lambda k: run_descriptive_stats_stat(k), "", key="desc")
+    with tab4: render_metric_card("Process Monitoring", "", lambda k: run_control_charts_stat(k), "", key="spc")
+    with tab5: render_metric_card("Shelf-Life & Stability", "", lambda k: run_kaplan_meier_stat(k), "", key="km")
+    with tab6: render_metric_card("Project Timeline Risk", "", lambda k: run_monte_carlo_stat(k), "", key="mc")
+
 # --- SIDEBAR NAVIGATION AND PAGE ROUTING ---
 PAGES = {
     "Executive Summary": render_main_page,
@@ -223,6 +283,7 @@ PAGES = {
     "2. Method & Process Validation": render_method_validation_page,
     "3. Execution Monitoring & SPC": render_execution_monitoring_page,
     "4. Project & Quality Management": render_quality_management_page,
+    "5. Advanced Statistical Methods": render_stats_page, # <-- RESTORED
 }
 
 st.sidebar.title("Navigation")
