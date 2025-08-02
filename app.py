@@ -1,4 +1,4 @@
-# app.py (Final, Monolithic, World-Class Version with All Enhancements)
+# app.py (Final, Monolithic, World-Class Version with ALL Content and Enhancements)
 
 import streamlit as st
 import pandas as pd
@@ -37,7 +37,7 @@ def render_metric_card(title, description, viz_function, insight, reg_context, k
             st.plotly_chart(fig, use_container_width=True)
         st.success(f"**Actionable Insight:** {insight}")
 
-# --- VISUALIZATION & DATA GENERATORS ---
+# --- VISUALIZATION & DATA GENERATORS (Existing World-Class Functions) ---
 
 def create_rtm_data_editor(key):
     df = pd.DataFrame([
@@ -135,137 +135,69 @@ def plot_rft_gauge(key):
     fig = go.Figure(go.Indicator(mode = "gauge+number", value = 82, title = {'text': "Right-First-Time Protocol Execution"}, gauge = {'axis': {'range': [None, 100]}, 'bar': {'color': "cornflowerblue"}})); return fig
 
 def run_anova_ttest_enhanced(key):
-    st.info("Used to determine if there is a statistically significant difference between groups (e.g., reagent lots, instruments, or operators). This is fundamental for method transfer and comparability studies.")
-    st.warning("**Regulatory Context:** FDA's guidance on Comparability Protocols; ISO 13485:2016, Section 7.5.6 (Validation of processes for production and service provision)")
-
-    col1, col2 = st.columns([1,2])
+    st.info("Used to determine if there is a statistically significant difference between groups (e.g., reagent lots). This is fundamental for method transfer and comparability studies.")
+    st.warning("**Regulatory Context:** FDA's guidance on Comparability Protocols; ISO 13485:2016, Section 7.5.6")
+    col1, col2 = st.columns([1,2]);
     with col1:
-        n_samples = st.slider("Samples per Group", 10, 100, 30, key=f"anova_n_{key}")
-        mean_shift = st.slider("Simulated Mean Shift in Lot B", 0.0, 5.0, 0.5, 0.1, key=f"anova_shift_{key}")
-        std_dev = st.slider("Group Standard Deviation", 0.5, 5.0, 2.0, 0.1, key=f"anova_std_{key}")
-    
-    group_a = np.random.normal(10, std_dev, n_samples)
-    group_b = np.random.normal(10 + mean_shift, std_dev, n_samples)
+        n_samples = st.slider("Samples per Group", 10, 100, 30, key=f"anova_n_{key}"); mean_shift = st.slider("Simulated Mean Shift in Lot B", 0.0, 5.0, 0.5, 0.1, key=f"anova_shift_{key}"); std_dev = st.slider("Group Standard Deviation", 0.5, 5.0, 2.0, 0.1, key=f"anova_std_{key}")
+    group_a = np.random.normal(10, std_dev, n_samples); group_b = np.random.normal(10 + mean_shift, std_dev, n_samples)
     df = pd.melt(pd.DataFrame({'Lot A': group_a, 'Lot B': group_b}), var_name='Group', value_name='Measurement')
-    
     with col2:
-        fig = px.box(df, x='Group', y='Measurement', title="Performance Comparison with Box & Violin Plots", points='all')
-        fig.add_trace(go.Violin(x=df['Group'], y=df['Measurement'], box_visible=False, line_color='rgba(0,0,0,0)', fillcolor='rgba(0,0,0,0)', points=False, name='Distribution'))
-        st.plotly_chart(fig, use_container_width=True)
-    
-    t_stat, p_value = stats.ttest_ind(group_a, group_b)
-    st.subheader("Statistical Interpretation")
-    if p_value < 0.05:
-        st.error(f"**Actionable Insight:** The difference between lots is statistically significant (p-value = {p_value:.4f}). Action: An investigation is required. Lot B cannot be considered comparable to Lot A based on this data.")
-    else:
-        st.success(f"**Actionable Insight:** No statistically significant difference was detected (p-value = {p_value:.4f}). The lots are considered comparable, and the method transfer can proceed.")
+        fig = px.box(df, x='Group', y='Measurement', title="Performance Comparison with Box & Violin Plots", points='all'); fig.add_trace(go.Violin(x=df['Group'], y=df['Measurement'], box_visible=False, line_color='rgba(0,0,0,0)', fillcolor='rgba(0,0,0,0)', points=False, name='Distribution')); st.plotly_chart(fig, use_container_width=True)
+    t_stat, p_value = stats.ttest_ind(group_a, group_b); st.subheader("Statistical Interpretation")
+    if p_value < 0.05: st.error(f"**Actionable Insight:** The difference is statistically significant (p-value = {p_value:.4f}). Action: An investigation is required. Lot B cannot be considered comparable.")
+    else: st.success(f"**Actionable Insight:** No statistically significant difference was detected (p-value = {p_value:.4f}). The lots are comparable.")
     return None
 
 def run_regression_analysis_stat_enhanced(key):
-    st.info("Linear regression is critical for verifying linearity, calculating bias, and assessing correlation. The statsmodels output provides the detailed metrics (R², p-values, coefficients, confidence intervals) required for a regulatory submission.")
-    st.warning("**Regulatory Context:** CLSI EP06 (Evaluation of the Linearity of Quantitative Measurement Procedures); FDA Guidance on Bioanalytical Method Validation")
-
-    col1, col2 = st.columns([1,2])
+    st.info("Linear regression is critical for verifying linearity and assessing correlation. The statsmodels output provides the detailed metrics required for a regulatory submission."); st.warning("**Regulatory Context:** CLSI EP06; FDA Guidance on Bioanalytical Method Validation")
+    col1, col2 = st.columns([1,2]);
     with col1:
-        noise = st.slider("Measurement Noise (Std Dev)", 0, 50, 15, key=f"regr_noise_{key}")
-        bias = st.slider("Systematic Bias", -20, 20, 5, key=f"regr_bias_{key}")
-    
-    conc = np.linspace(0, 400, 15); signal = 50 + 2.5 * conc + bias + np.random.normal(0, noise, 15)
-    df = pd.DataFrame({'Concentration': conc, 'Signal': signal})
-    
+        noise = st.slider("Measurement Noise (Std Dev)", 0, 50, 15, key=f"regr_noise_{key}"); bias = st.slider("Systematic Bias", -20, 20, 5, key=f"regr_bias_{key}")
+    conc = np.linspace(0, 400, 15); signal = 50 + 2.5 * conc + bias + np.random.normal(0, noise, 15); df = pd.DataFrame({'Concentration': conc, 'Signal': signal})
     with col2:
-        fig = px.scatter(df, x='Concentration', y='Signal', trendline='ols', title="Assay Performance Regression (Linearity)")
-        st.plotly_chart(fig, use_container_width=True)
-    
-    X = sm.add_constant(df['Concentration']); model = sm.OLS(df['Signal'], X).fit()
-    st.subheader("Statistical Interpretation (Statsmodels OLS Summary)")
-    st.code(f"{model.summary()}")
-    st.success(f"**Actionable Insight:** The R-squared value of {model.rsquared:.3f} confirms excellent linearity. The p-value for the Concentration coefficient is < 0.001, proving a significant positive relationship. The Intercept of {model.params['const']:.2f} represents the assay's background signal and can be used to inform blank correction strategies.")
+        fig = px.scatter(df, x='Concentration', y='Signal', trendline='ols', title="Assay Performance Regression (Linearity)"); st.plotly_chart(fig, use_container_width=True)
+    X = sm.add_constant(df['Concentration']); model = sm.OLS(df['Signal'], X).fit(); st.subheader("Statistical Interpretation (Statsmodels OLS Summary)"); st.code(f"{model.summary()}"); st.success(f"**Actionable Insight:** The R-squared value of {model.rsquared:.3f} confirms excellent linearity. The p-value for the Concentration coefficient is < 0.001, proving a significant positive relationship.")
     return None
 
 def run_descriptive_stats_stat_enhanced(key):
-    st.info("The foundational analysis for any analytical validation study (e.g., Limit of Detection, Limit of Quantitation, Precision). It quantifies the central tendency and dispersion of the data.")
-    st.warning("**Regulatory Context:** CLSI EP17 (Evaluation of Detection Capability); CLSI EP05-A3 (Evaluation of Precision of Quantitative Measurement Procedures)")
-    
-    data = np.random.normal(50, 2, 150)
-    df = pd.DataFrame(data, columns=["value"])
-    fig = px.histogram(df, x="value", marginal="box", nbins=20, title="Descriptive Statistics for Limit of Detection (LoD) Study")
-    
+    st.info("The foundational analysis for any analytical validation study (e.g., LoD, Precision)."); st.warning("**Regulatory Context:** CLSI EP17 (Detection Capability); CLSI EP05-A3 (Precision)")
+    data = np.random.normal(50, 2, 150); df = pd.DataFrame(data, columns=["value"]); fig = px.histogram(df, x="value", marginal="box", nbins=20, title="Descriptive Statistics for Limit of Detection (LoD) Study")
     mean, std, cv = np.mean(data), np.std(data, ddof=1), (np.std(data, ddof=1) / np.mean(data)) * 100
-    ci_95 = stats.t.interval(0.95, len(data)-1, loc=mean, scale=stats.sem(data))
-    
-    st.plotly_chart(fig, use_container_width=True)
-    st.subheader("Summary Statistics")
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Mean", f"{mean:.2f}")
-    col2.metric("Std Dev", f"{std:.2f}")
-    col3.metric("%CV", f"{cv:.2f}%")
-    col4.metric("95% CI for Mean", f"{ci_95[0]:.2f} - {ci_95[1]:.2f}")
+    ci_95 = stats.t.interval(0.95, len(data)-1, loc=mean, scale=stats.sem(data)); st.plotly_chart(fig, use_container_width=True); st.subheader("Summary Statistics")
+    col1, col2, col3, col4 = st.columns(4); col1.metric("Mean", f"{mean:.2f}"); col2.metric("Std Dev", f"{std:.2f}"); col3.metric("%CV", f"{cv:.2f}%"); col4.metric("95% CI for Mean", f"{ci_95[0]:.2f} - {ci_95[1]:.2f}")
     st.success("**Actionable Insight:** The low %CV and tight confidence interval provide high confidence that the LoD is reliably at 50 copies/mL, supporting the product claim for the 510(k) submission.")
     return None
 
 def run_control_charts_stat_enhanced(key):
-    st.info("X-bar & R-charts are a pair of Shewhart charts used to monitor the mean (X-bar) and variability (R-chart) of a process when data is collected in rational subgroups (e.g., 5 measurements per batch).")
-    st.warning("**Regulatory Context:** FDA 21 CFR 820.250 (Statistical Techniques); ISO TR 10017 (Guidance on statistical techniques for ISO 9001:2000)")
-    
-    data = [np.random.normal(10, 0.5, 5) for _ in range(20)]
-    process_shift = st.checkbox("Simulate a Process Shift", key=f"spc_shift_{key}")
-    if process_shift:
-        data[15:] = [np.random.normal(10.8, 0.5, 5) for _ in range(5)]
-        
+    st.info("X-bar & R-charts are used to monitor the mean (X-bar) and variability (R-chart) of a process when data is collected in rational subgroups (e.g., 5 measurements per batch)."); st.warning("**Regulatory Context:** FDA 21 CFR 820.250 (Statistical Techniques); ISO TR 10017")
+    data = [np.random.normal(10, 0.5, 5) for _ in range(20)]; process_shift = st.checkbox("Simulate a Process Shift", key=f"spc_shift_{key}")
+    if process_shift: data[15:] = [np.random.normal(10.8, 0.5, 5) for _ in range(5)]
     df = pd.DataFrame(data, columns=[f'm{i}' for i in range(1,6)]); df['mean'] = df.mean(axis=1); df['range'] = df.max(axis=1) - df.min(axis=1)
     x_bar_cl = df['mean'].mean(); x_bar_a2 = 0.577; x_bar_ucl = x_bar_cl + x_bar_a2 * df['range'].mean(); x_bar_lcl = x_bar_cl - x_bar_a2 * df['range'].mean()
     r_cl = df['range'].mean(); r_d4 = 2.114; r_ucl = r_d4 * r_cl
-    
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1, subplot_titles=("X-bar Chart (Process Mean)", "R-Chart (Process Variability)"))
-    fig.add_trace(go.Scatter(x=df.index, y=df['mean'], name='Subgroup Mean', mode='lines+markers'), row=1, col=1)
-    fig.add_hline(y=x_bar_cl, line_dash="dash", line_color="green", annotation_text="CL", row=1, col=1)
-    fig.add_hline(y=x_bar_ucl, line_dash="dot", line_color="red", annotation_text="UCL", row=1, col=1)
-    fig.add_hline(y=x_bar_lcl, line_dash="dot", line_color="red", annotation_text="LCL", row=1, col=1)
-    
-    fig.add_trace(go.Scatter(x=df.index, y=df['range'], name='Subgroup Range', mode='lines+markers', line=dict(color='orange')), row=2, col=1)
-    fig.add_hline(y=r_cl, line_dash="dash", line_color="green", annotation_text="CL", row=2, col=1)
-    fig.add_hline(y=r_ucl, line_dash="dot", line_color="red", annotation_text="UCL", row=2, col=1)
-    
-    fig.update_layout(height=600, title_text="X-bar and R Control Charts")
-    st.plotly_chart(fig, use_container_width=True)
-    if process_shift:
-        st.warning("**Actionable Insight:** A clear upward shift is detected in the X-bar chart starting at subgroup 15, while the R-chart remains stable. This indicates a special cause has shifted the process mean without affecting its variability. This requires an immediate investigation into potential assignable causes (e.g., new reagent lot, instrument calibration drift).")
-    else:
-        st.success("**Actionable Insight:** The process is in a state of statistical control. Both the mean and variability are stable and predictable, providing a solid baseline for validation.")
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1, subplot_titles=("X-bar Chart (Process Mean)", "R-Chart (Process Variability)")); fig.add_trace(go.Scatter(x=df.index, y=df['mean'], name='Subgroup Mean', mode='lines+markers'), row=1, col=1); fig.add_hline(y=x_bar_cl, line_dash="dash", line_color="green", annotation_text="CL", row=1, col=1); fig.add_hline(y=x_bar_ucl, line_dash="dot", line_color="red", annotation_text="UCL", row=1, col=1); fig.add_hline(y=x_bar_lcl, line_dash="dot", line_color="red", annotation_text="LCL", row=1, col=1)
+    fig.add_trace(go.Scatter(x=df.index, y=df['range'], name='Subgroup Range', mode='lines+markers', line=dict(color='orange')), row=2, col=1); fig.add_hline(y=r_cl, line_dash="dash", line_color="green", annotation_text="CL", row=2, col=1); fig.add_hline(y=r_ucl, line_dash="dot", line_color="red", annotation_text="UCL", row=2, col=1)
+    fig.update_layout(height=600, title_text="X-bar and R Control Charts"); st.plotly_chart(fig, use_container_width=True)
+    if process_shift: st.warning("**Actionable Insight:** A clear upward shift is detected in the X-bar chart starting at subgroup 15, while the R-chart remains stable. This indicates a special cause has shifted the process mean without affecting its variability. This requires an immediate investigation.")
+    else: st.success("**Actionable Insight:** The process is in a state of statistical control. Both the mean and variability are stable and predictable, providing a solid baseline for validation.")
     return None
     
 def run_kaplan_meier_stat_enhanced(key):
-    st.info("Survival analysis is used to estimate the shelf-life of a product by modeling time-to-failure data, especially when some samples have not failed by the end of the study (censored data).")
-    st.warning("**Regulatory Context:** ICH Q1E (Evaluation of Stability Data); FDA Guidance for Industry: Q1A(R2) Stability Testing of New Drug Substances and Products")
-    
-    time_to_failure = np.random.weibull(2, 50) * 24; observed = np.random.binomial(1, 0.8, 50)
-    df = pd.DataFrame({'Months': time_to_failure, 'Status': ['Failed' if o==1 else 'Censored' for o in observed]})
-    
-    fig = px.ecdf(df, x="Months", color="Status", ecdfmode="survival", title="Kaplan-Meier Survival Plot for Shelf-Life Validation")
-    fig.add_hline(y=0.5, line_dash="dash", line_color="red", annotation_text="Median Survival")
-    
-    st.plotly_chart(fig, use_container_width=True)
-    st.subheader("Study Conclusion")
-    st.success("**Actionable Insight:** The survival curve demonstrates the probability of a unit remaining stable over time. The point where the curve crosses the 50% line provides the estimated median shelf-life. 'Censored' data points (units that survived the entire study) are critical for an accurate model and must be included in the analysis to avoid underestimating the shelf-life.")
+    st.info("Survival analysis is used to estimate the shelf-life of a product by modeling time-to-failure data, especially when some samples have not failed by the end of the study (censored data)."); st.warning("**Regulatory Context:** ICH Q1E (Evaluation of Stability Data); FDA Guidance: Q1A(R2)")
+    time_to_failure = np.random.weibull(2, 50) * 24; observed = np.random.binomial(1, 0.8, 50); df = pd.DataFrame({'Months': time_to_failure, 'Status': ['Failed' if o==1 else 'Censored' for o in observed]})
+    fig = px.ecdf(df, x="Months", color="Status", ecdfmode="survival", title="Kaplan-Meier Survival Plot for Shelf-Life Validation"); fig.add_hline(y=0.5, line_dash="dash", line_color="red", annotation_text="Median Survival"); st.plotly_chart(fig, use_container_width=True); st.subheader("Study Conclusion")
+    st.success("**Actionable Insight:** The survival curve demonstrates the probability of a unit remaining stable over time. The point where the curve crosses the 50% line provides the estimated median shelf-life. 'Censored' data points are critical for an accurate model and must be included in the analysis.")
     return None
 
 def run_monte_carlo_stat_enhanced(key):
-    st.info("Monte Carlo simulation runs thousands of 'what-if' scenarios on a project plan with uncertain task durations to provide a probabilistic forecast, which is superior to a single-point estimate.")
-    st.warning("**Regulatory Context:** While not a direct compliance tool, this is a best practice in project management aligned with ISO 13485's emphasis on planning and risk management.")
-    
+    st.info("Monte Carlo simulation runs thousands of 'what-if' scenarios on a project plan with uncertain task durations to provide a probabilistic forecast."); st.warning("**Regulatory Context:** Aligned with risk-based planning principles in ISO 13485 and Project Management Body of Knowledge (PMBOK).")
     n_sims = st.slider("Number of Simulations", 1000, 10000, 5000, key=f"mc_sims_{key}")
-    task1, task2, task3 = np.random.triangular(8,10,15,n_sims), np.random.triangular(15,20,30,n_sims), np.random.triangular(5,8,12,n_sims)
-    total_times = task1 + task2 + task3
+    task1, task2, task3 = np.random.triangular(8,10,15,n_sims), np.random.triangular(15,20,30,n_sims), np.random.triangular(5,8,12,n_sims); total_times = task1 + task2 + task3
     p50 = np.percentile(total_times, 50); p90 = np.percentile(total_times, 90)
-    
-    fig = px.histogram(total_times, nbins=50, title="Monte Carlo Simulation of V&V Plan Duration")
-    fig.add_vline(x=p50, line_dash="dash", line_color="green", annotation_text=f"P50 (Median) = {p50:.1f} days")
-    fig.add_vline(x=p90, line_dash="dash", line_color="red", annotation_text=f"P90 (High Confidence) = {p90:.1f} days")
-    
-    st.plotly_chart(fig, use_container_width=True)
-    st.subheader("Risk-Adjusted Planning")
-    st.error(f"**Actionable Insight:** While the median (50% probability) completion time is {p50:.1f} days, there is a 10% chance the project will take **{p90:.1f} days or longer**. For high-stakes projects, the P90 estimate must be communicated to the PMO as the commitment date to account for risk and manage stakeholder expectations.")
+    fig = px.histogram(total_times, nbins=50, title="Monte Carlo Simulation of V&V Plan Duration"); fig.add_vline(x=p50, line_dash="dash", line_color="green", annotation_text=f"P50 (Median) = {p50:.1f} days"); fig.add_vline(x=p90, line_dash="dash", line_color="red", annotation_text=f"P90 (High Confidence) = {p90:.1f} days")
+    st.plotly_chart(fig, use_container_width=True); st.subheader("Risk-Adjusted Planning")
+    st.error(f"**Actionable Insight:** While the median completion time is {p50:.1f} days, there is a 10% chance the project will take **{p90:.1f} days or longer**. The P90 estimate must be communicated to the PMO as the commitment date to account for risk.")
     return None
 
 def create_v_model_figure(key=None):
@@ -281,7 +213,7 @@ def render_main_page():
     st.markdown("A definitive showcase of data-driven leadership in a regulated GxP environment.")
     st.markdown("---")
     render_director_briefing("Portfolio Objective", "This interactive application translates the core responsibilities of V&V leadership into a suite of high-density dashboards. It is designed to be an overwhelming and undeniable demonstration of the strategic, technical, and quality systems expertise required for a senior leadership role in the medical device industry.", "ISO 13485, ISO 14971, IEC 62304, 21 CFR 820, 21 CFR Part 11, CLSI Guidelines", "A well-led V&V function directly accelerates time-to-market, reduces compliance risk, lowers the cost of poor quality (COPQ), and builds a culture of data-driven excellence.")
-    st.info("Please use the navigation sidebar on the left to explore each of the five core competency areas.")
+    st.info("Please use the navigation sidebar on the left to explore each of the six core competency areas.")
 
 def render_design_controls_page():
     st.title("🏛️ 1. Design Controls, Planning & Risk Management")
@@ -361,6 +293,96 @@ def render_stats_page():
             st.subheader("Project Timeline Risk (Monte Carlo)")
             run_monte_carlo_stat_enhanced("mc")
 
+# --- THE FIX: NEW STRATEGIC COMMAND PAGE IS ADDED ---
+def render_strategic_command_page():
+    st.title("👑 6. Strategic Command & Control")
+    st.markdown("---")
+    render_director_briefing("Executive-Level V&V Leadership",
+        "A true V&V leader operates at the intersection of technical execution, financial reality, and cross-functional strategy. This command center demonstrates the tools and mindset required to run V&V not as a cost center, but as a strategic business partner that drives value and mitigates enterprise-level risk.",
+        "ISO 13485 Section 5 (Management Responsibility) & 6 (Resource Management)",
+        "Aligns V&V department with corporate financial goals, improves resource allocation, de-risks regulatory pathways, and enables scalable growth through effective talent management and partner oversight."
+    )
+
+    tab1, tab2, tab3, tab4 = st.tabs(["💰 V&V Cost & ROI Forecaster", "🌐 Regulatory & Partner Dashboard", "🧑‍🔬 Team Competency Matrix", "🔄 ECO Impact Assessment"])
+
+    with tab1:
+        st.header("V&V Project Cost & ROI Forecaster")
+        st.info("Translate technical plans into financial forecasts to justify resource allocation and demonstrate value.")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.subheader("Inputs")
+            proj = st.selectbox("Select Project", ["ImmunoPro-A (510k)", "MolecularDX-2 (PMA)"])
+            av_weeks = st.slider("Analytical V&V (Weeks)", 1, 20, 8)
+            sv_weeks = st.slider("System V&V (Weeks)", 1, 20, 10)
+            sw_weeks = st.slider("Software V&V (Weeks)", 1, 20, 6)
+            cs_weeks = st.slider("Clinical Support (Weeks)", 1, 20, 12)
+            fte_cost = st.number_input("Cost per FTE-Week ($)", value=4000)
+            reagent_cost = st.number_input("Cost of Reagents per Week ($)", value=7500)
+        with col2:
+            st.subheader("Forecasted V&V Budget")
+            total_weeks = av_weeks + sv_weeks + sw_weeks + cs_weeks
+            personnel_cost = total_weeks * fte_cost * 2 # Assume 2 FTEs
+            reagent_total_cost = (av_weeks + sv_weeks) * reagent_cost
+            total_budget = personnel_cost + reagent_total_cost
+            
+            st.metric("Total Forecasted V&V Budget", f"${total_budget:,.0f}")
+            
+            fig = px.pie(values=[personnel_cost, reagent_total_cost], names=['Personnel', 'Reagents & Consumables'], title='V&V Budget Allocation', hole=0.4)
+            st.plotly_chart(fig, use_container_width=True)
+            
+    with tab2:
+        st.header("Regulatory Strategy & External Partner Dashboard")
+        st.info("Dynamically align V&V evidence with submission requirements and manage external vendor performance.")
+        sub_type = st.selectbox("Select Submission Type", ["FDA 510(k)", "FDA PMA", "EU IVDR Class D"])
+        with st.container(border=True):
+            st.subheader(f"Required Evidence Checklist for: {sub_type}")
+            st.checkbox("Analytical Performance Studies (LoD, Precision, etc.)", value=True, disabled=True)
+            if "510(k)" in sub_type: st.checkbox("Substantial Equivalence Testing Data", value=True, disabled=True)
+            if "PMA" in sub_type or "IVDR" in sub_type: st.checkbox("Clinical Performance / Validation Data Support", value=True, disabled=True); st.checkbox("Stability & Robustness Data (Extended)", value=True, disabled=True)
+            if "IVDR" in sub_type: st.checkbox("Scientific Validity Report", value=True, disabled=True)
+        
+        st.subheader("CRO Partner Performance Oversight")
+        df = pd.DataFrame({'Metric': ['On-Time Delivery', 'Deviation Rate', 'Data Quality Score'], 'Internal Team': [95, 2.1, 98.5], 'CRO Partner A': [88, 4.5, 96.2]})
+        fig = px.bar(df, x='Metric', y=['Internal Team', 'CRO Partner A'], barmode='group', title="Internal vs. CRO Performance")
+        st.plotly_chart(fig, use_container_width=True)
+        st.error("**Actionable Insight:** CRO Partner A is underperforming on OTD and has a higher deviation rate. Schedule a Quarterly Business Review (QBR) to address these performance gaps.")
+
+    with tab3:
+        st.header("Team Competency & Development Matrix")
+        st.info("Move beyond simple training records to proactive talent management and strategic skill development.")
+        skills = ['qPCR Method Validation', 'ELISA Development', 'GAMP 5 CSV', 'Statistical Analysis (Python)', 'ISO 14971 Risk Management']
+        team = ['Alice', 'Bob', 'Charlie', 'Diana']
+        data = np.random.randint(1, 4, size=(len(team), len(skills)))
+        df = pd.DataFrame(data, index=team, columns=skills)
+
+        required_skills = st.multiselect("Filter for Required Project Skills", options=skills, default=['qPCR Method Validation', 'ISO 14971 Risk Management'])
+        
+        def highlight_skills(s):
+            return ['background-color: yellow' if s.name in required_skills else '' for i in s]
+        
+        st.dataframe(df.style.apply(highlight_skills, axis=1).background_gradient(cmap='RdYlGn', vmin=1, vmax=3), use_container_width=True)
+        st.success("**Actionable Insight:** For the new molecular project, the team has strong qPCR skills. However, there is a critical gap as no one is an expert (Level 3) in ISO 14971. Action: Prioritize risk management training for Bob and Diana this quarter.")
+
+    with tab4:
+        st.header("Interactive ECO Impact Assessment Tool")
+        st.info("A logic-driven tool to ensure a consistent, risk-based approach to V&V for post-market changes.")
+        change_type = st.selectbox("Select Type of Engineering Change Order (ECO)", ["Reagent Formulation", "Software (Minor UI)", "Software (Algorithm)", "Supplier of Critical Component"])
+        
+        with st.container(border=True):
+            st.subheader("Minimum Required V&V Activities")
+            if change_type == "Reagent Formulation":
+                st.error("**Full V&V Suite Required:** Analytical Performance (Precision, LoD, Linearity), Stability Studies, Clinical Bridging Study.")
+                st.markdown("**Rationale:** Change directly impacts assay performance and patient results. High risk.")
+            elif change_type == "Software (Minor UI)":
+                st.success("**Limited V&V Required:** Software Regression Testing, Usability Assessment.")
+                st.markdown("**Rationale:** Change does not impact the analytical algorithm. Low risk.")
+            elif change_type == "Software (Algorithm)":
+                st.error("**Full Software & Analytical V&V Required:** Full Software Validation Suite (per IEC 62304), Analytical Performance regression testing.")
+                st.markdown("**Rationale:** Change to the core algorithm directly impacts patient results. Highest software risk.")
+            elif change_type == "Supplier of Critical Component":
+                st.warning("**Targeted V&V Required:** Component Qualification, System-level performance regression testing, limited stability run.")
+                st.markdown("**Rationale:** Change introduces a new variable into the system. Medium risk requiring confirmation that system performance is unaffected.")
+
 # --- SIDEBAR NAVIGATION AND PAGE ROUTING ---
 PAGES = {
     "Executive Summary": render_main_page,
@@ -369,6 +391,7 @@ PAGES = {
     "3. Execution Monitoring & SPC": render_execution_monitoring_page,
     "4. Project & Quality Management": render_quality_management_page,
     "5. Advanced Statistical Methods": render_stats_page,
+    "6. Strategic Command & Control": render_strategic_command_page,
 }
 
 st.sidebar.title("Navigation")
