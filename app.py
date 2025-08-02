@@ -182,7 +182,7 @@ def run_control_charts_stat_enhanced(key):
     if process_shift: st.warning("**Actionable Insight:** A clear upward shift is detected in the X-bar chart starting at subgroup 15, while the R-chart remains stable. This indicates a special cause has shifted the process mean without affecting its variability. This requires an immediate investigation.")
     else: st.success("**Actionable Insight:** The process is in a state of statistical control. Both the mean and variability are stable and predictable, providing a solid baseline for validation.")
     return None
-    
+
 def run_kaplan_meier_stat_enhanced(key):
     st.info("Survival analysis is used to estimate the shelf-life of a product by modeling time-to-failure data, especially when some samples have not failed by the end of the study (censored data)."); st.warning("**Regulatory Context:** ICH Q1E (Evaluation of Stability Data); FDA Guidance: Q1A(R2)")
     time_to_failure = np.random.weibull(2, 50) * 24; observed = np.random.binomial(1, 0.8, 50); df = pd.DataFrame({'Months': time_to_failure, 'Status': ['Failed' if o==1 else 'Censored' for o in observed]})
@@ -206,7 +206,6 @@ def create_v_model_figure(key=None):
     for i in range(4): fig.add_shape(type="line", x0=4-i, y0=1+i, x1=5+i, y1=1+i, line=dict(color="grey", width=1, dash="dot"))
     fig.update_layout(title_text=None, showlegend=False, xaxis=dict(showticklabels=False, zeroline=False, showgrid=False), yaxis=dict(showticklabels=False, zeroline=False, showgrid=False)); return fig
 
-# --- 10+/10 UPGRADE: NEW DATA GENERATOR FOR POST-MARKET COMPLAINTS ---
 @st.cache_data
 def get_complaint_data():
     """Generates a realistic, cached DataFrame of simulated complaint data."""
@@ -216,7 +215,6 @@ def get_complaint_data():
     regions = ["AL", "CA", "TX", "FL", "NY", "IL", "PA", "OH", "GA", "NC"]
     lots = ["A2201-A", "A2201-B", "A2301-A", "A2301-B"]
     
-    # Create baseline data
     n_complaints = 300
     df = pd.DataFrame({
         "Complaint_ID": [f"C-{i+1:04d}" for i in range(n_complaints)],
@@ -227,7 +225,6 @@ def get_complaint_data():
         "Severity": np.random.choice(["Low", "Medium", "High"], n_complaints, p=[0.6, 0.3, 0.1])
     })
     
-    # Inject a signal for the CAPA feeder
     n_signal = 15
     signal_df = pd.DataFrame({
         "Complaint_ID": [f"C-{i+301:04d}" for i in range(n_signal)],
@@ -254,6 +251,20 @@ def render_design_controls_page():
     st.title("🏛️ 1. Design Controls, Planning & Risk Management")
     st.markdown("---")
     render_director_briefing("The Design History File (DHF) as a Strategic Asset", "The DHF is the compilation of records that demonstrates the design was developed in accordance with the design plan and regulatory requirements. An effective V&V leader architects the DHF from day one.", "FDA 21 CFR 820.30 (Design Controls), ISO 13485:2016 (Section 7.3)", "Ensures audit readiness and provides a clear, defensible story of product development to regulatory bodies, accelerating submission review times.")
+    
+    with st.container(border=True):
+        st.subheader("The V-Model: A Framework for Compliant V&V")
+        st.markdown("The V-Model is the cornerstone of a structured V&V strategy, visually linking the design and development phases (left side) to the corresponding testing and validation phases (right side). This ensures that for every design input, there is a corresponding validation output, forming the basis of a complete and auditable Design History File (DHF).")
+        st.plotly_chart(create_v_model_figure(), use_container_width=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("#### **Left Side: Design & Development (Building it Right)**")
+            st.markdown("- **User Needs:** High-level goals from Marketing/customers.\n- **System Requirements:** Detailed functional/performance specs.\n- **Architecture:** High-level system design.\n- **Module Design:** Low-level detailed design.")
+        with col2:
+            st.markdown("#### **Right Side: Verification & Validation (Proving We Built the Right Thing)**")
+            st.markdown("- **Unit Test:** Verifies individual code modules.\n- **Integration Test:** Verifies that modules work together.\n- **System V&V:** Verifies the complete system against requirements.\n- **User Acceptance Testing (UAT):** Validates the system against user needs.")
+        st.success("**Actionable Insight:** By enforcing this model, a V&V leader prevents late-stage failures, ensures no requirements are left untested, and provides a clear, defensible V&V narrative to auditors. The horizontal lines represent the core of traceability.")
+    
     render_metric_card("Requirements Traceability Matrix (RTM)", "The RTM is the backbone of the DHF, providing an auditable link between user needs, design inputs, V&V activities, and risk controls.", create_rtm_data_editor, "The matrix view instantly flags critical gaps, such as the un-tested cross-reactivity requirement (URS-003), allowing for proactive mitigation before a design freeze.", "FDA 21 CFR 820.30(j) - Design History File (DHF)", key="rtm")
     render_metric_card("Product Risk Management (FMEA & Risk Matrix)", "A systematic process for identifying, analyzing, and mitigating potential failure modes. V&V activities are primary risk mitigations.", plot_risk_matrix, "The risk matrix clearly prioritizes 'False Negative' as the highest risk, ensuring that it receives the most V&V resources and attention. This is a key input for the V&V Master Plan.", "ISO 14971: Application of risk management to medical devices", key="fmea")
     render_metric_card("Design of Experiments (DOE/RSM)", "A powerful statistical tool used to efficiently characterize the product's design space and identify robust operating parameters.", plot_doe_rsm, "The Response Surface Methodology (RSM) plot indicates the assay's optimal performance is at ~32°C and a pH of 7.5. This data forms the basis for setting manufacturing specifications.", "FDA Guidance on Process Validation: General Principles and Practices", key="doe")
@@ -300,6 +311,52 @@ def render_quality_management_page():
             st.checkbox("Access Controls (11.10d)", value=True, disabled=True)
             st.checkbox("E-Signatures (11.200a)", value=False, disabled=True)
             st.error("Gap identified in E-Signature implementation.")
+    
+    st.markdown("---")
+    st.subheader("Advanced Software V&V & CSV Dashboard")
+    st.info("This section provides a detailed view of Computer System Validation (CSV) for GxP systems (like LIMS) and V&V for Software in a Medical Device (SiMD), covering key metrics and compliance with GAMP 5, IEC 62304, and modern cybersecurity standards.")
+
+    tab1, tab2, tab3 = st.tabs(["📊 Key Metrics & KPIs", "📋 GAMP 5 Compliance", "🛡️ Cybersecurity Posture"])
+    with tab1:
+        st.markdown("##### SiMD V&V Release-Readiness Metrics")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Requirements Coverage", "98.7%")
+            st.progress(0.987)
+        with col2:
+            st.metric("Test Case Pass Rate (System V&V)", "99.2%")
+            st.progress(0.992)
+        with col1:
+            st.metric("Defect Density (per KLOC)", "0.85", delta="-0.12", delta_color="inverse", help="Defects per 1,000 Lines of Code. Lower is better.")
+        with col2:
+            st.metric("Static Analysis Critical Warnings", "3", delta="2", delta_color="inverse", help="Number of critical issues found in automated code scans. Delta from previous build.")
+        st.success("**Actionable Insight:** The high requirements coverage and test pass rates indicate strong readiness for a design freeze. The low and decreasing defect density suggests improving code quality. The 3 remaining critical warnings must be adjudicated before final release.")
+    with tab2:
+        st.info("**GAMP 5** provides a risk-based framework for validating GxP computerized systems (e.g., lab equipment software, LIMS, eDMS). The category determines the validation rigor required.")
+        gamp_data = {
+            "System": ["Instrument Control SW", "LIMS", "Statistical Analysis SW", "eDMS"],
+            "GAMP 5 Category": ["Cat 4: Configured", "Cat 5: Custom", "Cat 3: Standard", "Cat 4: Configured"],
+            "Validation Approach": ["Full Validation of Configured Elements", "Full Prospective Validation", "Supplier Assessment & IQ/OQ", "Risk-Based Validation"],
+            "Status": ["In Progress", "Planning", "Complete", "Complete"]
+        }
+        df_gamp = pd.DataFrame(gamp_data)
+        def gamp_color(val):
+            color = "background-color: "
+            if val == "Cat 5: Custom": return color + "#FF7F7F" # Red
+            if val == "Cat 4: Configured": return color + "#FFD700" # Yellow
+            if val == "Cat 3: Standard": return color + "#90EE90" # Green
+            return ""
+        st.dataframe(df_gamp.style.map(gamp_color, subset=['GAMP 5 Category']), use_container_width=True, hide_index=True)
+        st.success("**Actionable Insight:** The LIMS system, as a GAMP 5 Category 5, requires a full prospective validation effort. This must be prioritized and resourced appropriately. The completed validation for the statistical software provides confidence in its use for regulatory analysis.")
+    with tab3:
+        st.info("A robust cybersecurity V&V strategy is non-negotiable for connected medical devices. This aligns with **FDA's Premarket Cybersecurity Guidance** and **AAMI TIR57**.")
+        st.markdown("##### Cybersecurity V&V Checklist")
+        st.checkbox("✅ Threat Modeling (STRIDE) Performed", value=True, disabled=True)
+        st.checkbox("✅ Secure Coding Policy in place & training complete", value=True, disabled=True)
+        st.checkbox("✅ Software Bill of Materials (SBOM) Generated & Reviewed", value=True, disabled=True)
+        st.checkbox("❌ Penetration Testing by Third-Party Vendor", value=False, disabled=True)
+        st.checkbox("✅ Vulnerability Scanning Integrated into CI/CD Pipeline", value=True, disabled=True)
+        st.error("**Actionable Insight:** A critical gap exists in third-party penetration testing. This is a major finding for any regulatory submission. **Action:** Immediately engage a qualified vendor to perform penetration testing before the final code freeze.")
 
 def render_stats_page():
     st.title("📐 5. Advanced Statistical Methods Workbench")
@@ -328,15 +385,10 @@ def render_stats_page():
             st.subheader("Project Timeline Risk (Monte Carlo)")
             run_monte_carlo_stat_enhanced("mc")
 
-# --- UPGRADE START: Director-level Strategic Command Page with Enhancements ---
 def render_strategic_command_page():
     st.title("👑 6. Strategic Command & Control")
     st.markdown("---")
-    render_director_briefing("Executive-Level V&V Leadership",
-        "A true V&V leader operates at the intersection of technical execution, financial reality, and cross-functional strategy. This command center demonstrates the tools and mindset required to run V&V not as a cost center, but as a strategic business partner that drives value and mitigates enterprise-level risk.",
-        "ISO 13485 Section 5 (Management Responsibility) & 6 (Resource Management)",
-        "Aligns V&V department with corporate financial goals, improves resource allocation, de-risks regulatory pathways, and enables scalable growth through effective talent management and partner oversight."
-    )
+    render_director_briefing("Executive-Level V&V Leadership", "A true V&V leader operates at the intersection of technical execution, financial reality, and cross-functional strategy. This command center demonstrates the tools and mindset required to run V&V not as a cost center, but as a strategic business partner that drives value and mitigates enterprise-level risk.", "ISO 13485 Section 5 (Management Responsibility) & 6 (Resource Management)", "Aligns V&V department with corporate financial goals, improves resource allocation, de-risks regulatory pathways, and enables scalable growth through effective talent management and partner oversight." )
 
     tab1, tab2, tab3, tab4 = st.tabs(["💰 V&V Cost & ROI Forecaster", "🌐 Regulatory & Partner Dashboard", "🧑‍🔬 Team Competency Matrix", "🔄 ECO Impact Assessment"])
 
@@ -347,8 +399,6 @@ def render_strategic_command_page():
         with col1:
             st.subheader("Inputs: Project Scope & Resources")
             proj = st.selectbox("Select Project", ["ImmunoPro-A (510k)", "MolecularDX-2 (PMA)", "CardioScreen-X (De Novo)"])
-            
-            # --- 10+/10 ENHANCEMENT: SCENARIO ANALYSIS ---
             scenario = st.radio("Select Resourcing Scenario", ["Internal Team", "CRO Outsource"], horizontal=True)
             
             if scenario == "Internal Team":
@@ -372,11 +422,9 @@ def render_strategic_command_page():
                 mgmt_fte = st.slider("Internal Management Overhead (FTEs)", 0.5, 3.0, 1.0, 0.5)
                 mgmt_weeks = st.slider("Project Duration (Weeks)", 10, 52, 36)
                 fte_cost = st.number_input("Fully-Burdened Cost per FTE-Week ($)", value=5000, step=100, key="cro_fte_cost")
-
         with col2:
             st.subheader("Forecasted V&V Budget & ROI")
             
-            # Dynamic Calculation based on scenario
             if scenario == "Internal Team":
                 total_personnel_weeks = (av_weeks + sv_weeks + sw_weeks + cs_weeks)
                 total_fte = fte_sci + fte_eng
@@ -395,7 +443,6 @@ def render_strategic_command_page():
             fig_tree = px.treemap(df_costs, path=['Category'], values='Cost', title='V&V Budget Allocation by Category', color_discrete_map={'(?)':'#2ca02c', 'Personnel':'#1f77b4', 'Reagents & Consumables':'#ff7f0e', 'Instrument Time':'#d62728', 'CRO Contract': '#9467bd', 'Internal Management': '#8c564b'})
             st.plotly_chart(fig_tree, use_container_width=True)
 
-            # --- 10+/10 ENHANCEMENT: HEADCOUNT BURN CHART ---
             if scenario == "Internal Team":
                 st.subheader("Monthly Personnel Cost Burn")
                 total_weeks = av_weeks + sv_weeks + sw_weeks + cs_weeks
@@ -413,7 +460,7 @@ def render_strategic_command_page():
             if total_budget > 0:
                 roi = ((tpp_revenue - total_budget) / total_budget) * 100
                 st.metric("High-Level V&V ROI", f"{roi:.1f}%", help="(Forecasted Revenue - V&V Cost) / V&V Cost")
-            
+    
     with tab2:
         st.header("Regulatory Strategy & External Partner Dashboard")
         st.info("Dynamically align V&V evidence with submission requirements and manage external vendor performance.")
@@ -424,11 +471,17 @@ def render_strategic_command_page():
             st.checkbox("✅ Software V&V Documentation (per IEC 62304)", value=True, disabled=True)
             st.checkbox("✅ Risk Management File (per ISO 14971)", value=True, disabled=True)
             st.checkbox("✅ Stability & Shelf-Life Data", value=True, disabled=True)
-            if "510(k)" in sub_type: st.checkbox("✅ Substantial Equivalence Testing Data", value=True, disabled=True)
-            if "PMA" in sub_type: st.checkbox("🔥 Clinical Validation Data (Pivotal Study Support)", value=True, disabled=True); st.checkbox("🔥 PMA Module-Specific Data Packages", value=True, disabled=True)
+            if "510(k)" in sub_type: 
+                st.checkbox("✅ Substantial Equivalence Testing Data", value=True, disabled=True)
+            if "PMA" in sub_type: 
+                st.checkbox("🔥 Clinical Validation Data (Pivotal Study Support)", value=True, disabled=True)
+                st.checkbox("🔥 PMA Module-Specific Data Packages", value=True, disabled=True)
             if "IVDR" in sub_type:
-                st.checkbox("🔥 Scientific Validity Report", value=True, disabled=True); st.checkbox("🔥 Clinical Performance Study Report", value=True, disabled=True)
-                if "Class D" in sub_type: st.checkbox("🔥 Common Specifications (CS) Conformance Data", value=True, disabled=True); st.checkbox("🔥 Notified Body & EURL Review Support Package", value=True, disabled=True)
+                st.checkbox("🔥 Scientific Validity Report", value=True, disabled=True)
+                st.checkbox("🔥 Clinical Performance Study Report", value=True, disabled=True)
+                if "Class D" in sub_type:
+                    st.checkbox("🔥 Common Specifications (CS) Conformance Data", value=True, disabled=True)
+                    st.checkbox("🔥 Notified Body & EURL Review Support Package", value=True, disabled=True)
 
         st.subheader("CRO Partner Performance Oversight")
         df_perf = pd.DataFrame({'Metric': ['On-Time Delivery (%)', 'Protocol Deviation Rate (%)', 'Data Quality Score (1-100)'], 'Internal Team': [95, 2.1, 98.5], 'CRO Partner A': [88, 4.5, 96.2]})
@@ -443,50 +496,80 @@ def render_strategic_command_page():
         skills = ['qPCR Method Validation', 'ELISA Development', 'GAMP 5 CSV', 'Statistical Analysis (Python)', 'ISO 14971 Risk Management', 'JMP/Minitab', 'Clinical Study Design']
         team = ['Alice', 'Bob', 'Charlie', 'Diana', 'Ethan']
         data = np.random.randint(1, 4, size=(len(team), len(skills)))
-        df_skills = pd.DataFrame(data, index=team, columns=skills); df_skills.index.name = "Team Member"
-        st.subheader("1. Filter for Project Needs"); required_skills = st.multiselect("Select Required Project Skills", options=skills, default=['qPCR Method Validation', 'ISO 14971 Risk Management', 'Statistical Analysis (Python)'])
+        df_skills = pd.DataFrame(data, index=team, columns=skills)
+        df_skills.index.name = "Team Member"
+
+        st.subheader("1. Filter for Project Needs")
+        required_skills = st.multiselect("Select Required Project Skills", options=skills, default=['qPCR Method Validation', 'ISO 14971 Risk Management', 'Statistical Analysis (Python)'])
+        
         st.subheader("2. Analyze Team Readiness")
-        def highlight_skills(df): style = pd.DataFrame('', index=df.index, columns=df.columns); [style.loc[:, skill].replace('', 'background-color: yellow', inplace=True) for skill in required_skills if skill in df.columns]; return style
+        def highlight_skills(df):
+            style = pd.DataFrame('', index=df.index, columns=df.columns)
+            for skill in required_skills:
+                if skill in df.columns:
+                    style.loc[:, skill].replace('', 'background-color: yellow', inplace=True)
+            return style
+        
         st.dataframe(df_skills.style.apply(highlight_skills, axis=None).background_gradient(cmap='RdYlGn', vmin=1, vmax=3, axis=None).set_caption("Proficiency: 1 (Novice) to 3 (Expert)"), use_container_width=True)
+
         st.subheader("3. Formulate Action Plan")
-        missing_skills = [s for s in required_skills if s not in df_skills.columns]; team_readiness = df_skills[required_skills].sum(axis=1) if required_skills else pd.Series()
-        if not team_readiness.empty: best_fit = team_readiness.idxmax(); st.success(f"**Staffing Insight:** **{best_fit}** is the strongest individual lead for this project based on the required skills. However, for ISO 14971, no one is rated as an expert (Level 3)."); st.warning("**Development Action:** Prioritize ISO 14971 Risk Management training for at least two team members this quarter to mitigate this single-point-of-failure risk.")
-        csv = df_skills.to_csv().encode('utf-8'); st.download_button(label="Export Full Competency Matrix (CSV)", data=csv, file_name='team_competency_matrix.csv', mime='text/csv')
+        missing_skills = [s for s in required_skills if s not in df_skills.columns]
+        if missing_skills:
+            st.error(f"**Critical Gap:** The team completely lacks the required skill(s): {', '.join(missing_skills)}.")
+        
+        team_readiness = df_skills[required_skills].sum(axis=1) if required_skills else pd.Series()
+        if not team_readiness.empty:
+            best_fit = team_readiness.idxmax()
+            st.success(f"**Staffing Insight:** **{best_fit}** is the strongest individual lead for this project based on the required skills. However, for ISO 14971, no one is rated as an expert (Level 3).")
+            st.warning("**Development Action:** Prioritize ISO 14971 Risk Management training for at least two team members this quarter to mitigate this single-point-of-failure risk.")
+        
+        csv = df_skills.to_csv().encode('utf-8')
+        st.download_button(
+            label="Export Full Competency Matrix (CSV)",
+            data=csv,
+            file_name='team_competency_matrix.csv',
+            mime='text/csv',
+        )
 
     with tab4:
         st.header("Interactive ECO Impact Assessment Tool")
         st.info("A logic-driven tool to ensure a consistent, risk-based approach to V&V for post-market changes, ensuring compliance with 21 CFR 820.")
         change_type = st.selectbox("Select Type of Engineering Change Order (ECO)", ["Reagent Formulation Change", "Software (Minor UI change)", "Software (Algorithm update)", "Supplier Change (Critical Component)", "Manufacturing Process Change"])
+        
         with st.container(border=True):
             st.subheader("Minimum Required V&V Activities (per SOP-00123)")
-            rationale_text = ""; impact_text = ""
+            rationale_text = ""
+            impact_text = ""
             if change_type == "Reagent Formulation Change":
-                st.error("🔴 **Full V&V Suite Required**"); st.markdown("- Analytical Performance (Precision, LoD, Linearity)\n- Stability Studies (Accelerated & Real-time)\n- Clinical Bridging Study\n- Shipping Validation")
+                st.error("🔴 **Full V&V Suite Required**")
+                st.markdown("- Analytical Performance (Precision, LoD, Linearity)\n- Stability Studies (Accelerated & Real-time)\n- Clinical Bridging Study\n- Shipping Validation")
                 rationale_text = "Change directly impacts assay performance and patient results. This is a high-risk change requiring comprehensive re-validation and potentially a new regulatory filing."
                 impact_text = "**URS-001** (Clinical Sensitivity), **DI-002** (Analytical Sensitivity), **DI-003** (Stability)."
             elif change_type == "Software (Minor UI change)":
-                st.success("🟢 **Limited V&V Required**"); st.markdown("- Software Regression Testing (Targeted)\n- Usability Assessment (Summative if applicable)\n- Documentation Update")
+                st.success("🟢 **Limited V&V Required**")
+                st.markdown("- Software Regression Testing (Targeted)\n- Usability Assessment (Summative if applicable)\n- Documentation Update")
                 rationale_text = "Change does not impact the analytical algorithm or patient data integrity. This is a low-risk change focused on user experience."
                 impact_text = "**SRS-012** (UI Display)."
             elif change_type == "Software (Algorithm update)":
-                st.error("🔴 **Full Software & Analytical V&V Required**"); st.markdown("- Full Software Validation Suite (per IEC 62304 Class)\n- Analytical Performance regression testing using old vs. new software\n- Full Risk Management File Update")
+                st.error("🔴 **Full Software & Analytical V&V Required**")
+                st.markdown("- Full Software Validation Suite (per IEC 62304 Class)\n- Analytical Performance regression testing using old vs. new software\n- Full Risk Management File Update")
                 rationale_text = "Change to the core algorithm directly impacts patient result calculation. This is the highest software risk category and requires rigorous verification."
                 impact_text = "All performance requirements (**URS-001, DI-002**) and software requirements linked to the algorithm."
             elif change_type == "Supplier Change (Critical Component)":
-                st.warning("🟡 **Targeted V&V Required**"); st.markdown("- New Component Qualification (IQC)\n- System-level performance regression testing\n- Limited stability run (bracketing)\n- Comparability Analysis")
+                st.warning("🟡 **Targeted V&V Required**")
+                st.markdown("- New Component Qualification (IQC)\n- System-level performance regression testing\n- Limited stability run (bracketing)\n- Comparability Analysis")
                 rationale_text = "Change introduces a new variable into the system. This is a medium-risk change requiring confirmation that system performance, reliability, and safety are unaffected."
                 impact_text = "All system-level requirements and potentially stability claims (**DI-003**)."
             elif change_type == "Manufacturing Process Change":
-                st.warning("🟡 **Process Re-Validation Required**"); st.markdown("- Process Validation (IQ, OQ, PQ) for the changed step\n- Product Performance Testing on 3 new lots\n- Stability testing on 1 new lot")
+                st.warning("🟡 **Process Re-Validation Required**")
+                st.markdown("- Process Validation (IQ, OQ, PQ) for the changed step\n- Product Performance Testing on 3 new lots\n- Stability testing on 1 new lot")
                 rationale_text = "Change to the manufacturing process could impact product consistency and performance. A risk-based re-validation is required to ensure continued product quality."
                 impact_text = "Product specification requirements, stability claims (**DI-003**)."
 
             st.markdown(f"**Rationale:** {rationale_text}")
-            # --- 10+/10 ENHANCEMENT: RTM INTEGRATION ---
             with st.container(border=True):
                 st.info(f"**Traceability Impact Analysis:** This change affects the following critical requirements in the RTM: {impact_text}")
 
-# --- 10+/10 UPGRADE: NEW PAGE FOR POST-MARKET SURVEILLANCE ---
 def render_post_market_page():
     st.title("📡 7. Post-Market Intelligence & CAPA Feeder")
     render_director_briefing(
@@ -497,7 +580,6 @@ def render_post_market_page():
     )
     df = get_complaint_data()
     
-    # --- CAPA Feeder Logic ---
     capa_filter = df[(df['Lot_Number'] == 'A2301-B') & (df['Complaint_Type'] == 'False Positive')]
     if len(capa_filter) > 10:
         st.error(
@@ -508,7 +590,6 @@ def render_post_market_page():
     st.subheader("Post-Market Data Analysis")
     col1, col2 = st.columns(2)
     with col1:
-        # Pareto Chart
         with st.container(border=True):
             st.markdown("**Complaint Analysis (Pareto)**")
             complaint_counts = df['Complaint_Type'].value_counts().reset_index()
@@ -522,14 +603,12 @@ def render_post_market_page():
             st.plotly_chart(fig, use_container_width=True)
 
     with col2:
-        # Time Series
         with st.container(border=True):
             st.markdown("**Complaint Trend (Monthly)**")
             monthly_counts = df.resample('M', on='Date').size().reset_index(name='Count')
             fig_ts = px.line(monthly_counts, x='Date', y='Count', title='Total Complaints per Month')
             st.plotly_chart(fig_ts, use_container_width=True)
 
-    # Geographic Heatmap
     with st.container(border=True):
         st.markdown("**Geographic Complaint Hotspots**")
         region_counts = df['Region'].value_counts().reset_index()
@@ -537,7 +616,6 @@ def render_post_market_page():
         fig_map = px.choropleth(region_counts, locations='Region', locationmode="USA-states", color='Count', scope="usa", title="Complaints by US State", color_continuous_scale="Reds")
         st.plotly_chart(fig_map, use_container_width=True)
 
-# --- 10+/10 UPGRADE: NEW PAGE FOR DIGITAL DHF & WORKFLOW ---
 def render_dhf_hub_page():
     st.title("🗂️ 8. The Digital DHF & Workflow Hub")
     render_director_briefing(
