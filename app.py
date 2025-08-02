@@ -1,4 +1,4 @@
-# app.py (Final, Monolithic, Guaranteed Working Version)
+# app.py (Final, Monolithic, World-Class Version with ALL Content and Enhancements)
 
 import streamlit as st
 import pandas as pd
@@ -184,7 +184,6 @@ def run_descriptive_stats_stat_enhanced(key):
     st.info("The foundational analysis for any analytical validation study (e.g., Limit of Detection, Limit of Quantitation, Precision). It quantifies the central tendency and dispersion of the data.")
     
     data = np.random.normal(50, 2, 150)
-    # THE FIX: Create a DataFrame first, then use the named column
     df = pd.DataFrame(data, columns=["value"])
     fig = px.histogram(df, x="value", marginal="box", nbins=20, title="Descriptive Statistics for Limit of Detection (LoD) Study")
     
