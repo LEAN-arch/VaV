@@ -17,6 +17,9 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from statsmodels.tsa.arima.model import ARIMA
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 # --- PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
 st.set_page_config(
     layout="wide",
@@ -46,6 +49,135 @@ def render_metric_card(title, description, viz_function, insight, reg_context, k
         st.success(f"**Actionable Insight:** {insight}")
 
 # --- VISUALIZATION & DATA GENERATORS ---
+# --- NEW ADVANCED AI/ML & OPERATIONS VISUALIZATION & DATA GENERATORS ---
+
+def create_automation_dashboard(key):
+    """Generates charts for the Test Automation Dashboard."""
+    # Data for Pie Chart
+    automation_data = pd.DataFrame({'Category': ['Automated', 'Manual'], 'Count': [2850, 1300]})
+    fig_pie = px.pie(automation_data, values='Count', names='Category', title='Test Case Distribution',
+                     color_discrete_map={'Automated':'cornflowerblue', 'Manual':'lightgrey'})
+    
+    # Data for Dual-Axis Chart
+    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
+    exec_time = [120, 110, 105, 90, 80, 75]
+    coverage = [45, 50, 55, 60, 62, 65]
+    fig_dual = make_subplots(specs=[[{"secondary_y": True}]])
+    fig_dual.add_trace(go.Bar(x=months, y=exec_time, name='Execution Time (Hours)'), secondary_y=False)
+    fig_dual.add_trace(go.Scatter(x=months, y=coverage, name='Automation Coverage (%)', mode='lines+markers'), secondary_y=True)
+    fig_dual.update_layout(title_text='Automation Impact on V&V Execution')
+    fig_dual.update_yaxes(title_text="Total Execution Time (Hours)", secondary_y=False)
+    fig_dual.update_yaxes(title_text="Coverage (%)", secondary_y=True)
+
+    return fig_pie, fig_dual
+
+def create_instrument_utilization_dashboard(key):
+    """Generates heatmap and forecast for instrument utilization."""
+    np.random.seed(50)
+    # Heatmap Data
+    days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    hours = [f'{h}:00' for h in range(24)]
+    util_data = np.random.randint(0, 100, size=(7, 24))
+    util_data[1:5, 8:17] = np.random.randint(70, 100, size=(4, 9)) # Simulate high usage during work hours
+    fig_heatmap = px.imshow(util_data, x=hours, y=days, aspect="auto", 
+                             color_continuous_scale='RdYlGn_r',
+                             title='Instrument Utilization Heatmap (Platform X)')
+    
+    # AI/ML Forecast Data & Model
+    months = np.arange(1, 13).reshape(-1, 1)
+    historical_util = np.array([40, 42, 45, 50, 55, 60, 62, 68, 70, 75, 80, 85])
+    model = RandomForestRegressor(n_estimators=100, random_state=42)
+    model.fit(months, historical_util)
+    future_months = np.arange(13, 19).reshape(-1, 1)
+    predicted_util = model.predict(future_months)
+    
+    fig_forecast = go.Figure()
+    fig_forecast.add_trace(go.Scatter(x=np.arange(1, 13), y=historical_util, mode='lines+markers', name='Historical Utilization'))
+    fig_forecast.add_trace(go.Scatter(x=np.arange(13, 19), y=predicted_util, mode='lines+markers', name='AI Forecast', line=dict(color='red', dash='dash')))
+    fig_forecast.add_hline(y=90, line_dash="dot", line_color="orange", annotation_text="Capacity Threshold")
+    fig_forecast.update_layout(title='AI-Powered Utilization Forecast & CapEx Planning', xaxis_title='Month', yaxis_title='Utilization (%)')
+
+    return fig_heatmap, fig_forecast
+
+def create_portfolio_health_dashboard(key):
+    """Generates the RAG status table for the project portfolio."""
+    data = {
+        'Project': ["ImmunoPro-A", "MolecularDX-2", "CardioScreen-X", "NextGen Platform SW"],
+        'Phase': ["System V&V", "Clinical Study", "Feasibility", "Architecture"],
+        'Schedule Status': ["Green", "Green", "Amber", "Green"],
+        'Budget Status': ["Green", "Amber", "Green", "Green"],
+        'Technical Risk': ["Green", "Amber", "Red", "Amber"],
+        'Resource Strain': ["Amber", "Green", "Red", "Red"]
+    }
+    df = pd.DataFrame(data)
+
+    def style_rag(val):
+        color = 'white'
+        if val == 'Green': color = 'lightgreen'
+        elif val == 'Amber': color = 'lightyellow'
+        elif val == 'Red': color = '#ffcccb'
+        return f'background-color: {color}'
+
+    styled_df = df.style.applymap(style_rag, subset=['Schedule Status', 'Budget Status', 'Technical Risk', 'Resource Strain'])
+    return styled_df
+
+def create_resource_allocation_matrix(key):
+    """Generates the resource allocation heatmap."""
+    team = ['Alice', 'Bob', 'Charlie', 'Diana', 'Ethan', 'Fiona']
+    projects = ["ImmunoPro-A", "MolecularDX-2", "CardioScreen-X", "Sustaining"]
+    alloc_data = np.array([
+        [50, 10, 40, 0],   # Alice: 100%
+        [50, 25, 0, 25],  # Bob: 100%
+        [0, 60, 40, 10],   # Charlie: 110% (Over-allocated)
+        [0, 5, 60, 35],    # Diana: 100%
+        [0, 0, 50, 50],    # Ethan: 100%
+        [0, 0, 0, 0]      # Fiona: Unassigned
+    ])
+    df = pd.DataFrame(alloc_data, index=team, columns=projects)
+    fig = px.imshow(df, text_auto=True, aspect="auto", color_continuous_scale='Blues',
+                    title='V&V Team Resource Allocation Matrix (%)')
+    
+    # Check for over-allocation
+    df['Total'] = df.sum(axis=1)
+    over_allocated = df[df['Total'] > 100]
+    return fig, over_allocated
+
+def create_lessons_learned_search(key):
+    """Simulates an NLP-powered search engine for the knowledge base."""
+    # Mock Knowledge Base
+    knowledge_base = {
+        "DOC-001 (Immuno- Assay Stability)": "Initial stability run failed at 3 months due to improper blocking agent concentration. Root cause was determined to be a supplier change in BSA. Corrective action involved re-validating the new supplier and adjusting the protocol. See CAPA-2022-012.",
+        "DOC-002 (Molecular Assay V&V)": "Cross-reactivity testing for the molecular panel showed minor signal with Influenza C, which was not a specified requirement. Risk assessment concluded this was low risk but it was added to the product insert. This highlights the need for broader cross-reactant panels early in development.",
+        "DOC-003 (Software CSV)": "The LIMS integration module failed during system testing due to an undocumented API change from the vendor. This caused a 2-week project delay. Lesson learned: Implement automated API contract testing as part of the CI/CD pipeline for all external integrations.",
+        "DOC-004 (ECO-088 Reagent Change)": "A change in a critical buffer supplier post-launch required a full analytical bridging study. The study showed a statistically significant shift in the negative control population, requiring a full re-validation of QC ranges. Emphasizes the risk of seemingly 'equivalent' supplier changes."
+    }
+    docs = list(knowledge_base.values())
+    doc_titles = list(knowledge_base.keys())
+
+    query = st.text_input("Search the V&V Knowledge Base (e.g., 'supplier change' or 'API integration')", key=f"search_{key}")
+
+    if query:
+        # AI/ML Model: TF-IDF + Cosine Similarity
+        corpus = [query] + docs
+        tfidf = TfidfVectorizer(stop_words='english')
+        tfidf_matrix = tfidf.fit_transform(corpus)
+        
+        # Calculate similarity between the query (first vector) and all documents
+        cosine_sim = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:])
+        
+        # Get ranked results
+        sim_scores = list(enumerate(cosine_sim[0]))
+        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+        
+        st.write("#### Search Results:")
+        for i, score in sim_scores[:3]: # Show top 3 results
+            if score > 0.05: # Only show relevant results
+                with st.container(border=True):
+                    st.markdown(f"**Document:** `{doc_titles[i]}`")
+                    st.markdown(f"**Relevance Score:** {score:.2f}")
+                    st.info(docs[i])
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def run_requirement_risk_nlp_model(key):
     """
     Uses NLP to classify the risk of a requirement based on its text.
@@ -1008,8 +1140,73 @@ def render_dhf_hub_page():
 
                 **5.0 Traceability:** This report provides objective evidence fulfilling requirement **DI-002**.
                 """)
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+def render_operations_page():
+    st.title("⚙️ 9. V&V Operations & Automation")
+    render_director_briefing(
+        "Building a High-Performance V&V Engine",
+        "A world-class V&V department is not just a project function; it's a highly efficient operational unit. This dashboard demonstrates leadership in optimizing departmental performance through strategic automation, data-driven capital planning, and a culture of continuous improvement. The goal is to increase V&V throughput, improve data quality, and maximize the value of every resource.",
+        "ISO 13485: 6.3 (Infrastructure), Lean Six Sigma Principles, 21 CFR Part 11 (for automated systems)",
+        "Reduces project timelines, lowers operational costs, justifies capital expenditures with data, and allows skilled personnel to focus on complex problem-solving rather than repetitive tasks, thereby improving employee engagement and retention."
+    )
 
+    st.subheader("🧪 Test Automation & Efficiency")
+    with st.container(border=True):
+        col1, col2 = st.columns(2)
+        with col1:
+            fig_pie, fig_dual = create_automation_dashboard("automation")
+            st.plotly_chart(fig_pie, use_container_width=True)
+        with col2:
+            st.plotly_chart(fig_dual, use_container_width=True)
+        
+        kpi_cols = st.columns(3)
+        kpi_cols[0].metric("Manual Test Rework Rate", "8.2%", delta="1.1%", delta_color="inverse")
+        kpi_cols[1].metric("Automated Test Rework Rate", "1.5%", delta="-0.3%")
+        kpi_cols[2].metric("Defect Escape Rate (Post-Launch)", "0.1%", delta="-0.05%")
+        st.success("**Actionable Insight:** The upward trend in automation coverage directly correlates with a reduction in execution time and rework rates. This provides a clear ROI for continued investment in our test automation framework.")
 
+    st.subheader("🔬 Lab Instrument & Capital Planning")
+    with st.container(border=True):
+        fig_heatmap, fig_forecast = create_instrument_utilization_dashboard("utilization")
+        st.plotly_chart(fig_heatmap, use_container_width=True)
+        st.plotly_chart(fig_forecast, use_container_width=True)
+        st.error("**Actionable Insight:** The heatmap reveals our primary analytical platform is severely bottlenecked during standard work hours. The AI forecast confirms that we will exceed 90% capacity within 4 months, jeopardizing the timelines for two upcoming projects. This data forms the basis of a CapEx request for a new instrument in the next budget cycle.")
+
+def render_portfolio_page():
+    st.title("📂 10. V&V Portfolio Command Center")
+    render_director_briefing(
+        "Managing the V&V Portfolio",
+        "An effective director manages a portfolio of projects, not just a single timeline. This requires balancing competing priorities, allocating finite resources, and providing clear, high-level status updates to executive leadership. This command center demonstrates the ability to manage these complexities and make data-driven trade-off decisions.",
+        "Project Management Body of Knowledge (PMBOK), ISO 13485: 5.6 (Management Review)",
+        "Provides executive-level visibility into V&V's contribution to corporate goals, enables proactive risk management across projects, and ensures strategic alignment of the department's most valuable asset: its people."
+    )
+    
+    st.subheader("Project Portfolio Health (RAG Status)")
+    with st.container(border=True):
+        st.dataframe(create_portfolio_health_dashboard("portfolio"), use_container_width=True, hide_index=True)
+        st.error("**Actionable Insight:** The CardioScreen-X project is flagged 'Red' for both Technical Risk and Resource Strain. The V&V team is currently unable to support the aggressive feasibility timeline. **Action:** Escalate to the project core team to either de-scope the initial phase or re-allocate bioinformatics resources from another project.")
+
+    st.subheader("Integrated Resource Allocation Matrix")
+    with st.container(border=True):
+        fig_alloc, over_allocated = create_resource_allocation_matrix("allocation")
+        st.plotly_chart(fig_alloc, use_container_width=True)
+        if not over_allocated.empty:
+            for index, row in over_allocated.iterrows():
+                st.warning(f"**⚠️ Over-allocation Alert:** {index} is allocated at {row['Total']}%. This is unsustainable and poses a risk of burnout and project delays.")
+
+def render_learning_hub_page():
+    st.title("🧠 11. Organizational Learning & Knowledge Hub")
+    render_director_briefing(
+        "Building a Learning Organization",
+        "A V&V department's greatest asset is its cumulative experience. A key leadership function is to capture, organize, and democratize this knowledge to prevent repeating past mistakes and accelerate future projects. This hub demonstrates a system for turning historical data into an active, intelligent resource.",
+        "ISO 13485: 8.4 (Analysis of Data), 8.5.1 (Improvement)",
+        "Dramatically reduces the learning curve for new team members, improves the quality of V&V plans by leveraging past data, and fosters a culture of continuous improvement and knowledge sharing. This directly lowers the Cost of Poor Quality (COPQ)."
+    )
+
+    st.subheader("AI-Powered Lessons Learned Search Engine")
+    with st.container(border=True):
+        st.info("This tool uses Natural Language Processing (NLP) to search the entire history of V&V reports, CAPAs, and ECOs to find relevant insights for new projects.")
+        create_lessons_learned_search("lessons_learned")
 # --- SIDEBAR NAVIGATION AND PAGE ROUTING ---
 PAGES = {
     "Executive Summary": render_main_page,
@@ -1021,6 +1218,9 @@ PAGES = {
     "6. Strategic Command & Control": render_strategic_command_page,
     "7. Post-Market Surveillance": render_post_market_page,
     "8. The Digital DHF Hub": render_dhf_hub_page,
+    "9. V&V Operations & Automation": render_operations_page,
+    "10. V&V Portfolio Command Center": render_portfolio_page,
+    "11. Organizational Learning Hub": render_learning_hub_page,
 }
 
 st.sidebar.title("V&V Command Center")
