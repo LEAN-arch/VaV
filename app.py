@@ -8,7 +8,11 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 from scipy import stats
 import statsmodels.api as sm
-
+from sklearn.ensemble import IsolationForest, RandomForestClassifier
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.decomposition import LatentDirichletAllocation
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix, accuracy_score
 # --- PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
 st.set_page_config(
     layout="wide",
@@ -38,7 +42,125 @@ def render_metric_card(title, description, viz_function, insight, reg_context, k
         st.success(f"**Actionable Insight:** {insight}")
 
 # --- VISUALIZATION & DATA GENERATORS ---
+# --- NEW AI/ML VISUALIZATION & DATA GENERATORS ---
 
+def plot_multivariate_anomaly_detection(key):
+    """
+    Generates data and a 3D plot for multivariate anomaly detection using Isolation Forest.
+    This simulates detecting subtle process deviations that univariate charts would miss.
+    """
+    np.random.seed(101)
+    # Generate normal 'in-control' data for three process parameters
+    in_control_data = np.random.multivariate_normal(
+        mean=[10, 20, 5], 
+        cov=[[1, 0.5, 0.3], [0.5, 1, 0.4], [0.3, 0.4, 1]], 
+        size=300
+    )
+    # Inject subtle anomalies that are outliers in combination, but not necessarily individually
+    anomalies = np.array([[11, 19, 7], [9, 21, 3]])
+    data = np.vstack([in_control_data, anomalies])
+    df = pd.DataFrame(data, columns=['Temp (°C)', 'Pressure (psi)', 'Flow Rate (mL/min)'])
+    
+    # AI/ML Model: Isolation Forest
+    model = IsolationForest(contamination=0.01, random_state=42)
+    df['Anomaly'] = model.fit_predict(df)
+    df['Status'] = df['Anomaly'].apply(lambda x: 'Anomaly' if x == -1 else 'In Control')
+    
+    # Visualization
+    fig = px.scatter_3d(
+        df, x='Temp (°C)', y='Pressure (psi)', z='Flow Rate (mL/min)',
+        color='Status',
+        color_discrete_map={'In Control': 'blue', 'Anomaly': 'red'},
+        symbol='Status',
+        size_max=10,
+        title='AI-Powered Multivariate Process Monitoring'
+    )
+    fig.update_traces(marker=dict(size=4))
+    return fig
+
+def run_predictive_maintenance_model(key):
+    """
+    Simulates instrument sensor data drift over time to predict impending failure.
+    Uses a Random Forest Classifier and shows feature importance.
+    """
+    np.random.seed(42)
+    # Simulate data for 10 instruments over 100 days
+    data = []
+    for i in range(10):
+        # Instruments 0-6 are healthy, 7-9 will fail
+        will_fail = i >= 7
+        for day in range(100):
+            laser_drift = (day / 100) * 0.5 if will_fail else 0
+            pressure_spike = (day / 100)**2 * 3 if will_fail else 0
+            
+            laser_intensity = np.random.normal(5 - laser_drift, 0.1)
+            pump_pressure = np.random.normal(50 + pressure_spike, 0.5)
+            temp_fluctuation = np.random.normal(37, 0.2 + (day/1000 if will_fail else 0))
+            
+            # Label failure in the last 5 days
+            failure = 1 if will_fail and day > 95 else 0
+            data.append([i, day, laser_intensity, pump_pressure, temp_fluctuation, failure])
+
+    df = pd.DataFrame(data, columns=['Instrument_ID', 'Day', 'Laser_Intensity', 'Pump_Pressure', 'Temp_Fluctuation', 'Failure'])
+    
+    # AI/ML Model: Random Forest Classifier
+    features = ['Laser_Intensity', 'Pump_Pressure', 'Temp_Fluctuation']
+    X = df[features]
+    y = df['Failure']
+    
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
+    
+    model = RandomForestClassifier(n_estimators=100, random_state=42)
+    model.fit(X_train, y_train)
+    
+    # Display Model Performance
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    st.metric("Model Accuracy on Test Data", f"{accuracy:.2%}")
+
+    # Feature Importance Plot
+    importance_df = pd.DataFrame({'Feature': features, 'Importance': model.feature_importances_}).sort_values('Importance', ascending=False)
+    fig = px.bar(importance_df, x='Importance', y='Feature', orientation='h', title='Key Predictors of Instrument Failure')
+    return fig
+
+def run_nlp_topic_modeling(key):
+    """
+    Applies NLP Topic Modeling (LDA) to simulated free-text complaint data.
+    """
+    # Simulate free-text complaint data
+    complaint_docs = [
+        "The software froze during a run and I had to restart the instrument.",
+        "Error code 503 appeared on screen, the manual is not clear on this.",
+        "The reagent cartridge was leaking from the bottom seal upon opening the box.",
+        "Results seem consistently higher than the previous lot, we suspect a calibration issue.",
+        "The machine is making a loud grinding noise during the initial spin cycle.",
+        "I cannot get the system to calibrate properly after the last software update.",
+        "The touch screen is unresponsive in the top left corner.",
+        "Another case of a leaky reagent pack, this is the third time this month.",
+        "The instrument UI is very slow to respond after starting a new batch.",
+        "Calibration failed multiple times before finally passing.",
+        "The seal on the reagent pack was broken, causing a spill inside the machine."
+    ] * 5 # Multiply to get more data
+
+    # AI/ML Model: Latent Dirichlet Allocation (LDA) for Topic Modeling
+    vectorizer = CountVectorizer(stop_words='english')
+    X = vectorizer.fit_transform(complaint_docs)
+    
+    lda = LatentDirichletAllocation(n_components=3, random_state=42)
+    lda.fit(X)
+    
+    # Display topics and their keywords
+    feature_names = vectorizer.get_feature_names_out()
+    topics = {}
+    for topic_idx, topic in enumerate(lda.components_):
+        top_words_idx = topic.argsort()[:-6:-1]
+        top_words = [feature_names[i] for i in top_words_idx]
+        topics[f"Topic {topic_idx+1}"] = ", ".join(top_words)
+
+    st.write("#### Automatically Discovered Complaint Themes:")
+    st.table(pd.DataFrame.from_dict(topics, orient='index', columns=["Top Keywords"]))
+    return None # No chart needed, table is the output
+# ================================================================================================================
 def create_rtm_data_editor(key):
     df = pd.DataFrame([
         {"ID": "URS-001", "Requirement": "Assay must detect Target X with >95% clinical sensitivity.", "Risk": "High", "Linked Test Case": "AVP-SENS-01", "Status": "PASS"},
@@ -291,7 +413,17 @@ def render_execution_monitoring_page():
     render_metric_card("Levey-Jennings & Westgard Rules", "The standard for monitoring daily quality control runs in a clinical lab. Westgard multi-rules provide high sensitivity for detecting systematic errors.", plot_levey_jennings_westgard, "The chart flags both a 1_3s rule violation (random error) and a 2_2s rule violation (systematic error). Action: Halt testing and launch a formal lab investigation.", "CLSI C24 - Statistical Quality Control for Quantitative Measurement Procedures", key="lj")
     render_metric_card("Individuals (I) Chart with Nelson Rules", "An I-chart (a type of Shewhart chart) is used to monitor individual data points over time. Nelson rules are powerful statistical tests to detect out-of-control conditions.", run_control_charts, "The I-chart shows a statistically significant upward shift at sample 15. This must be investigated to determine the assignable cause.", "FDA 21 CFR 820.250 (Statistical Techniques)", key="ichart")
     render_metric_card("First-Pass Analysis", "Measures the percentage of tests completed successfully without rework. A primary indicator of process quality.", plot_rft_gauge, "A First-Pass (RFT) rate of 82% indicates that nearly 1 in 5 protocols requires rework. This provides a clear business case for process improvement initiatives.", "Lean Six Sigma Principles", key="fpa")
-
+# In render_execution_monitoring_page()
+# ... after the existing render_metric_card calls ...
+    
+    render_metric_card(
+        "AI-Powered Anomaly Detection",
+        "This model uses an Isolation Forest algorithm to perform multivariate anomaly detection. It identifies outlier data points based on combinations of variables, finding subtle issues that traditional single-variable control charts might miss.",
+        plot_multivariate_anomaly_detection,
+        "The model identified two batches that are statistically significant outliers when considering Temperature, Pressure, and Flow Rate simultaneously. Although each individual parameter may be within its spec, their combination is anomalous and requires investigation. This is a powerful tool for early warning of process drift.",
+        "AIAG SPC Manual, FDA Guidance on Process Validation",
+        key="anomaly_detection"
+    )
 def render_quality_management_page():
     st.title("✅ 4. Project & Quality Systems Management")
     st.markdown("---")
@@ -622,7 +754,29 @@ def render_post_market_page():
         region_counts.columns = ['Region', 'Count']
         fig_map = px.choropleth(region_counts, locations='Region', locationmode="USA-states", color='Count', scope="usa", title="Complaints by US State", color_continuous_scale="Reds")
         st.plotly_chart(fig_map, use_container_width=True)
+# In render_post_market_page()
+# ... after the existing content .............................................................................................................................................................................
+    
+    st.markdown("---")
+    st.subheader("AI-Driven Predictive & Root Cause Analysis")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        with st.container(border=True):
+            st.markdown("#### Predictive Maintenance Model")
+            st.markdown("This Random Forest model is trained on historical sensor data to predict the likelihood of an instrument failing in the near future. This enables proactive maintenance, reducing unplanned downtime and costly failed runs.")
+            fig_pred = run_predictive_maintenance_model("pred_maint")
+            if fig_pred:
+                st.plotly_chart(fig_pred, use_container_width=True)
+            st.success("**Actionable Insight:** The model shows that 'Pump_Pressure' is by far the most significant predictor of failure. The maintenance team should prioritize monitoring this parameter and consider it a leading indicator for service scheduling.")
 
+    with col2:
+        with st.container(border=True):
+            st.markdown("#### NLP for Complaint Theme Discovery")
+            st.markdown("This NLP model uses Latent Dirichlet Allocation (LDA) to analyze free-text from customer complaints, automatically grouping them into distinct topics. This turns unstructured data into actionable, quantifiable themes without manual review.")
+            run_nlp_topic_modeling("nlp_topic")
+            st.success("**Actionable Insight:** The AI has automatically identified a recurring theme related to 'leaky reagent packs'. This quantitative signal elevates the issue's priority and provides a strong justification for launching a formal investigation with the packaging engineering team.")
+#===============================================================================================================================================================================
 def render_dhf_hub_page():
     st.title("🗂️ 8. The Digital DHF & Workflow Hub")
     render_director_briefing(
