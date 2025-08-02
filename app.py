@@ -37,7 +37,7 @@ def render_metric_card(title, description, viz_function, insight, reg_context, k
             st.plotly_chart(fig, use_container_width=True)
         st.success(f"**Actionable Insight:** {insight}")
 
-# --- VISUALIZATION & DATA GENERATORS (Existing World-Class Functions) ---
+# --- VISUALIZATION & DATA GENERATORS ---
 
 def create_rtm_data_editor(key):
     df = pd.DataFrame([
@@ -135,7 +135,7 @@ def plot_rft_gauge(key):
     fig = go.Figure(go.Indicator(mode = "gauge+number", value = 82, title = {'text': "Right-First-Time Protocol Execution"}, gauge = {'axis': {'range': [None, 100]}, 'bar': {'color': "cornflowerblue"}})); return fig
 
 def run_anova_ttest_enhanced(key):
-    st.info("Used to determine if there is a statistically significant difference between groups (e.g., reagent lots). This is fundamental for method transfer and comparability studies.")
+    st.info("Used to determine if there is a statistically significant difference between groups (e.g., reagent lots, instruments, or operators). This is fundamental for method transfer and comparability studies.")
     st.warning("**Regulatory Context:** FDA's guidance on Comparability Protocols; ISO 13485:2016, Section 7.5.6")
     col1, col2 = st.columns([1,2]);
     with col1:
@@ -293,7 +293,6 @@ def render_stats_page():
             st.subheader("Project Timeline Risk (Monte Carlo)")
             run_monte_carlo_stat_enhanced("mc")
 
-# --- THE FIX: NEW STRATEGIC COMMAND PAGE IS ADDED ---
 def render_strategic_command_page():
     st.title("👑 6. Strategic Command & Control")
     st.markdown("---")
@@ -382,6 +381,7 @@ def render_strategic_command_page():
             elif change_type == "Supplier of Critical Component":
                 st.warning("**Targeted V&V Required:** Component Qualification, System-level performance regression testing, limited stability run.")
                 st.markdown("**Rationale:** Change introduces a new variable into the system. Medium risk requiring confirmation that system performance is unaffected.")
+
 
 # --- SIDEBAR NAVIGATION AND PAGE ROUTING ---
 PAGES = {
