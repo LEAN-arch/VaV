@@ -448,7 +448,7 @@ def render_strategic_command_page():
                 total_weeks = av_weeks + sv_weeks + sw_weeks + cs_weeks
                 monthly_cost = total_fte * fte_cost * 4.33 # Avg weeks in a month
                 burn_df = pd.DataFrame({
-                    "Month": pd.date_range(start="2024-01-01", periods=int(total_weeks/4.33)+1, freq="M"),
+                    "Month": pd.date_range(start="2024-01-01", periods=int(total_weeks/4.33)+1, freq="ME"),
                     "Cost": monthly_cost
                 })
                 fig_burn = px.bar(burn_df, x="Month", y="Cost", title="Projected Monthly Personnel Spend")
@@ -507,7 +507,7 @@ def render_strategic_command_page():
             style = pd.DataFrame('', index=df.index, columns=df.columns)
             for skill in required_skills:
                 if skill in df.columns:
-                    style.loc[:, skill].replace('', 'background-color: yellow', inplace=True)
+                    style.loc[:, skill] = 'background-color: yellow'
             return style
         
         st.dataframe(df_skills.style.apply(highlight_skills, axis=None).background_gradient(cmap='RdYlGn', vmin=1, vmax=3, axis=None).set_caption("Proficiency: 1 (Novice) to 3 (Expert)"), use_container_width=True)
@@ -605,7 +605,7 @@ def render_post_market_page():
     with col2:
         with st.container(border=True):
             st.markdown("**Complaint Trend (Monthly)**")
-            monthly_counts = df.resample('M', on='Date').size().reset_index(name='Count')
+            monthly_counts = df.resample('ME', on='Date').size().reset_index(name='Count')
             fig_ts = px.line(monthly_counts, x='Date', y='Count', title='Total Complaints per Month')
             st.plotly_chart(fig_ts, use_container_width=True)
 
