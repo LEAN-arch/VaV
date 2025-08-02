@@ -49,6 +49,170 @@ def render_metric_card(title, description, viz_function, insight, reg_context, k
         st.success(f"**Actionable Insight:** {insight}")
 
 # --- VISUALIZATION & DATA GENERATORS ---
+def create_opex_dashboard(key):
+    """Generates charts for the departmental OpEx dashboard."""
+    budget = 5000000
+    actual = 4200000
+    
+    fig_gauge = go.Figure(go.Indicator(
+        mode = "gauge+number",
+        value = actual,
+        domain = {'x': [0, 1], 'y': [0, 1]},
+        title = {'text': "Annual V&V OpEx: Budget vs. Actual"},
+        gauge = {
+            'axis': {'range': [None, budget], 'tickwidth': 1, 'tickcolor': "darkblue"},
+            'bar': {'color': "cornflowerblue"},
+            'steps' : [
+                {'range': [0, budget * 0.8], 'color': 'lightgreen'},
+                {'range': [budget * 0.8, budget * 0.95], 'color': 'lightyellow'}],
+            'threshold' : {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': budget}}))
+
+    months = pd.date_range(start="2023-01-01", periods=12, freq='ME')
+    burn_rate = np.random.normal(loc=actual/12, scale=20000, size=12)
+    df_burn = pd.DataFrame({'Month': months, 'Spend': burn_rate})
+    fig_bar = px.bar(df_burn, x='Month', y='Spend', title='Monthly OpEx Burn Rate')
+    
+    return fig_gauge, fig_bar
+
+def create_copq_modeler(key):
+    """Creates an interactive modeler for Cost of Poor Quality and its relation to V&V spend."""
+    st.subheader("Interactive Cost of Poor Quality (COPQ) Modeler")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("**Internal Failure Costs (Annualized)**")
+        scrap_rate = st.slider("Scrap Rate (%)", 0.5, 5.0, 2.5, 0.1, key=f"copq_scrap_{key}")
+        rework_hours = st.number_input("Rework Hours (per month)", value=250)
+        
+        st.markdown("**External Failure Costs (Annualized)**")
+        complaint_hours = st.number_input("Complaint Investigation Hours (per month)", value=150)
+        warranty_claims = st.number_input("Warranty Claims ($ per year)", value=75000)
+    
+    # Constants for calculation
+    cost_per_rework_hr = 120
+    cost_per_complaint_hr = 150
+    cost_of_goods = 10000000 # Annual COGS
+    
+    internal_scrap = (scrap_rate / 100) * cost_of_goods
+    internal_rework = rework_hours * cost_per_rework_hr * 12
+    external_complaint = complaint_hours * cost_per_complaint_hr * 12
+    total_copq = internal_scrap + internal_rework + external_complaint + warranty_claims
+
+    with col2:
+        st.metric("Total Annualized COPQ", f"${total_copq:,.0f}", help="Scrap + Rework + Complaints + Warranty")
+        st.info("This model quantifies the financial impact of quality failures that robust V&V aims to prevent.")
+
+    # AI/ML Model: Correlation between V&V Spend and COPQ
+    np.random.seed(42)
+    v_v_spend = np.random.uniform(200000, 1000000, 20)
+    copq = 2500000 - (1.5 * v_v_spend) + np.random.normal(0, 200000, 20)
+    df_corr = pd.DataFrame({'V&V Spend during Development ($)': v_v_spend, 'Post-Launch COPQ ($)': copq})
+    
+    fig_corr = px.scatter(df_corr, x='V&V Spend during Development ($)', y='Post-Launch COPQ ($)', 
+                          trendline='ols', trendline_color_override='red',
+                          title='AI-Modeled Impact of V&V Investment on COPQ')
+    return fig_corr
+
+def create_audit_dashboard(key):
+    """Generates the audit readiness dashboard components."""
+    audit_data = {
+        "Audit/Inspection": ["FDA QSR Inspection", "ISO 13485 Recertification", "Internal Audit Q2", "MDSAP Audit"],
+        "Date": ["2023-11-15", "2023-08-20", "2023-06-10", "2023-03-05"],
+        "V&V-related Findings": [0, 1, 1, 2],
+        "Outcome": ["NAI (No Action Indicated)", "Passed w/ Minor Obs.", "Passed", "Passed w/ Minor Obs."]
+    }
+    df = pd.DataFrame(audit_data)
+
+    def style_outcome(val):
+        color = 'white'
+        if "NAI" in val or val == "Passed": color = 'lightgreen'
+        elif "Minor" in val: color = 'lightyellow'
+        return f'background-color: {color}'
+    
+    styled_df = df.style.map(style_outcome, subset=['Outcome'])
+    return styled_df
+
+def create_qms_kanban(key):
+    """Simulates a Kanban board for V&V tasks in the QMS."""
+    tasks = {
+        "New": [],
+        "Investigation": ["CAPA-2024-001: Investigate Lot A2301-B False Positives", "NCMR-1088: OOT result in stability pull"],
+        "Root Cause Analysis": ["CAPA-2023-014: Reagent leak correlation"],
+        "Effectiveness Check": ["ECO-091: Verify new packaging seal integrity"],
+        "Closed": ["CAPA-2023-009: Software patch for UI freeze", "NCMR-1056: Raw material equivalency"]
+    }
+    st.subheader("V&V Tasks in the Quality System")
+    col1, col2, col3, col4, col5 = st.columns(5)
+    cols = [col1, col2, col3, col4, col5]
+    for i, (status, items) in enumerate(tasks.items()):
+        with cols[i]:
+            st.markdown(f"**{status}**")
+            for item in items:
+                st.info(item)
+
+def create_method_transfer_dashboard(key):
+    """Generates charts for the global method transfer dashboard."""
+    metrics = ['Precision (%CV)', 'Bias (%)', 'TMV Protocol Pass Rate (%)']
+    san_diego = [1.8, 0.5, 100]
+    athens_oh = [2.1, -0.8, 95]
+    df = pd.DataFrame({'Metric': metrics, 'San Diego (Source)': san_diego, 'Athens, OH (Receiving)': athens_oh})
+    
+    fig_bar = px.bar(df, x='Metric', y=['San Diego (Source)', 'Athens, OH (Receiving)'], 
+                     barmode='group', title='Method Performance: Inter-site Comparability')
+    
+    transfer_status = {
+        "Protocol": ["AVP-LOD-01 (LoD)", "AVP-PREC-01 (Precision)", "AVP-LIN-01 (Linearity)", "AVP-STAB-01 (Stability)"],
+        "Status": ["Complete", "Complete", "Executing", "Pending Start"]
+    }
+    df_status = pd.DataFrame(transfer_status)
+    return fig_bar, df_status
+
+def create_pipeline_advisor(key):
+    """Creates the AI-powered R&D pipeline risk advisor."""
+    # AI/ML Model: Train a model on historical data
+    np.random.seed(42)
+    historical_data = pd.DataFrame({
+        'New_Tech_Count': np.random.randint(0, 5, 20),
+        'Complexity_Score': np.random.randint(1, 11, 20),
+        'Target_LoD_Tightness': np.random.uniform(0.1, 1, 20),
+        'V_V_Duration': np.random.uniform(3, 18, 20)
+    })
+    X = historical_data[['New_Tech_Count', 'Complexity_Score', 'Target_LoD_Tightness']]
+    y = historical_data['V_V_Duration']
+    model = RandomForestRegressor(n_estimators=100, random_state=42).fit(X, y)
+    
+    # UI for new project input
+    st.subheader("Forecast V&V Risk for New R&D Projects")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        new_tech = st.slider("Number of New Technologies", 0, 5, 2, key=f"pipe_tech_{key}")
+    with col2:
+        complexity = st.slider("Assay Complexity Score (1-10)", 1, 10, 5, key=f"pipe_comp_{key}")
+    with col3:
+        lod_tightness = st.slider("Target LoD Tightness (vs. Predicate)", 0.1, 2.0, 1.0, 0.1, key=f"pipe_lod_{key}")
+    
+    # Prediction
+    new_project_data = [[new_tech, complexity, lod_tightness]]
+    predicted_duration = model.predict(new_project_data)[0]
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("Predicted V&V Duration (Months)", f"{predicted_duration:.1f}")
+    with col2:
+        # Simple heuristic for success probability
+        success_prob = max(0, 95 - (predicted_duration * 2))
+        st.metric("Predicted Technical Success Probability", f"{success_prob:.1f}%")
+    
+    # Visualization: Magic Quadrant
+    pipeline_projects = pd.DataFrame({
+        'Project': ['Project Alpha (LFA)', 'Project Beta (Molecular)', 'Project Gamma (Immuno)', 'Project Delta (Digital)'],
+        'V&V Complexity': [3, 8, 6, 9],
+        'Predicted ROI (%)': [50, 300, 150, 500],
+        'V&V Cost ($M)': [0.5, 2.0, 1.2, 3.5]
+    })
+    fig_quad = px.scatter(pipeline_projects, x='V&V Complexity', y='Predicted ROI (%)', size='V&V Cost ($M)', 
+                          color='Project', text='Project', title='Strategic R&D Pipeline Advisor')
+    fig_quad.update_traces(textposition='top center')
+    return fig_quad
 # --- NEW ADVANCED AI/ML & OPERATIONS VISUALIZATION & DATA GENERATORS ---
 
 def create_automation_dashboard(key):
@@ -1219,8 +1383,11 @@ PAGES = {
     "7. Post-Market Surveillance": render_post_market_page,
     "8. The Digital DHF Hub": render_dhf_hub_page,
     "9. V&V Operations & Automation": render_operations_page,
-    "10. V&V Portfolio Command Center": render_portfolio_page,
-    "11. Organizational Learning Hub": render_learning_hub_page,
+    "10. The Integrated QMS Cockpit": render_qms_cockpit_page,
+    "11. V&V Business & Quality Metrics Hub": render_business_metrics_page,
+    "12. V&V Portfolio Command Center": render_portfolio_page,
+    "13. Organizational Learning Hub": render_learning_hub_page,
+    "14. The Global V&V Strategy Hub": render_global_strategy_page,
 }
 
 st.sidebar.title("V&V Command Center")
