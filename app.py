@@ -1,4 +1,4 @@
-# app.py (Final, Monolithic, World-Class Version with ALL Content and Enhancements)
+# app.py (Final, Monolithic, World-Class Version with All Enhancements)
 
 import streamlit as st
 import pandas as pd
@@ -26,11 +26,12 @@ def render_director_briefing(title, content, reg_refs, business_impact):
         st.info(f"**Business Impact:** {business_impact}")
         st.warning(f"**Regulatory Mapping:** {reg_refs}")
 
-def render_metric_card(title, description, viz_function, insight, key=""):
+def render_metric_card(title, description, viz_function, insight, reg_context, key=""):
     """Renders a formatted container for a specific metric or visualization."""
     with st.container(border=True):
         st.subheader(title)
         st.markdown(f"*{description}*")
+        st.warning(f"**Regulatory Context:** {reg_context}")
         fig = viz_function(key)
         if fig:
             st.plotly_chart(fig, use_container_width=True)
@@ -135,7 +136,8 @@ def plot_rft_gauge(key):
 
 def run_anova_ttest_enhanced(key):
     st.info("Used to determine if there is a statistically significant difference between groups (e.g., reagent lots, instruments, or operators). This is fundamental for method transfer and comparability studies.")
-    
+    st.warning("**Regulatory Context:** FDA's guidance on Comparability Protocols; ISO 13485:2016, Section 7.5.6 (Validation of processes for production and service provision)")
+
     col1, col2 = st.columns([1,2])
     with col1:
         n_samples = st.slider("Samples per Group", 10, 100, 30, key=f"anova_n_{key}")
@@ -154,14 +156,15 @@ def run_anova_ttest_enhanced(key):
     t_stat, p_value = stats.ttest_ind(group_a, group_b)
     st.subheader("Statistical Interpretation")
     if p_value < 0.05:
-        st.error(f"**Conclusion:** The difference between lots is statistically significant (p-value = {p_value:.4f}). Action: An investigation is required. Lot B cannot be considered comparable to Lot A.")
+        st.error(f"**Actionable Insight:** The difference between lots is statistically significant (p-value = {p_value:.4f}). Action: An investigation is required. Lot B cannot be considered comparable to Lot A based on this data.")
     else:
-        st.success(f"**Conclusion:** No statistically significant difference was detected (p-value = {p_value:.4f}). The lots are considered comparable based on this data.")
+        st.success(f"**Actionable Insight:** No statistically significant difference was detected (p-value = {p_value:.4f}). The lots are considered comparable, and the method transfer can proceed.")
     return None
 
 def run_regression_analysis_stat_enhanced(key):
     st.info("Linear regression is critical for verifying linearity, calculating bias, and assessing correlation. The statsmodels output provides the detailed metrics (R², p-values, coefficients, confidence intervals) required for a regulatory submission.")
-    
+    st.warning("**Regulatory Context:** CLSI EP06 (Evaluation of the Linearity of Quantitative Measurement Procedures); FDA Guidance on Bioanalytical Method Validation")
+
     col1, col2 = st.columns([1,2])
     with col1:
         noise = st.slider("Measurement Noise (Std Dev)", 0, 50, 15, key=f"regr_noise_{key}")
@@ -177,11 +180,12 @@ def run_regression_analysis_stat_enhanced(key):
     X = sm.add_constant(df['Concentration']); model = sm.OLS(df['Signal'], X).fit()
     st.subheader("Statistical Interpretation (Statsmodels OLS Summary)")
     st.code(f"{model.summary()}")
-    st.success(f"**Actionable Insight:** The R-squared value of {model.rsquared:.3f} confirms excellent linearity. The p-value for the Concentration coefficient is < 0.001, proving a significant positive relationship. The Intercept of {model.params['const']:.2f} represents the assay's background signal.")
+    st.success(f"**Actionable Insight:** The R-squared value of {model.rsquared:.3f} confirms excellent linearity. The p-value for the Concentration coefficient is < 0.001, proving a significant positive relationship. The Intercept of {model.params['const']:.2f} represents the assay's background signal and can be used to inform blank correction strategies.")
     return None
 
 def run_descriptive_stats_stat_enhanced(key):
     st.info("The foundational analysis for any analytical validation study (e.g., Limit of Detection, Limit of Quantitation, Precision). It quantifies the central tendency and dispersion of the data.")
+    st.warning("**Regulatory Context:** CLSI EP17 (Evaluation of Detection Capability); CLSI EP05-A3 (Evaluation of Precision of Quantitative Measurement Procedures)")
     
     data = np.random.normal(50, 2, 150)
     df = pd.DataFrame(data, columns=["value"])
@@ -197,11 +201,12 @@ def run_descriptive_stats_stat_enhanced(key):
     col2.metric("Std Dev", f"{std:.2f}")
     col3.metric("%CV", f"{cv:.2f}%")
     col4.metric("95% CI for Mean", f"{ci_95[0]:.2f} - {ci_95[1]:.2f}")
-    st.success("**Actionable Insight:** The low %CV and tight confidence interval provide high confidence that the LoD is reliably at 50 copies/mL, supporting the product claim.")
+    st.success("**Actionable Insight:** The low %CV and tight confidence interval provide high confidence that the LoD is reliably at 50 copies/mL, supporting the product claim for the 510(k) submission.")
     return None
 
 def run_control_charts_stat_enhanced(key):
     st.info("X-bar & R-charts are a pair of Shewhart charts used to monitor the mean (X-bar) and variability (R-chart) of a process when data is collected in rational subgroups (e.g., 5 measurements per batch).")
+    st.warning("**Regulatory Context:** FDA 21 CFR 820.250 (Statistical Techniques); ISO TR 10017 (Guidance on statistical techniques for ISO 9001:2000)")
     
     data = [np.random.normal(10, 0.5, 5) for _ in range(20)]
     process_shift = st.checkbox("Simulate a Process Shift", key=f"spc_shift_{key}")
@@ -225,13 +230,14 @@ def run_control_charts_stat_enhanced(key):
     fig.update_layout(height=600, title_text="X-bar and R Control Charts")
     st.plotly_chart(fig, use_container_width=True)
     if process_shift:
-        st.warning("**Insight:** A clear upward shift is detected in the X-bar chart starting at subgroup 15, while the R-chart remains stable. This indicates a special cause has shifted the process mean without affecting its variability. This requires immediate investigation.")
+        st.warning("**Actionable Insight:** A clear upward shift is detected in the X-bar chart starting at subgroup 15, while the R-chart remains stable. This indicates a special cause has shifted the process mean without affecting its variability. This requires an immediate investigation into potential assignable causes (e.g., new reagent lot, instrument calibration drift).")
     else:
-        st.success("The process is in a state of statistical control.")
+        st.success("**Actionable Insight:** The process is in a state of statistical control. Both the mean and variability are stable and predictable, providing a solid baseline for validation.")
     return None
     
 def run_kaplan_meier_stat_enhanced(key):
     st.info("Survival analysis is used to estimate the shelf-life of a product by modeling time-to-failure data, especially when some samples have not failed by the end of the study (censored data).")
+    st.warning("**Regulatory Context:** ICH Q1E (Evaluation of Stability Data); FDA Guidance for Industry: Q1A(R2) Stability Testing of New Drug Substances and Products")
     
     time_to_failure = np.random.weibull(2, 50) * 24; observed = np.random.binomial(1, 0.8, 50)
     df = pd.DataFrame({'Months': time_to_failure, 'Status': ['Failed' if o==1 else 'Censored' for o in observed]})
@@ -241,11 +247,12 @@ def run_kaplan_meier_stat_enhanced(key):
     
     st.plotly_chart(fig, use_container_width=True)
     st.subheader("Study Conclusion")
-    st.markdown("**Insight:** The survival curve demonstrates the probability of a unit remaining stable over time. The point where the curve crosses the 50% line provides the estimated median shelf-life. 'Censored' data points are critical as they represent units that survived the entire study duration, providing valuable information.")
+    st.success("**Actionable Insight:** The survival curve demonstrates the probability of a unit remaining stable over time. The point where the curve crosses the 50% line provides the estimated median shelf-life. 'Censored' data points (units that survived the entire study) are critical for an accurate model and must be included in the analysis to avoid underestimating the shelf-life.")
     return None
 
 def run_monte_carlo_stat_enhanced(key):
     st.info("Monte Carlo simulation runs thousands of 'what-if' scenarios on a project plan with uncertain task durations to provide a probabilistic forecast, which is superior to a single-point estimate.")
+    st.warning("**Regulatory Context:** While not a direct compliance tool, this is a best practice in project management aligned with ISO 13485's emphasis on planning and risk management.")
     
     n_sims = st.slider("Number of Simulations", 1000, 10000, 5000, key=f"mc_sims_{key}")
     task1, task2, task3 = np.random.triangular(8,10,15,n_sims), np.random.triangular(15,20,30,n_sims), np.random.triangular(5,8,12,n_sims)
@@ -258,7 +265,7 @@ def run_monte_carlo_stat_enhanced(key):
     
     st.plotly_chart(fig, use_container_width=True)
     st.subheader("Risk-Adjusted Planning")
-    st.error(f"**Actionable Insight:** While the median (50% probability) completion time is {p50:.1f} days, there is a 10% chance the project will take **{p90:.1f} days or longer**. For high-stakes projects, the P90 estimate must be communicated to the PMO as the commitment date to account for risk.")
+    st.error(f"**Actionable Insight:** While the median (50% probability) completion time is {p50:.1f} days, there is a 10% chance the project will take **{p90:.1f} days or longer**. For high-stakes projects, the P90 estimate must be communicated to the PMO as the commitment date to account for risk and manage stakeholder expectations.")
     return None
 
 def create_v_model_figure(key=None):
@@ -280,31 +287,31 @@ def render_design_controls_page():
     st.title("🏛️ 1. Design Controls, Planning & Risk Management")
     st.markdown("---")
     render_director_briefing("The Design History File (DHF) as a Strategic Asset", "The DHF is the compilation of records that demonstrates the design was developed in accordance with the design plan and regulatory requirements. An effective V&V leader architects the DHF from day one.", "FDA 21 CFR 820.30 (Design Controls), ISO 13485:2016 (Section 7.3)", "Ensures audit readiness and provides a clear, defensible story of product development to regulatory bodies, accelerating submission review times.")
-    render_metric_card("Requirements Traceability Matrix (RTM)", "The RTM is the backbone of the DHF, providing an auditable link between user needs, design inputs, V&V activities, and risk controls.", create_rtm_data_editor, "The matrix view instantly flags critical gaps, such as the un-tested cross-reactivity requirement (URS-003), allowing for proactive mitigation before a design freeze.", key="rtm")
-    render_metric_card("Product Risk Management (FMEA & Risk Matrix)", "A systematic process for identifying, analyzing, and mitigating potential failure modes. V&V activities are primary risk mitigations.", plot_risk_matrix, "The risk matrix clearly prioritizes 'False Negative' as the highest risk, ensuring that it receives the most V&V resources and attention. This is a key input for the V&V Master Plan.", key="fmea")
-    render_metric_card("Design of Experiments (DOE/RSM)", "A powerful statistical tool used to efficiently characterize the product's design space and identify robust operating parameters.", plot_doe_rsm, "The Response Surface Methodology (RSM) plot indicates the assay's optimal performance is at ~32°C and a pH of 7.5. This data forms the basis for setting manufacturing specifications.", key="doe")
+    render_metric_card("Requirements Traceability Matrix (RTM)", "The RTM is the backbone of the DHF, providing an auditable link between user needs, design inputs, V&V activities, and risk controls.", create_rtm_data_editor, "The matrix view instantly flags critical gaps, such as the un-tested cross-reactivity requirement (URS-003), allowing for proactive mitigation before a design freeze.", "FDA 21 CFR 820.30(j) - Design History File (DHF)", key="rtm")
+    render_metric_card("Product Risk Management (FMEA & Risk Matrix)", "A systematic process for identifying, analyzing, and mitigating potential failure modes. V&V activities are primary risk mitigations.", plot_risk_matrix, "The risk matrix clearly prioritizes 'False Negative' as the highest risk, ensuring that it receives the most V&V resources and attention. This is a key input for the V&V Master Plan.", "ISO 14971: Application of risk management to medical devices", key="fmea")
+    render_metric_card("Design of Experiments (DOE/RSM)", "A powerful statistical tool used to efficiently characterize the product's design space and identify robust operating parameters.", plot_doe_rsm, "The Response Surface Methodology (RSM) plot indicates the assay's optimal performance is at ~32°C and a pH of 7.5. This data forms the basis for setting manufacturing specifications.", "FDA Guidance on Process Validation: General Principles and Practices", key="doe")
     
 def render_method_validation_page():
     st.title("🔬 2. Method Validation & Statistical Rigor")
     st.markdown("---")
     render_director_briefing("Ensuring Data Trustworthiness", "Before a product can be validated, the methods used to measure it must be proven reliable. TMV, MSA, and CpK are the statistical pillars that provide objective evidence of this reliability.", "FDA Guidance on Analytical Procedures and Methods Validation; CLSI Guidelines (EP05, EP17, etc.); AIAG MSA Manual", "Prevents costly product failures and batch rejections caused by unreliable or incapable measurement and manufacturing processes. It is the foundation of data integrity.")
-    render_metric_card("Process Capability (CpK)", "Measures how well a process can produce output that meets specifications. A CpK > 1.33 is typically considered capable for medical devices.", plot_cpk_analysis, "The interactive slider shows how tightening specification limits directly impacts the CpK value, demonstrating the trade-offs between design margin and manufacturing capability.", key="cpk")
-    render_metric_card("Measurement System Analysis (MSA/Gage R&R)", "Quantifies the variation in a measurement system attributable to operators and equipment. A key part of Test Method Validation (TMV).", plot_msa_analysis, "The box plot shows that Operator Charlie's measurements are consistently lower than Alice and Bob's, indicating a potential training issue or procedural deviation that requires investigation.", key="msa")
-    render_metric_card("Assay Performance Regression Analysis", "Linear regression is used to characterize key assay performance attributes. The full statistical output is critical for regulatory submissions.", run_assay_regression, "The statsmodels summary provides a comprehensive model of the assay's response with high statistical significance (p < 0.001) and an R-squared of 0.99+, confirming excellent linearity.", key="regression")
+    render_metric_card("Process Capability (CpK)", "Measures how well a process can produce output that meets specifications. A CpK > 1.33 is typically considered capable for medical devices.", plot_cpk_analysis, "The interactive slider shows how tightening specification limits directly impacts the CpK value, demonstrating the trade-offs between design margin and manufacturing capability.", "ISO TR 10017 - Guidance on statistical techniques", key="cpk")
+    render_metric_card("Measurement System Analysis (MSA/Gage R&R)", "Quantifies the variation in a measurement system attributable to operators and equipment. A key part of Test Method Validation (TMV).", plot_msa_analysis, "The box plot shows that Operator Charlie's measurements are consistently lower than Alice and Bob's, indicating a potential training issue or procedural deviation that requires investigation.", "AIAG MSA Reference Manual", key="msa")
+    render_metric_card("Assay Performance Regression Analysis", "Linear regression is used to characterize key assay performance attributes. The full statistical output is critical for regulatory submissions.", run_assay_regression, "The statsmodels summary provides a comprehensive model of the assay's response with high statistical significance (p < 0.001) and an R-squared of 0.99+, confirming excellent linearity.", "CLSI EP06 - Evaluation of the Linearity of Quantitative Measurement Procedures", key="regression")
 
 def render_execution_monitoring_page():
     st.title("📈 3. Execution Monitoring & Quality Control")
     st.markdown("---")
     render_director_briefing("Statistical Process Control (SPC) for V&V", "SPC distinguishes between normal process variation ('common cause') and unexpected problems ('special cause') that require immediate investigation.", "FDA 21 CFR 820.250 (Statistical Techniques), ISO TR 10017, CLSI C24", "Provides an early warning system for process drifts, reducing the risk of large-scale, costly investigations and ensuring data integrity.")
-    render_metric_card("Levey-Jennings & Westgard Rules", "The standard for monitoring daily quality control runs in a clinical lab. Westgard multi-rules provide high sensitivity for detecting systematic errors.", plot_levey_jennings_westgard, "The chart flags both a 1_3s rule violation (random error) and a 2_2s rule violation (systematic error). Action: Halt testing and launch a formal lab investigation.", key="lj")
-    render_metric_card("Individuals (I) Chart with Nelson Rules", "An I-chart (a type of Shewhart chart) is used to monitor individual data points over time. Nelson rules are powerful statistical tests to detect out-of-control conditions.", run_control_charts, "The I-chart shows a statistically significant upward shift at sample 15. This must be investigated to determine the assignable cause.", key="ichart")
-    render_metric_card("First-Pass Analysis", "Measures the percentage of tests completed successfully without rework. A primary indicator of process quality.", plot_rft_gauge, "A First-Pass (RFT) rate of 82% indicates that nearly 1 in 5 protocols requires rework. This provides a clear business case for process improvement initiatives.", key="fpa")
+    render_metric_card("Levey-Jennings & Westgard Rules", "The standard for monitoring daily quality control runs in a clinical lab. Westgard multi-rules provide high sensitivity for detecting systematic errors.", plot_levey_jennings_westgard, "The chart flags both a 1_3s rule violation (random error) and a 2_2s rule violation (systematic error). Action: Halt testing and launch a formal lab investigation.", "CLSI C24 - Statistical Quality Control for Quantitative Measurement Procedures", key="lj")
+    render_metric_card("Individuals (I) Chart with Nelson Rules", "An I-chart (a type of Shewhart chart) is used to monitor individual data points over time. Nelson rules are powerful statistical tests to detect out-of-control conditions.", run_control_charts, "The I-chart shows a statistically significant upward shift at sample 15. This must be investigated to determine the assignable cause.", "FDA 21 CFR 820.250 (Statistical Techniques)", key="ichart")
+    render_metric_card("First-Pass Analysis", "Measures the percentage of tests completed successfully without rework. A primary indicator of process quality.", plot_rft_gauge, "A First-Pass (RFT) rate of 82% indicates that nearly 1 in 5 protocols requires rework. This provides a clear business case for process improvement initiatives.", "Lean Six Sigma Principles", key="fpa")
 
 def render_quality_management_page():
     st.title("✅ 4. Project & Quality Systems Management")
     st.markdown("---")
     render_director_briefing("Managing the V&V Ecosystem", "A V&V leader must manage project health, track quality issues, and ensure software compliance. These KPIs provide the necessary oversight to manage timelines, scope, and compliance risks.", "IEC 62304, 21 CFR Part 11, GAMP 5", "Improves project predictability, ensures software compliance (a major source of FDA 483s), and provides transparent reporting to stakeholders.")
-    render_metric_card("Defect Open vs. Close Trend (Burnup)", "A burnup chart tracks scope changes and visualizes the rate of work completion against the rate of issue discovery.", plot_defect_burnup, "The widening gap between opened and closed defects indicates that our resolution rate is not keeping up. Action: Allocate additional resources to defect resolution.", key="burnup")
+    render_metric_card("Defect Open vs. Close Trend (Burnup)", "A burnup chart tracks scope changes and visualizes the rate of work completion against the rate of issue discovery.", plot_defect_burnup, "The widening gap between opened and closed defects indicates that our resolution rate is not keeping up. Action: Allocate additional resources to defect resolution.", "Agile Project Management Principles", key="burnup")
     
     st.subheader("Software V&V (IEC 62304 & 21 CFR Part 11)")
     col1, col2 = st.columns(2)
@@ -334,13 +341,25 @@ def render_stats_page():
     
     col1, col2 = st.columns(2)
     with col1:
-        render_metric_card("Performance Comparison (t-test)", "", lambda k: run_anova_ttest_enhanced(k), "", key="anova")
-        render_metric_card("Assay Performance (Descriptive Stats)", "", lambda k: run_descriptive_stats_stat_enhanced(k), "", key="desc")
-        render_metric_card("Shelf-Life & Stability (Kaplan-Meier)", "", lambda k: run_kaplan_meier_stat_enhanced(k), "", key="km")
+        with st.container(border=True):
+            st.subheader("Performance Comparison (t-test)")
+            run_anova_ttest_enhanced("anova")
+        with st.container(border=True):
+            st.subheader("Assay Performance (Descriptive Stats)")
+            run_descriptive_stats_stat_enhanced("desc")
+        with st.container(border=True):
+            st.subheader("Shelf-Life & Stability (Kaplan-Meier)")
+            run_kaplan_meier_stat_enhanced("km")
     with col2:
-        render_metric_card("Risk-to-Failure Correlation (Regression)", "", lambda k: run_regression_analysis_stat_enhanced(k), "", key="regr")
-        render_metric_card("Process Monitoring (SPC)", "", lambda k: run_control_charts_stat_enhanced(k), "", key="spc")
-        render_metric_card("Project Timeline Risk (Monte Carlo)", "", lambda k: run_monte_carlo_stat_enhanced(k), "", key="mc")
+        with st.container(border=True):
+            st.subheader("Risk-to-Failure Correlation (Regression)")
+            run_regression_analysis_stat_enhanced("regr")
+        with st.container(border=True):
+            st.subheader("Process Monitoring (SPC)")
+            run_control_charts_stat_enhanced("spc")
+        with st.container(border=True):
+            st.subheader("Project Timeline Risk (Monte Carlo)")
+            run_monte_carlo_stat_enhanced("mc")
 
 # --- SIDEBAR NAVIGATION AND PAGE ROUTING ---
 PAGES = {
