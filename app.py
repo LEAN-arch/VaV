@@ -133,8 +133,6 @@ def get_software_risk_data():
 def plot_rft_gauge(key):
     fig = go.Figure(go.Indicator(mode = "gauge+number", value = 82, title = {'text': "Right-First-Time Protocol Execution"}, gauge = {'axis': {'range': [None, 100]}, 'bar': {'color': "cornflowerblue"}})); return fig
 
-# --- THE FIX: ALL STATISTICAL METHODS ARE NOW CORRECTLY DEFINED BEFORE BEING CALLED ---
-
 def run_anova_ttest_enhanced(key):
     st.info("Used to determine if there is a statistically significant difference between groups (e.g., reagent lots, instruments, or operators). This is fundamental for method transfer and comparability studies.")
     
@@ -168,15 +166,12 @@ def run_regression_analysis_stat_enhanced(key):
     with col1:
         noise = st.slider("Measurement Noise (Std Dev)", 0, 50, 15, key=f"regr_noise_{key}")
         bias = st.slider("Systematic Bias", -20, 20, 5, key=f"regr_bias_{key}")
-        show_ci = st.checkbox("Show 95% Confidence Interval", value=True, key=f"regr_ci_{key}")
     
     conc = np.linspace(0, 400, 15); signal = 50 + 2.5 * conc + bias + np.random.normal(0, noise, 15)
     df = pd.DataFrame({'Concentration': conc, 'Signal': signal})
     
     with col2:
         fig = px.scatter(df, x='Concentration', y='Signal', trendline='ols', title="Assay Performance Regression (Linearity)")
-        if show_ci:
-            pass # Plotly's OLS trendline includes this visually
         st.plotly_chart(fig, use_container_width=True)
     
     X = sm.add_constant(df['Concentration']); model = sm.OLS(df['Signal'], X).fit()
@@ -189,8 +184,9 @@ def run_descriptive_stats_stat_enhanced(key):
     st.info("The foundational analysis for any analytical validation study (e.g., Limit of Detection, Limit of Quantitation, Precision). It quantifies the central tendency and dispersion of the data.")
     
     data = np.random.normal(50, 2, 150)
-    fig = px.histogram(data, x="value", marginal="box", nbins=20,
-                       title="Descriptive Statistics for Limit of Detection (LoD) Study")
+    # THE FIX: Create a DataFrame first, then use the named column
+    df = pd.DataFrame(data, columns=["value"])
+    fig = px.histogram(df, x="value", marginal="box", nbins=20, title="Descriptive Statistics for Limit of Detection (LoD) Study")
     
     mean, std, cv = np.mean(data), np.std(data, ddof=1), (np.std(data, ddof=1) / np.mean(data)) * 100
     ci_95 = stats.t.interval(0.95, len(data)-1, loc=mean, scale=stats.sem(data))
