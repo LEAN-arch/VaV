@@ -30,7 +30,9 @@ def render_metric_card(title, description, viz_function, insight, key=""):
     with st.container(border=True):
         st.subheader(title)
         st.markdown(f"*{description}*")
+        # The key is passed to the viz_function if it needs unique Streamlit widgets
         fig = viz_function(key)
+        # Some functions might return None if they render complex widgets directly (like st.dataframe)
         if fig:
             st.plotly_chart(fig, use_container_width=True)
         st.success(f"**Actionable Insight:** {insight}")
@@ -110,15 +112,29 @@ def run_assay_regression(key):
     st.code(f"Regression Results (statsmodels summary):\n{model.summary()}")
     return fig
 
-def create_v_model_figure(key):
-    fig = go.Figure(); fig.add_trace(go.Scatter(x=[1, 2, 3, 4], y=[4, 3, 2, 1], mode='lines+markers+text', text=["User Needs", "System Req.", "Architecture", "Module Design"], textposition="top right", line=dict(color='royalblue', width=2), marker=dict(size=10)))
-    fig.add_trace(go.Scatter(x=[5, 6, 7, 8], y=[1, 2, 3, 4], mode='lines+markers+text', text=["Unit Test", "Integration Test", "System V&V", "UAT"], textposition="top left", line=dict(color='green', width=2), marker=dict(size=10)))
-    for i in range(4): fig.add_shape(type="line", x0=4-i, y0=1+i, x1=5+i, y1=1+i, line=dict(color="grey", width=1, dash="dot"))
-    fig.update_layout(title_text=None, showlegend=False, xaxis=dict(showticklabels=False, zeroline=False, showgrid=False), yaxis=dict(showticklabels=False, zeroline=False, showgrid=False)); return fig
+# --- THE FIX: The missing functions are now included ---
+def plot_risk_matrix(key):
+    severity = [9, 10, 6, 8, 7, 5]; probability = [3, 2, 4, 3, 5, 1]
+    risk_level = [s * p for s, p in zip(severity, probability)]
+    text = ["False Positive", "False Negative", "Software Crash", "Contamination", "Reagent Exp.", "UI Lag"]
+    fig = go.Figure(data=go.Scatter(x=probability, y=severity, mode='markers+text', text=text, textposition="top center", marker=dict(size=risk_level, sizemin=10, color=risk_level, colorscale="Reds", showscale=True, colorbar_title="Risk Score")))
+    fig.update_layout(title='Risk Matrix (Severity vs. Probability)', xaxis_title='Probability of Occurrence', yaxis_title='Severity of Harm', xaxis=dict(range=[0, 6]), yaxis=dict(range=[0, 11]))
+    return fig
+
+def run_control_charts(key):
+    data = [np.random.normal(10, 0.5, 5) for _ in range(20)]; data[15:] = [np.random.normal(10.8, 0.5, 5) for _ in range(5)]
+    df = pd.DataFrame(data, columns=[f'm{i}' for i in range(1,6)]); df['mean'] = df.mean(axis=1); df['range'] = df.max(axis=1) - df.min(axis=1)
+    x_bar_cl = df['mean'].mean(); x_bar_ucl = x_bar_cl + 3 * (df['range'].mean() / 2.326); x_bar_lcl = x_bar_cl - 3 * (df['range'].mean() / 2.326)
+    fig = go.Figure(); fig.add_trace(go.Scatter(x=df.index, y=df['mean'], name='Subgroup Mean', mode='lines+markers')); fig.add_hline(y=x_bar_cl, line_dash="dash", line_color="green", annotation_text="CL")
+    fig.add_hline(y=x_bar_ucl, line_dash="dot", line_color="red", annotation_text="UCL"); fig.add_hline(y=x_bar_lcl, line_dash="dot", line_color="red", annotation_text="LCL")
+    fig.update_layout(title="I-Chart (Shewhart Chart) for Process Monitoring"); return fig
 
 def get_software_risk_data():
     return pd.DataFrame([{"Software Item": "Patient Result Algorithm", "IEC 62304 Class": "Class C"}, {"Software Item": "Database Middleware", "IEC 62304 Class": "Class B"}, {"Software Item": "UI Color Theme Module", "IEC 62304 Class": "Class A"}])
 
+def plot_rft_gauge(key):
+    fig = go.Figure(go.Indicator(mode = "gauge+number", value = 82, title = {'text': "Right-First-Time Protocol Execution"}, gauge = {'axis': {'range': [None, 100]}, 'bar': {'color': "cornflowerblue"}})); return fig
+    
 # --- PAGE RENDERING FUNCTIONS ---
 
 def render_main_page():
@@ -141,7 +157,7 @@ def render_design_controls_page():
         "Ensures audit readiness and provides a clear, defensible story of product development to regulatory bodies, accelerating submission review times."
     )
     render_metric_card("Requirements Traceability Matrix (RTM)", "The RTM is the backbone of the DHF, providing an auditable, many-to-many link between user needs, design inputs, V&V activities, and risk controls.", create_rtm_data_editor, "The matrix view instantly flags critical gaps, such as the un-tested cross-reactivity requirement (URS-003), allowing for proactive mitigation before a design freeze. This is a primary tool for preventing audit findings.", key="rtm")
-    render_metric_card("Product Risk Management (FMEA & Risk Matrix)", "A systematic process for identifying, analyzing, and mitigating potential failure modes in the product design. V&V activities are primary risk mitigations.", lambda k: plot_risk_matrix(k), "The risk matrix clearly prioritizes 'False Negative' as the highest risk, ensuring that it receives the most V&V resources and attention. This is a key input for the V&V Master Plan.", key="fmea")
+    render_metric_card("Product Risk Management (FMEA & Risk Matrix)", "A systematic process for identifying, analyzing, and mitigating potential failure modes in the product design. V&V activities are primary risk mitigations.", plot_risk_matrix, "The risk matrix clearly prioritizes 'False Negative' as the highest risk, ensuring that it receives the most V&V resources and attention. This is a key input for the V&V Master Plan.", key="fmea")
     render_metric_card("Design of Experiments (DOE/RSM)", "A powerful statistical tool used to efficiently characterize the product's design space and identify robust operating parameters (e.g., optimal temperature and pH for an assay).", plot_doe_rsm, "The Response Surface Methodology (RSM) plot indicates the assay's optimal performance is at ~32°C and a pH of 7.5. This data forms the basis for setting manufacturing specifications and proves the design is well-understood.", key="doe")
     
 def render_method_validation_page():
@@ -165,8 +181,8 @@ def render_execution_monitoring_page():
         "Provides an early warning system for process drifts or failures, reducing the risk of large-scale, costly investigations and ensuring the integrity of V&V data."
     )
     render_metric_card("Levey-Jennings & Westgard Rules", "The standard for monitoring daily quality control runs in a clinical lab environment. Westgard multi-rules provide high sensitivity for detecting systematic errors before they lead to invalid runs.", plot_levey_jennings_westgard, "The chart flags both a 1_3s rule violation (potential random error) and a 2_2s rule violation (potential systematic error). Action: Halt testing and launch a formal lab investigation as per the Quality Control SOP.", key="lj")
-    render_metric_card("Individuals (I) Chart with Nelson Rules", "An I-chart is used to monitor individual data points over time when rational subgrouping is not possible. Nelson rules are another set of statistical tests to detect out-of-control conditions.", lambda k: run_control_charts(k), "The I-chart shows a clear upward shift starting at sample 15. This is a statistically significant process change that must be investigated to determine the assignable cause before proceeding with validation.", key="ichart")
-    render_metric_card("First-Pass Analysis", "Measures the percentage of tests, protocols, or validation batches that are completed successfully without any rework, deviations, or failures. A primary indicator of process quality and efficiency.", lambda k: plot_rft_gauge(k), "A First-Pass (or Right-First-Time) rate of 82% indicates that nearly 1 in 5 protocols requires some form of rework. This provides a clear business case for investing in process improvement initiatives.", key="fpa")
+    render_metric_card("Individuals (I) Chart with Nelson Rules", "An I-chart (a type of Shewhart chart) is used to monitor individual data points over time. Nelson rules are a powerful set of statistical tests to detect out-of-control conditions.", run_control_charts, "The I-chart shows a clear upward shift starting at sample 15. This is a statistically significant process change that must be investigated to determine the assignable cause before proceeding with validation.", key="ichart")
+    render_metric_card("First-Pass Analysis", "Measures the percentage of tests, protocols, or validation batches that are completed successfully without any rework, deviations, or failures. A primary indicator of process quality and efficiency.", plot_rft_gauge, "A First-Pass (or Right-First-Time) rate of 82% indicates that nearly 1 in 5 protocols requires some form of rework. This provides a clear business case for investing in process improvement initiatives.", key="fpa")
 
 def render_quality_management_page():
     st.title("✅ 4. Project & Quality Systems Management")
@@ -184,11 +200,12 @@ def render_quality_management_page():
         with st.container(border=True):
             st.markdown("**IEC 62304 Software Safety Classification**")
             risk_df = get_software_risk_data()
+            # FIX: Use Styler.map instead of the deprecated Styler.applymap
             def classify_color(cls):
                 if cls == "Class C": return "background-color: #FF7F7F"
                 if cls == "Class B": return "background-color: #FFD700"
                 return "background-color: #90EE90"
-            st.dataframe(risk_df.style.applymap(classify_color, subset=['IEC 62304 Class']), use_container_width=True, hide_index=True)
+            st.dataframe(risk_df.style.map(classify_color, subset=['IEC 62304 Class']), use_container_width=True, hide_index=True)
             st.info("The rigor of V&V activities (e.g., level of documentation, code reviews, unit testing) is directly tied to this risk classification.")
     with col2:
         with st.container(border=True):
