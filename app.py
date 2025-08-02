@@ -523,7 +523,14 @@ def render_design_controls_page():
     render_metric_card("Requirements Traceability Matrix (RTM)", "The RTM is the backbone of the DHF, providing an auditable link between user needs, design inputs, V&V activities, and risk controls.", create_rtm_data_editor, "The matrix view instantly flags critical gaps, such as the un-tested cross-reactivity requirement (URS-003), allowing for proactive mitigation before a design freeze.", "FDA 21 CFR 820.30(j) - Design History File (DHF)", key="rtm")
     render_metric_card("Product Risk Management (FMEA & Risk Matrix)", "A systematic process for identifying, analyzing, and mitigating potential failure modes. V&V activities are primary risk mitigations.", plot_risk_matrix, "The risk matrix clearly prioritizes 'False Negative' as the highest risk, ensuring that it receives the most V&V resources and attention. This is a key input for the V&V Master Plan.", "ISO 14971: Application of risk management to medical devices", key="fmea")
     render_metric_card("Design of Experiments (DOE/RSM)", "A powerful statistical tool used to efficiently characterize the product's design space and identify robust operating parameters.", plot_doe_rsm, "The Response Surface Methodology (RSM) plot indicates the assay's optimal performance is at ~32°C and a pH of 7.5. This data forms the basis for setting manufacturing specifications.", "FDA Guidance on Process Validation: General Principles and Practices", key="doe")
-    
+    render_metric_card(
+        "AI-Powered Requirement Risk Analysis", 
+        "This NLP model uses Logistic Regression to analyze the text of a requirement and predict its risk of being ambiguous or untestable. It is trained to identify vague words like 'easy', 'fast', or 'robust'.", 
+        run_requirement_risk_nlp_model, 
+        "The model flags two requirements with a high probability of ambiguity. This allows the V&V lead to proactively engage with the systems engineering team to clarify and quantify these requirements *before* the design is frozen, preventing costly late-stage rework.", 
+        "ISO 13485: 7.3.2 (Design Inputs), FDA Guidance on Design Controls", 
+        key="req_risk"
+    )
 def render_method_validation_page():
     st.title("🔬 2. Method Validation & Statistical Rigor")
     st.markdown("---")
@@ -550,12 +557,27 @@ def render_execution_monitoring_page():
         "AIAG SPC Manual, FDA Guidance on Process Validation",
         key="anomaly_detection"
     )
+    render_metric_card(
+        "AI-Powered CQA Forecasting", 
+        "This ARIMA time-series model forecasts the future trend of a Critical Quality Attribute (CQA) based on its historical performance. This shifts the team from reactive monitoring to proactive intervention.", 
+        run_cqa_forecasting_model, 
+        "The model predicts that the CQA value will breach the upper specification limit within the next 15 days. This provides an early warning to the manufacturing sciences team to investigate the process before a non-conforming lot is produced.", 
+        "ICH Q8 (Quality by Design), FDA Guidance on Process Validation", 
+        key="cqa_forecast"
+    )
 def render_quality_management_page():
     st.title("✅ 4. Project & Quality Systems Management")
     st.markdown("---")
     render_director_briefing("Managing the V&V Ecosystem", "A V&V leader must manage project health, track quality issues, and ensure software compliance. These KPIs provide the necessary oversight to manage timelines, scope, and compliance risks.", "IEC 62304, 21 CFR Part 11, GAMP 5", "Improves project predictability, ensures software compliance (a major source of FDA 483s), and provides transparent reporting to stakeholders.")
     render_metric_card("Defect Open vs. Close Trend (Burnup)", "A burnup chart tracks scope changes and visualizes the rate of work completion against the rate of issue discovery.", plot_defect_burnup, "The widening gap between opened and closed defects indicates that our resolution rate is not keeping up. Action: Allocate additional resources to defect resolution.", "Agile Project Management Principles", key="burnup")
-    
+    render_metric_card(
+        "AI-Powered Defect Triage", 
+        "This NLP model uses a Random Forest Classifier to automatically predict the root cause category of a new defect based on its free-text description. This accelerates the triage process and improves resource allocation.", 
+        run_defect_root_cause_model, 
+        "The model identifies that 'Requirement Issues' are a significant source of defects, nearly equal to 'Coding Errors'. This is a critical insight, suggesting that improving the requirements engineering process could yield a high ROI in reducing downstream bugs.", 
+        "ISO 13485: 8.4 (Analysis of Data)", 
+        key="defect_root_cause"
+    )
     st.subheader("Software V&V (IEC 62304 & 21 CFR Part 11)")
     col1, col2 = st.columns(2)
     with col1:
@@ -842,6 +864,14 @@ def render_post_market_page():
         "A mature V&V function extends its influence beyond product launch. This dashboard demonstrates proactive post-market surveillance, using field data to monitor real-world performance, identify emerging trends, and provide data-driven triggers for the CAPA system. This is a critical component of a robust Quality Management System.",
         "21 CFR 820.198 (Complaint files), 21 CFR 820.100 (CAPA), ISO 13485:2016 Section 8.2.2 & 8.5.2",
         "Drives continuous product improvement, reduces the risk of field actions or recalls, and demonstrates a culture of quality and patient safety to regulatory bodies."
+    )
+    render_metric_card(
+        "AI-Powered Complaint Sentiment Analysis", 
+        "This VADER sentiment analysis model processes the free-text of complaint records to classify the customer's sentiment as Positive, Neutral, or Negative. This provides a crucial layer of business context on top of the technical data.", 
+        run_sentiment_analysis_model, 
+        "The analysis reveals that while 'Instrument Error' is the most frequent complaint type, 'Reagent Leak' complaints are overwhelmingly associated with negative sentiment. This indicates that the reagent issue is causing significantly more customer frustration and potential brand damage, and should be prioritized for corrective action.", 
+        "ISO 13485: 8.2.1 (Feedback)", 
+        key="sentiment_analysis"
     )
     df = get_complaint_data()
     
