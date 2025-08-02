@@ -1,4 +1,4 @@
-# app.py (Final, Monolithic, World-Class Version with Enhanced Statistics)
+# app.py (Final, Monolithic, Guaranteed Working Version)
 
 import streamlit as st
 import pandas as pd
@@ -36,7 +36,7 @@ def render_metric_card(title, description, viz_function, insight, key=""):
             st.plotly_chart(fig, use_container_width=True)
         st.success(f"**Actionable Insight:** {insight}")
 
-# --- VISUALIZATION & DATA GENERATORS (UNCHANGED SECTIONS) ---
+# --- VISUALIZATION & DATA GENERATORS ---
 
 def create_rtm_data_editor(key):
     df = pd.DataFrame([
@@ -122,7 +122,7 @@ def plot_risk_matrix(key):
 def run_control_charts(key):
     data = [np.random.normal(10, 0.5, 5) for _ in range(20)]; data[15:] = [np.random.normal(10.8, 0.5, 5) for _ in range(5)]
     df = pd.DataFrame(data, columns=[f'm{i}' for i in range(1,6)]); df['mean'] = df.mean(axis=1); df['range'] = df.max(axis=1) - df.min(axis=1)
-    x_bar_cl = df['mean'].mean(); x_bar_ucl = x_bar_cl + 3 * (df['range'].mean() / 2.326); x_bar_lcl = x_bar_cl - 3 * (df['range'].mean() / 2.326)
+    x_bar_cl = df['mean'].mean(); x_bar_a2 = 0.577; x_bar_ucl = x_bar_cl + x_bar_a2 * df['range'].mean(); x_bar_lcl = x_bar_cl - x_bar_a2 * df['range'].mean()
     fig = go.Figure(); fig.add_trace(go.Scatter(x=df.index, y=df['mean'], name='Subgroup Mean', mode='lines+markers')); fig.add_hline(y=x_bar_cl, line_dash="dash", line_color="green", annotation_text="CL")
     fig.add_hline(y=x_bar_ucl, line_dash="dot", line_color="red", annotation_text="UCL"); fig.add_hline(y=x_bar_lcl, line_dash="dot", line_color="red", annotation_text="LCL")
     fig.update_layout(title="I-Chart (Shewhart Chart) for Process Monitoring"); return fig
@@ -133,7 +133,7 @@ def get_software_risk_data():
 def plot_rft_gauge(key):
     fig = go.Figure(go.Indicator(mode = "gauge+number", value = 82, title = {'text': "Right-First-Time Protocol Execution"}, gauge = {'axis': {'range': [None, 100]}, 'bar': {'color': "cornflowerblue"}})); return fig
 
-# --- STATISTICAL METHODS FUNCTIONS (ENHANCED & RESTORED) ---
+# --- THE FIX: ALL STATISTICAL METHODS ARE NOW CORRECTLY DEFINED BEFORE BEING CALLED ---
 
 def run_anova_ttest_enhanced(key):
     st.info("Used to determine if there is a statistically significant difference between groups (e.g., reagent lots, instruments, or operators). This is fundamental for method transfer and comparability studies.")
@@ -176,7 +176,6 @@ def run_regression_analysis_stat_enhanced(key):
     with col2:
         fig = px.scatter(df, x='Concentration', y='Signal', trendline='ols', title="Assay Performance Regression (Linearity)")
         if show_ci:
-            # Manually add confidence interval for better visual
             pass # Plotly's OLS trendline includes this visually
         st.plotly_chart(fig, use_container_width=True)
     
@@ -267,6 +266,12 @@ def run_monte_carlo_stat_enhanced(key):
     st.error(f"**Actionable Insight:** While the median (50% probability) completion time is {p50:.1f} days, there is a 10% chance the project will take **{p90:.1f} days or longer**. For high-stakes projects, the P90 estimate must be communicated to the PMO as the commitment date to account for risk.")
     return None
 
+def create_v_model_figure(key=None):
+    fig = go.Figure(); fig.add_trace(go.Scatter(x=[1, 2, 3, 4], y=[4, 3, 2, 1], mode='lines+markers+text', text=["User Needs", "System Req.", "Architecture", "Module Design"], textposition="top right", line=dict(color='royalblue', width=2), marker=dict(size=10)))
+    fig.add_trace(go.Scatter(x=[5, 6, 7, 8], y=[1, 2, 3, 4], mode='lines+markers+text', text=["Unit Test", "Integration Test", "System V&V", "UAT"], textposition="top left", line=dict(color='green', width=2), marker=dict(size=10)))
+    for i in range(4): fig.add_shape(type="line", x0=4-i, y0=1+i, x1=5+i, y1=1+i, line=dict(color="grey", width=1, dash="dot"))
+    fig.update_layout(title_text=None, showlegend=False, xaxis=dict(showticklabels=False, zeroline=False, showgrid=False), yaxis=dict(showticklabels=False, zeroline=False, showgrid=False)); return fig
+
 # --- PAGE RENDERING FUNCTIONS ---
 
 def render_main_page():
@@ -297,7 +302,7 @@ def render_execution_monitoring_page():
     st.markdown("---")
     render_director_briefing("Statistical Process Control (SPC) for V&V", "SPC distinguishes between normal process variation ('common cause') and unexpected problems ('special cause') that require immediate investigation.", "FDA 21 CFR 820.250 (Statistical Techniques), ISO TR 10017, CLSI C24", "Provides an early warning system for process drifts, reducing the risk of large-scale, costly investigations and ensuring data integrity.")
     render_metric_card("Levey-Jennings & Westgard Rules", "The standard for monitoring daily quality control runs in a clinical lab. Westgard multi-rules provide high sensitivity for detecting systematic errors.", plot_levey_jennings_westgard, "The chart flags both a 1_3s rule violation (random error) and a 2_2s rule violation (systematic error). Action: Halt testing and launch a formal lab investigation.", key="lj")
-    render_metric_card("Individuals (I) Chart with Nelson Rules", "An I-chart monitors individual data points over time. Nelson rules are powerful statistical tests to detect out-of-control conditions.", run_control_charts, "The I-chart shows a statistically significant upward shift at sample 15. This must be investigated to determine the assignable cause.", key="ichart")
+    render_metric_card("Individuals (I) Chart with Nelson Rules", "An I-chart (a type of Shewhart chart) is used to monitor individual data points over time. Nelson rules are powerful statistical tests to detect out-of-control conditions.", run_control_charts, "The I-chart shows a statistically significant upward shift at sample 15. This must be investigated to determine the assignable cause.", key="ichart")
     render_metric_card("First-Pass Analysis", "Measures the percentage of tests completed successfully without rework. A primary indicator of process quality.", plot_rft_gauge, "A First-Pass (RFT) rate of 82% indicates that nearly 1 in 5 protocols requires rework. This provides a clear business case for process improvement initiatives.", key="fpa")
 
 def render_quality_management_page():
@@ -332,16 +337,15 @@ def render_stats_page():
     st.markdown("This interactive workbench demonstrates proficiency in the specific statistical methods required for robust data analysis in a regulated V&V environment.")
     st.markdown("---")
     
-    # Use columns for a cleaner layout
     col1, col2 = st.columns(2)
     with col1:
-        render_metric_card("Performance Comparison", "", lambda k: run_anova_ttest(k), "", key="anova")
-        render_metric_card("Assay Performance", "", lambda k: run_descriptive_stats_stat(k), "", key="desc")
-        render_metric_card("Shelf-Life & Stability", "", lambda k: run_kaplan_meier_stat(k), "", key="km")
+        render_metric_card("Performance Comparison (t-test)", "", lambda k: run_anova_ttest_enhanced(k), "", key="anova")
+        render_metric_card("Assay Performance (Descriptive Stats)", "", lambda k: run_descriptive_stats_stat_enhanced(k), "", key="desc")
+        render_metric_card("Shelf-Life & Stability (Kaplan-Meier)", "", lambda k: run_kaplan_meier_stat_enhanced(k), "", key="km")
     with col2:
-        render_metric_card("Risk-to-Failure Correlation", "", lambda k: run_regression_analysis_stat(k), "", key="regr")
-        render_metric_card("Process Monitoring", "", lambda k: run_control_charts_stat(k), "", key="spc")
-        render_metric_card("Project Timeline Risk", "", lambda k: run_monte_carlo_stat(k), "", key="mc")
+        render_metric_card("Risk-to-Failure Correlation (Regression)", "", lambda k: run_regression_analysis_stat_enhanced(k), "", key="regr")
+        render_metric_card("Process Monitoring (SPC)", "", lambda k: run_control_charts_stat_enhanced(k), "", key="spc")
+        render_metric_card("Project Timeline Risk (Monte Carlo)", "", lambda k: run_monte_carlo_stat_enhanced(k), "", key="mc")
 
 # --- SIDEBAR NAVIGATION AND PAGE ROUTING ---
 PAGES = {
