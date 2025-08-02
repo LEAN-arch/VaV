@@ -118,7 +118,7 @@ def create_portfolio_health_dashboard(key):
         elif val == 'Red': color = '#ffcccb'
         return f'background-color: {color}'
 
-    styled_df = df.style.applymap(style_rag, subset=['Schedule Status', 'Budget Status', 'Technical Risk', 'Resource Strain'])
+    styled_df = df.style.map(style_rag, subset=['Schedule Status', 'Budget Status', 'Technical Risk', 'Resource Strain'])
     return styled_df
 
 def create_resource_allocation_matrix(key):
