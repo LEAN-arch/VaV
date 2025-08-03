@@ -327,7 +327,7 @@ def create_process_map_diagram() -> go.Figure:
         shape_type = node.get('shape')
         
         # --- ENHANCEMENT: Increased Font Size ---
-        font_size = 14 if key == 'val_activities' else 12
+        font_size = 15 if key == 'val_activities' else 14
         
         path = ""
         # Define SVG paths for each shape type to ensure correct rendering
