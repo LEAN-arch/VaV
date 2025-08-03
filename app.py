@@ -1,4 +1,4 @@
-# app.py (Final, SME World-Class Version - No Logo)
+# app.py (Final, SME World-Class Version - Fully Corrected)
 
 # --- IMPORTS ---
 import base64
@@ -23,7 +23,7 @@ st.set_page_config(
 )
 
 # --- AESTHETIC & THEME CONSTANTS ---
-PRIMARY_COLOR = '#0460A9' # A professional blue, formerly Roche Blue
+PRIMARY_COLOR = '#0460A9' # A professional blue
 SUCCESS_GREEN = '#4CAF50'
 WARNING_AMBER = '#FFC107'
 ERROR_RED = '#D32F2F'
@@ -193,14 +193,17 @@ def plot_gantt_chart(key: str) -> go.Figure:
                       title="<b>Major Capital Project Timelines</b>",
                       color_discrete_map={'Execution': PRIMARY_COLOR, 'Planning': WARNING_AMBER})
     
-    fig.update_layout(
-        title_x=0.5, yaxis_title=None, plot_bgcolor=BACKGROUND_GREY,
-        xaxis_type='date'
+    # --- FIX for TypeError: Use add_shape and add_annotation separately ---
+    today_date = pd.to_datetime('today')
+    fig.add_shape(type="line",
+        x0=today_date, y0=0, x1=today_date, y1=1, yref='paper',
+        line=dict(color="black", width=2, dash="dash")
     )
-    fig.add_vline(
-        x=pd.to_datetime('today'),
-        line_width=2, line_dash="dash", line_color="black", 
-        annotation_text="Today"
+    fig.add_annotation(x=today_date, y=1.05, yref='paper',
+                       text="Today", showarrow=False, font=dict(color="black"))
+
+    fig.update_layout(
+        title_x=0.5, yaxis_title=None, plot_bgcolor=BACKGROUND_GREY
     )
     return fig
 
