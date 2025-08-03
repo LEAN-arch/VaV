@@ -81,6 +81,74 @@ def plot_kpi_sparkline(data: list, unit: str, x_axis_label: str, is_good_down: b
     return fig
 
 # --- DATA GENERATORS & VISUALIZATIONS ---
+def display_rpn_table(key: str) -> None:
+    """
+    Displays an interactive, professional-grade RPN table from a pFMEA.
+    """
+    st.subheader("Detailed Risk Register (pFMEA)", divider='blue')
+    st.info("""
+    **Purpose:** While the Risk Matrix provides a visual summary, this detailed RPN table is the core risk management tool. It quantifies risk using Severity, Occurrence, and **Detectability** (the likelihood of detecting a failure before it reaches the patient). Risks exceeding the threshold (e.g., RPN > 100) require mandatory mitigation.
+    """)
+
+    # Create detailed FMEA data
+    fmea_data = {
+        'ID': ['FMEA-01', 'FMEA-02', 'FMEA-03', 'FMEA-04'],
+        'Failure Mode': ['Incorrect Titer', 'Contamination from CIP', 'Sensor Failure (pH)', 'Software Crash'],
+        'Severity (S)': [9, 10, 7, 6],
+        'Occurrence (O)': [3, 2, 5, 4],
+        'Detectability (D)': [5, 4, 2, 3], # Higher number = Harder to detect
+        'Required Mitigation Action': [
+            'Implement PAT sensor for real-time monitoring.',
+            'Increase final rinse duration and add TOC sampling.',
+            'Define more frequent calibration/sensor health check in maintenance SOP.',
+            'Accepted risk; covered by disaster recovery plan.'
+        ],
+        'Status': ['In Progress', 'Complete', 'Complete', 'Accepted']
+    }
+    df = pd.DataFrame(fmea_data)
+    df['RPN'] = df['Severity (S)'] * df['Occurrence (O)'] * df['Detectability (D)']
+    
+    # Reorder columns for logical flow
+    df = df[['ID', 'Failure Mode', 'Severity (S)', 'Occurrence (O)', 'Detectability (D)', 'RPN', 'Required Mitigation Action', 'Status']]
+
+    def style_status_and_rpn(df_styled):
+        # Color-code RPN values
+        df_styled = df_styled.background_gradient(cmap='YlOrRd', subset=['RPN'], vmin=0, vmax=200)
+        
+        # Color-code Status
+        def style_status(val):
+            color_map = {'Complete': SUCCESS_GREEN, 'In Progress': WARNING_AMBER, 'Accepted': NEUTRAL_GREY}
+            bg_color = color_map.get(val, 'white')
+            font_color = 'white' if val in color_map else 'black'
+            return f"background-color: {bg_color}; color: {font_color};"
+        
+        df_styled = df_styled.map(style_status, subset=['Status'])
+        return df_styled
+
+    st.data_editor(
+        df,
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "Status": st.column_config.SelectboxColumn(
+                "Status",
+                options=["Not Started", "In Progress", "Complete", "Accepted"],
+                required=True,
+            ),
+            "RPN": st.column_config.ProgressColumn(
+                "RPN",
+                help="Risk Priority Number (S x O x D). Threshold > 100 requires action.",
+                min_value=0,
+                max_value=200,
+            ),
+        },
+        key=f"rpn_editor_{key}"
+    )
+
+    st.success("""
+    **Actionable Insight:** The RPN analysis has correctly prioritized 'Incorrect Titer' (RPN=135) as the highest risk due to its high severity and poor detectability. The mitigation to implement a PAT sensor is 'In Progress' and is being tracked as a key deliverable for Project Atlas.
+    """)
+
 def display_revalidation_planner(key: str) -> None:
     """
     NEW: An interactive planner for developing a risk-based revalidation strategy.
@@ -902,6 +970,8 @@ def render_e2e_validation_hub_page() -> None:
         with st.container(border=True): st.subheader("AI-Powered URS Risk Analysis"); st.plotly_chart(run_urs_risk_nlp_model("urs_risk"), use_container_width=True); st.success("**Actionable Insight:** Requirements 2, 3, and 5 flagged for rewrite due to high ambiguity.")
         with st.container(border=True): st.subheader("User Requirements Traceability (RTM)"); create_rtm_data_editor("rtm")
         with st.container(border=True): st.subheader("Process Risk Management (pFMEA)"); plot_risk_matrix("fmea")
+        with st.container(border=True):
+            display_rpn_table(key="e2e_rpn")
     with col2:
         st.header("Phases 2-4: Execution & Qualification"); st.info("The 'right side of the V-Model' focuses on generating objective evidence.")
         st.subheader("Phase 2: Factory & Site Acceptance Testing", divider='blue')
