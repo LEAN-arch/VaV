@@ -29,7 +29,6 @@ NEUTRAL_GREY = '#B0BEC5'
 
 # --- UTILITY & HELPER FUNCTIONS ---
 def render_manager_briefing(title: str, content: str, reg_refs: str, business_impact: str) -> None:
-    """Renders a formatted container for strategic context and manager-level briefings."""
     with st.container(border=True):
         st.subheader(f"🤖 {title}"); st.markdown(content)
         st.info(f"**Business Impact:** {business_impact}")
@@ -92,10 +91,10 @@ def plot_risk_burndown(key: str) -> go.Figure:
 def display_vendor_scorecard(key: str) -> None:
     st.table(pd.DataFrame({
         "Vendor": ["Vendor A (Automation)", "Vendor B (Components)"],
-        "On-Time Delivery": ["95%", "88%"],
-        "FAT First-Pass Yield": ["92%", "98%"],
-        "Documentation Quality (per GDP)": ["A-", "B+"],
-        "Overall Score": ["91/100", "90/100"]
+        "On-Time Delivery (%)": [95, 88],
+        "FAT First-Pass Yield (%)": [92, 98],
+        "Doc Package GDP Error Rate (%)": [2, 8],
+        "Overall Score (weighted)": [91, 85]
     }))
 
 def create_rtm_data_editor(key: str) -> None:
@@ -204,7 +203,7 @@ def render_project_portfolio_page() -> None:
     with st.container(border=True): st.subheader("Validation Team Resource Allocation"); fig_alloc, over_allocated_df = create_resource_allocation_matrix("allocation"); st.plotly_chart(fig_alloc, use_container_width=True);
     if not over_allocated_df.empty:
         for _, row in over_allocated_df.iterrows(): st.warning(f"**⚠️ Over-allocation Alert:** {row['Team Member']} at {row['Total Allocation']}%.")
-    with st.container(border=True): st.subheader("Key Vendor Performance Scorecard"); st.info("Purpose: This scorecard tracks the performance of key equipment vendors against critical metrics."); display_vendor_scorecard("vendor"); st.success("**Actionable Insight:** Vendor A's strong performance on the 'Atlas' project makes them a preferred partner for the upcoming 'Beacon' project. Vendor B's documentation quality issues require a follow-up meeting.")
+    with st.container(border=True): st.subheader("Key Vendor Performance Scorecard"); st.info("Purpose: This scorecard tracks the performance of key equipment vendors against critical, quantitative metrics."); display_vendor_scorecard("vendor"); st.success("**Actionable Insight:** Vendor A's strong performance and low documentation error rate on the 'Atlas' project make them a preferred partner for the upcoming 'Beacon' project. Vendor B's performance requires a follow-up meeting to establish a performance improvement plan.")
 
 def render_e2e_validation_hub_page() -> None:
     st.title("🔩 3. End-to-End Validation Hub: Project Atlas")
@@ -212,7 +211,7 @@ def render_e2e_validation_hub_page() -> None:
     phase = st.select_slider("Select a Validation Phase to View Key Deliverables:", options=["1. Design Review & Planning", "2. FAT & SAT", "3. IQ & OQ", "4. PQ"], value="1. Design Review & Planning")
     st.divider()
     if phase == "1. Design Review & Planning":
-        st.header("Phase 1: Design Controls & Risk-Based Planning"); st.info("Purpose: My role is to act as the Validation SME, ensuring the equipment is designed to be testable and compliant from day one. This proactive involvement is key to preventing costly redesigns and validation failures.")
+        st.header("Phase 1: Design Controls & Risk-Based Planning"); st.info("My role is to act as the Validation SME, ensuring the equipment is designed to be testable and compliant from day one. This proactive involvement is key to preventing costly redesigns and validation failures.")
         with st.container(border=True): st.subheader("Validation V-Model"); st.plotly_chart(create_v_model_figure("vmodel"), use_container_width=True)
         with st.container(border=True): st.subheader("User Requirements Traceability (RTM)"); create_rtm_data_editor("rtm")
         with st.container(border=True): st.subheader("Process Risk Management (pFMEA)"); plot_risk_matrix("fmea")
@@ -246,7 +245,9 @@ def render_validation_program_health_page() -> None:
     with tab1:
         st.subheader("Risk-Based Periodic Review Schedule"); st.info("Purpose: This table tracks the periodic review schedule for all critical GxP systems, prioritized by risk level. This ensures that resources are focused on the systems with the greatest impact on product quality and patient safety.")
         review_data = {"System": ["Bioreactor C", "Purification A", "WFI System", "HVAC - Grade A", "Inspection System", "CIP Skid B"], "Risk Level": ["High", "High", "High", "Medium", "Medium", "Low"], "Last Review": ["2023-01-15", "2023-02-22", "2023-08-10", "2022-11-05", "2023-09-01", "2022-04-20"], "Next Due": ["2024-01-15", "2024-02-22", "2024-08-10", "2024-11-05", "2025-09-01", "2025-04-20"], "Status": ["Complete", "Complete", "On Schedule", "DUE", "On Schedule", "On Schedule"]}
-        review_df = pd.DataFrame(review_data); def highlight_status(row): return ['background-color: #FFC7CE'] * len(row) if row["Status"] == "DUE" else [''] * len(row)
+        review_df = pd.DataFrame(review_data)
+        def highlight_status(row):
+            return ['background-color: #FFC7CE'] * len(row) if row["Status"] == "DUE" else [''] * len(row)
         st.dataframe(review_df.style.apply(highlight_status, axis=1), use_container_width=True, hide_index=True)
         st.error("**Actionable Insight:** The Periodic Review for the **HVAC - Grade A Area** is now due. I will assign a Validation Engineer to initiate the review this week.")
     with tab2:
@@ -272,7 +273,6 @@ def render_documentation_hub_page() -> None:
             with st.expander("📋 **View Professional PQ Report Template**"):
                 _render_professional_report_template()
 
-# --- HELPER FUNCTIONS FOR DOCUMENTATION HUB ---
 def _render_professional_protocol_template() -> None:
     st.header("IQ/OQ Protocol: VAL-TP-101"); st.subheader("Automated Bioreactor Suite (ASSET-123)"); st.divider()
     meta_cols = st.columns(4); meta_cols[0].metric("Document ID", "VAL-TP-101"); meta_cols[1].metric("Version", "1.0"); meta_cols[2].metric("Status", "Approved"); meta_cols[3].metric("Effective Date", "2024-01-15"); st.divider()
