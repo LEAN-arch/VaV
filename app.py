@@ -86,8 +86,14 @@ def display_revalidation_planner(key: str) -> None:
     df = pd.DataFrame(review_data)
 
     st.markdown("##### Select a Potential Future Change Event:")
-    change_event = st.selectbox("", 
-        options=["No Significant Change", "Major Software Patch (OS Update)", "Minor Process Drift Detected (SPC Trend)", "New Raw Material Supplier"])
+    
+    # --- FIX for Accessibility Warning ---
+    # Provide a descriptive label for screen readers and hide it visually.
+    change_event = st.selectbox(
+        label="Select a potential future change event to forecast its revalidation impact.", 
+        options=["No Significant Change", "Major Software Patch (OS Update)", "Minor Process Drift Detected (SPC Trend)", "New Raw Material Supplier"],
+        label_visibility="collapsed"
+    )
 
     # Define risk multipliers for different events
     multipliers = {
