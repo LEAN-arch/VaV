@@ -425,6 +425,7 @@ def create_portfolio_health_dashboard(key: str) -> Styler:
 
     styled_df = df.style.map(style_rag, subset=['Schedule Status', 'Budget Status', 'Technical Risk', 'Resource Strain'])
     return styled_df
+
 def create_resource_allocation_matrix(key: str) -> Tuple[go.Figure, pd.DataFrame]:
     """
     Generates an enhanced, actionable resource allocation dashboard.
@@ -880,31 +881,62 @@ def plot_doe_rsm(key: str) -> go.Figure:
     return fig
 
 
-def plot_levey_jennings_westgard(key: str) -> go.Figure:
+def plot_enhanced_levey_jennings(key: str) -> None:
     """
-    Generates a Levey-Jennings chart with Westgard rule violations.
-
-    Args:
-        key (str): A unique key for Streamlit widgets (unused).
-
-    Returns:
-        go.Figure: A Levey-Jennings control chart.
+    Renders a professional Levey-Jennings plot with programmatic Westgard rule
+    detection and a violation log table, mimicking a real LIMS.
     """
-    np.random.seed(1)
+    rng = np.random.default_rng(1)
     days = np.arange(1, 31)
     mean, sd = 100, 4
-    data = np.random.normal(mean, sd, 30)
+    # Simulate data with specific, detectable violations
+    data = rng.normal(mean, sd, 30)
     data[10] = mean + 3.5 * sd  # 1_3s violation
     data[20:22] = mean + 2.2 * sd  # 2_2s violation
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=days, y=data, mode='lines+markers', name='Control Value'))
-    for i, color in zip([1, 2, 3], ['green', 'orange', 'red']):
-        fig.add_hline(y=mean + i * sd, line_dash="dot", line_color=color, annotation_text=f"+{i}SD")
-        fig.add_hline(y=mean - i * sd, line_dash="dot", line_color=color, annotation_text=f"-{i}SD")
-    fig.add_annotation(x=10, y=data[10], text="1_3s Violation", showarrow=True, arrowhead=1)
-    fig.add_annotation(x=21, y=data[21], text="2_2s Violation", showarrow=True, arrowhead=1)
-    fig.update_layout(title='Levey-Jennings Chart with Westgard Rules', xaxis_title='Day', yaxis_title='Control Value')
-    return fig
+    
+    # --- Programmatic Westgard Rule Detection ---
+    violations = []
+    # Check for 1_3s violations
+    for i, x in enumerate(data):
+        if abs(x - mean) > 3 * sd:
+            violations.append({'Day': days[i], 'Value': f'{x:.2f}', 'Rule': '1₃ₛ', 'Interpretation': 'Likely random error; outlier.'})
+    # Check for 2_2s violations (two consecutive points > 2SD on the same side)
+    for i in range(1, len(data)):
+        if (data[i] > mean + 2 * sd and data[i-1] > mean + 2 * sd) or \
+           (data[i] < mean - 2 * sd and data[i-1] < mean - 2 * sd):
+            violations.append({'Day': days[i], 'Value': f'{data[i]:.2f}', 'Rule': '2₂ₛ', 'Interpretation': 'Systematic error; process shift.'})
+
+    # --- Create Enhanced Visualization ---
+    fig = make_subplots(
+        rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.15,
+        row_heights=[0.7, 0.3],
+        specs=[[{"type": "xy"}], [{"type": "table"}]]
+    )
+    
+    # 1. Levey-Jennings Plot
+    fig.add_trace(go.Scatter(x=days, y=data, mode='lines+markers', name='Control Value', line=dict(color='royalblue')), row=1, col=1)
+    for i, color, ls in zip([1, 2, 3], ['green', 'orange', 'red'], ['dot', 'dashdot', 'dash']):
+        fig.add_hline(y=mean + i*sd, line_dash=ls, line_color=color, annotation_text=f"+{i}SD", row=1, col=1)
+        fig.add_hline(y=mean - i*sd, line_dash=ls, line_color=color, annotation_text=f"-{i}SD", row=1, col=1)
+
+    # Add markers for detected violations
+    violation_days = [v['Day'] for v in violations]
+    violation_values = [float(v['Value']) for v in violations]
+    violation_rules = [v['Rule'] for v in violations]
+    fig.add_trace(go.Scatter(x=violation_days, y=violation_values, mode='markers', name='Violation', 
+                             marker=dict(color='red', size=12, symbol='x')), row=1, col=1)
+
+    # 2. Violation Log Table
+    if violations:
+        violations_df = pd.DataFrame(violations)
+        fig.add_trace(go.Table(
+            header=dict(values=list(violations_df.columns), fill_color='#FFC7CE', align='left'),
+            cells=dict(values=[violations_df.Day, violations_df.Value, violations_df.Rule, violations_df.Interpretation], fill_color='#FADBD8', align='left')
+        ), row=2, col=1)
+        
+    fig.update_layout(height=600, title_text='Levey-Jennings Chart with Automated Westgard Rule Violations', showlegend=False)
+    fig.update_yaxes(title_text="Control Value", row=1, col=1)
+    st.plotly_chart(fig, use_container_width=True)
 
 
 def run_assay_regression(key: str) -> go.Figure:
@@ -960,33 +992,57 @@ def plot_risk_matrix(key: str) -> go.Figure:
     return fig
 
 
-def run_control_charts(key: str) -> go.Figure:
+def plot_enhanced_spc_charts(key: str) -> None:
     """
-    Generates a basic I-Chart (Shewhart chart).
-
-    Args:
-        key (str): A unique key for Streamlit widgets (unused).
-
-    Returns:
-        go.Figure: An I-Chart for process monitoring.
+    Renders an industrial-grade, interactive X-bar and R chart, the standard
+    for monitoring process mean and variability with rational subgroups.
     """
-    np.random.seed(1)
-    data = [np.random.normal(10, 0.5, 5) for _ in range(20)]
-    data[15:] = [np.random.normal(10.8, 0.5, 5) for _ in range(5)]
-    df = pd.DataFrame(data, columns=[f'm{i}' for i in range(1, 6)])
-    df['mean'] = df.mean(axis=1)
-    df['range'] = df.max(axis=1) - df.min(axis=1)
-    x_bar_cl = df['mean'].mean()
-    x_bar_a2 = 0.577  # Constant for n=5 subgroups
-    x_bar_ucl = x_bar_cl + x_bar_a2 * df['range'].mean()
-    x_bar_lcl = x_bar_cl - x_bar_a2 * df['range'].mean()
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df.index, y=df['mean'], name='Subgroup Mean', mode='lines+markers'))
-    fig.add_hline(y=x_bar_cl, line_dash="dash", line_color="green", annotation_text="CL")
-    fig.add_hline(y=x_bar_ucl, line_dash="dot", line_color="red", annotation_text="UCL")
-    fig.add_hline(y=x_bar_lcl, line_dash="dot", line_color="red", annotation_text="LCL")
-    fig.update_layout(title="I-Chart (Shewhart Chart) for Process Monitoring")
-    return fig
+    st.info("Monitor a process by collecting data in rational subgroups (e.g., 5 measurements per batch). The **X-bar Chart** tracks the average between subgroups, while the **R-Chart** tracks the variability within subgroups. Both must be in control.")
+    
+    process_shift = st.checkbox("Simulate a Process Shift (after Subgroup 15)", key=f"spc_shift_{key}")
+    
+    # --- Generate Data ---
+    rng = np.random.default_rng(42)
+    subgroups = 20
+    subgroup_size = 5
+    data = [rng.normal(10, 0.5, subgroup_size) for _ in range(subgroups)]
+    if process_shift:
+        data[15:] = [rng.normal(10.8, 0.5, subgroup_size) for _ in range(subgroups - 15)]
+        
+    df = pd.DataFrame(data, columns=[f'm{i}' for i in range(1, subgroup_size + 1)])
+    df.index.name = "Subgroup"
+    df['Mean'] = df.mean(axis=1)
+    df['Range'] = df.max(axis=1) - df.min(axis=1)
+
+    # --- Calculate Control Limits (using SPC constants for n=5) ---
+    # Use data from the first 15 "in-control" subgroups to establish limits
+    mean_of_means = df['Mean'][:15].mean()
+    mean_of_ranges = df['Range'][:15].mean()
+    A2 = 0.577  # SPC constant for n=5
+    D4 = 2.114  # SPC constant for n=5
+    
+    x_bar_ucl, x_bar_lcl = mean_of_means + A2 * mean_of_ranges, mean_of_means - A2 * mean_of_ranges
+    r_ucl = D4 * mean_of_ranges
+    
+    # --- Create Visualization ---
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1, subplot_titles=("X-bar Chart (Process Mean)", "R-Chart (Process Variability)"))
+    
+    # X-bar Chart
+    fig.add_trace(go.Scatter(x=df.index, y=df['Mean'], name='Subgroup Mean', mode='lines+markers'), row=1, col=1)
+    fig.add_hline(y=mean_of_means, line_dash="dash", line_color="green", annotation_text="CL", row=1, col=1)
+    fig.add_hline(y=x_bar_ucl, line_dash="dot", line_color="red", annotation_text="UCL", row=1, col=1)
+    fig.add_hline(y=x_bar_lcl, line_dash="dot", line_color="red", annotation_text="LCL", row=1, col=1)
+    
+    # R-Chart
+    fig.add_trace(go.Scatter(x=df.index, y=df['Range'], name='Subgroup Range', mode='lines+markers', line=dict(color='orange')), row=2, col=1)
+    fig.add_hline(y=mean_of_ranges, line_dash="dash", line_color="green", annotation_text="CL", row=2, col=1)
+    fig.add_hline(y=r_ucl, line_dash="dot", line_color="red", annotation_text="UCL", row=2, col=1)
+    
+    fig.update_layout(height=600, showlegend=False, title_text="X-bar and R Control Charts")
+    fig.update_xaxes(title_text="Subgroup Number", row=2, col=1)
+    fig.update_yaxes(title_text="Subgroup Average", row=1, col=1)
+    fig.update_yaxes(title_text="Subgroup Range", row=2, col=1)
+    st.plotly_chart(fig, use_container_width=True)
 
 
 def get_software_risk_data(key: str = "") -> pd.DataFrame:
@@ -1006,23 +1062,37 @@ def get_software_risk_data(key: str = "") -> pd.DataFrame:
     ])
 
 
-def plot_rft_gauge(key: str) -> go.Figure:
+def plot_enhanced_rft_kpi(key: str) -> None:
     """
-    Generates a gauge for Right-First-Time protocol execution rate.
-
-    Args:
-        key (str): A unique key for Streamlit widgets (unused).
-
-    Returns:
-        go.Figure: A gauge indicator.
+    Renders a true KPI dashboard for Right-First-Time (RFT), including a gauge,
+    a metric with delta, and a historical trend chart.
     """
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=82,
-        title={'text': "Right-First-Time Protocol Execution"},
-        gauge={'axis': {'range': [None, 100]}, 'bar': {'color': "cornflowerblue"}}
-    ))
-    return fig
+    col1, col2 = st.columns([1, 2])
+    
+    with col1:
+        st.markdown("##### Current RFT Rate")
+        fig_gauge = go.Figure(go.Indicator(
+            mode="gauge+number+delta",
+            value=82.4,
+            title={'text': "This Quarter"},
+            delta={'reference': 79.1, 'relative': False, 'valueformat': '.1f'},
+            gauge={'axis': {'range': [50, 100]}, 'bar': {'color': "cornflowerblue"},
+                   'steps': [{'range': [50, 80], 'color': 'lightyellow'}, {'range': [80, 90], 'color': 'lightgreen'}],
+                   'threshold': {'line': {'color': "green", 'width': 4}, 'thickness': 0.9, 'value': 95}}
+        ))
+        fig_gauge.update_layout(height=300, margin=dict(t=40, b=40))
+        st.plotly_chart(fig_gauge, use_container_width=True)
+
+    with col2:
+        st.markdown("##### Historical Trend")
+        months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
+        rft_rates = [75.2, 78.5, 79.1, 81.3, 80.5, 82.4]
+        df = pd.DataFrame({'Month': months, 'RFT Rate (%)': rft_rates})
+        
+        fig_trend = px.line(df, x='Month', y='RFT Rate (%)', markers=True,
+                            title='RFT Performance Over Last 6 Months')
+        fig_trend.update_layout(height=300, margin=dict(t=40, b=40), yaxis_range=[70, 90])
+        st.plotly_chart(fig_trend, use_container_width=True)
 
 
 def run_anova_ttest_enhanced(key: str) -> None:
@@ -1335,26 +1405,45 @@ def render_method_validation_page() -> None:
 
 
 def render_execution_monitoring_page() -> None:
-    """Renders the Execution Monitoring & Quality Control page."""
+    """Renders the professionally upgraded Execution Monitoring & Quality Control page."""
     st.title("📈 3. Execution Monitoring & Quality Control")
     st.markdown("---")
-    render_director_briefing("Statistical Process Control (SPC) for V&V", "SPC distinguishes between normal process variation ('common cause') and unexpected problems ('special cause') that require immediate investigation.", "FDA 21 CFR 820.250 (Statistical Techniques), ISO TR 10017, CLSI C24", "Provides an early warning system for process drifts, reducing the risk of large-scale, costly investigations and ensuring data integrity.")
-    render_metric_card("Levey-Jennings & Westgard Rules", "The standard for monitoring daily quality control runs in a clinical lab. Westgard multi-rules provide high sensitivity for detecting systematic errors.", plot_levey_jennings_westgard, "The chart flags both a 1_3s rule violation (random error) and a 2_2s rule violation (systematic error). Action: Halt testing and launch a formal lab investigation.", "CLSI C24 - Statistical Quality Control for Quantitative Measurement Procedures", key="lj")
-    render_metric_card("Individuals (I) Chart with Nelson Rules", "An I-chart (a type of Shewhart chart) is used to monitor individual data points over time. Nelson rules are powerful statistical tests to detect out-of-control conditions.", run_control_charts, "The I-chart shows a statistically significant upward shift at sample 15. This must be investigated to determine the assignable cause.", "FDA 21 CFR 820.250 (Statistical Techniques)", key="ichart")
-    render_metric_card("Right-First-Time (RFT) Analysis", "Measures the percentage of protocols completed successfully without rework. A primary indicator of process quality.", plot_rft_gauge, "An RFT rate of 82% indicates that nearly 1 in 5 protocols requires rework. This provides a clear business case for process improvement initiatives.", "Lean Six Sigma Principles", key="fpa")
+    render_director_briefing(
+        "Statistical Process Control (SPC) for V&V", 
+        "SPC distinguishes between normal process variation ('common cause') and unexpected problems ('special cause') that require immediate investigation. An effective SPC program moves a V&V organization from reactive problem-solving to proactive process control, ensuring data integrity and product consistency.",
+        "FDA 21 CFR 820.250 (Statistical Techniques), ISO TR 10017, CLSI C24", 
+        "Provides an early warning system for process drifts, reducing the risk of large-scale, costly investigations. It is the foundation for demonstrating a process is in a state of statistical control, a key requirement for process validation (PQ)."
+    )
+    
+    with st.container(border=True):
+        st.subheader("Daily Quality Control Monitoring (Levey-Jennings)")
+        plot_enhanced_levey_jennings("lj_enhanced")
+        st.success("**Actionable Insight:** The system has automatically detected a '2₂ₛ' violation, a classic sign of a systematic error such as a shift in calibration or a degrading reagent. This is a higher priority than the random '1₃ₛ' error. Action: Halt testing, recalibrate the instrument, and re-run controls before processing patient samples.")
+
+    with st.container(border=True):
+        st.subheader("Manufacturing Process Monitoring (X-bar & R Charts)")
+        plot_enhanced_spc_charts("spc_enhanced")
+        st.success("**Actionable Insight:** If a process shift is simulated, the X-bar chart clearly shows the mean shifting out of control, while the R-chart remains stable. This is a powerful diagnostic signal, indicating that the process *variability* is unchanged, but the *average* has moved. This allows the team to rule out causes related to inconsistency (e.g., operator variation) and focus on causes related to a systemic shift (e.g., incorrect buffer concentration, wrong machine setting).")
+
+    with st.container(border=True):
+        st.subheader("V&V Protocol Execution Efficiency (Right-First-Time KPI)")
+        plot_enhanced_rft_kpi("rft_enhanced")
+        st.success("**Actionable Insight:** The RFT rate is currently 82.4%, a 3.3 point improvement over last quarter, showing our process improvement initiatives are working. However, the trend shows we are still far from our goal of 95%. The fact that nearly 1 in 5 protocols requires rework justifies allocating a dedicated resource to root cause analysis of failed/repeated protocols.")
+
     render_metric_card(
-        "AI-Powered Anomaly Detection",
-        "This model uses an Isolation Forest algorithm to perform multivariate anomaly detection. It identifies outlier data points based on combinations of variables, finding subtle issues that traditional single-variable control charts might miss.",
+        "AI-Powered Multivariate Anomaly Detection",
+        "This model uses an Isolation Forest algorithm to perform multivariate anomaly detection. It identifies outlier data points based on combinations of variables, finding subtle issues that traditional single-variable control charts (like the ones above) would miss.",
         plot_multivariate_anomaly_detection,
-        "The model identified two batches that are statistically significant outliers when considering Temperature, Pressure, and Flow Rate simultaneously. Although each individual parameter may be within its spec, their combination is anomalous and requires investigation. This is a powerful tool for early warning of process drift.",
+        "The model identified two batches as significant outliers by considering Temperature, Pressure, and Flow Rate *simultaneously*. This is powerful because univariate charts would not have flagged these points, as each individual parameter was likely within its own specification limits. The failure is in the *combination* of parameters, indicating a complex process interaction that requires investigation.",
         "AIAG SPC Manual, FDA Guidance on Process Validation",
         key="anomaly_detection"
     )
+
     render_metric_card(
         "AI-Powered CQA Forecasting", 
         "This ARIMA time-series model forecasts the future trend of a Critical Quality Attribute (CQA) based on its historical performance. This shifts the team from reactive monitoring to proactive intervention.", 
         run_cqa_forecasting_model, 
-        "The model predicts that the CQA value will breach the upper specification limit within the next 15 days. This provides an early warning to the manufacturing sciences team to investigate the process before a non-conforming lot is produced.", 
+        "The model predicts that the CQA value will breach the upper specification limit within the next 15 days. This provides an early warning to the manufacturing sciences team to investigate the process *before* a non-conforming lot is produced, saving significant cost and time.", 
         "ICH Q8 (Quality by Design), FDA Guidance on Process Validation", 
         key="cqa_forecast"
     )
