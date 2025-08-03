@@ -1,4 +1,4 @@
-# app.py (Final, SME World-Class Version - KPI Glossary & All Enhancements)
+# app.py (Final, SME World-Class Version - Fully Corrected)
 
 # --- IMPORTS ---
 import streamlit as st
@@ -270,6 +270,33 @@ def plot_doe_optimization(key: str) -> go.Figure:
     fig.update_layout(title='<b>DOE Response Surface for Process Optimization</b>', scene=dict(xaxis_title='Temperature (°C)', yaxis_title='pH', zaxis_title='Product Yield (%)'), title_x=0.5, margin=dict(l=0, r=0, b=0, t=40))
     return fig
 
+# --- FIX: Added missing plot_cost_of_quality function ---
+def plot_cost_of_quality(key: str) -> go.Figure:
+    """Plots a Cost of Quality model to demonstrate strategic financial acumen."""
+    categories = ['Prevention Costs (e.g., Planning, Training)', 'Appraisal Costs (e.g., Testing, FAT/SAT)',
+                  'Internal Failure Costs (e.g., Rework, Deviations)', 'External Failure Costs (e.g., Recall, Audit Findings)']
+    fig = go.Figure()
+    fig.add_trace(go.Bar(name='With Proactive Validation', x=[200, 300, 50, 10], y=categories, orientation='h', marker_color=SUCCESS_GREEN))
+    fig.add_trace(go.Bar(name='Without Proactive Validation', x=[50, 75, 800, 1500], y=categories, orientation='h', marker_color=ERROR_RED))
+    fig.update_layout(barmode='stack', title_text='<b>Strategic Value: The Cost of Quality (CoQ) Model</b>', title_x=0.5,
+                      xaxis_title='Annual Costs (in $ thousands)', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+                      plot_bgcolor=BACKGROUND_GREY)
+    total_with = 200 + 300 + 50 + 10; total_without = 50 + 75 + 800 + 1500
+    fig.add_annotation(x=total_with, y=categories[0], text=f"<b>Total: ${total_with}k</b>", showarrow=False, xanchor='left', font_color=SUCCESS_GREEN)
+    fig.add_annotation(x=total_without, y=categories[0], text=f"<b>Total: ${total_without}k</b>", showarrow=False, xanchor='right', font_color=ERROR_RED)
+    return fig
+
+# --- FIX: Added missing display_team_skill_matrix function ---
+def display_team_skill_matrix(key: str) -> None:
+    """Displays a team skill matrix to demonstrate strategic talent management."""
+    skill_data = {'Team Member': ['J. Doe (Lead)', 'S. Smith (Eng. II)', 'A. Wong (Spec. I)', 'B. Zeller (Eng. I)'], 'CSV & Part 11': [5, 3, 2, 2], 'Cleaning Validation': [4, 4, 3, 1], 'Statistics (Cpk/DOE)': [5, 3, 2, 3], 'Project Management': [5, 2, 1, 1], 'Development Goal': ['Mentor team on advanced stats', 'Lead CSV for Project Beacon', 'Cross-train on Cleaning Val', 'Achieve PMP certification']}
+    df = pd.DataFrame(skill_data)
+    st.info("**Purpose:** A skills matrix is a critical tool for a manager to visualize team capabilities, identify skill gaps, and plan targeted development. *Proficiency Scale: 1 (Novice) to 5 (SME)*")
+    skill_cols = df.columns.drop(['Team Member', 'Development Goal'])
+    styled_df = df.style.background_gradient(cmap='Greens', subset=skill_cols, vmin=1, vmax=5).set_properties(**{'text-align': 'center'}, subset=skill_cols)
+    st.dataframe(styled_df, use_container_width=True, hide_index=True, height=215)
+    st.success("**Actionable Insight:** The matrix identifies a bottleneck in Project Management skills. Based on B. Zeller's development goal, I will approve the budget for PMP certification training. A. Wong will be assigned to the 'Atlas' Cleaning Validation PQ to gain hands-on experience, supported by S. Smith.")
+
 def plot_kaizen_roi_chart(key: str) -> go.Figure:
     fig = go.Figure(go.Waterfall(name="2023 Savings", orientation="v", measure=["relative", "relative", "relative", "total"], x=["Optimize CIP Cycle Time", "Implement PAT Sensor", "Reduce Line Changeover", "<b>Total Annual Savings</b>"], text=[f"+${v}k" for v in [150, 75, 220, 445]], y=[150, 75, 220, 445], connector={"line": {"color": NEUTRAL_GREY}}, increasing={"marker":{"color":SUCCESS_GREEN}}, decreasing={"marker":{"color":ERROR_RED}}, totals={"marker":{"color":PRIMARY_COLOR, "line": dict(color='white', width=2)}}))
     fig.update_layout(title="<b>Continuous Improvement (Kaizen) ROI Tracker</b>", yaxis_title="Annual Savings ($k)", title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
@@ -296,7 +323,7 @@ def render_main_page() -> None:
     st.title("🤖 Automated Equipment Validation Portfolio"); st.subheader("A Live Demonstration of Modern Validation Leadership"); st.divider()
     st.markdown("Welcome. This interactive environment provides **undeniable proof of expertise in the end-to-end validation of automated manufacturing equipment** in a strictly regulated GMP environment. It simulates how an effective leader manages a validation function, with a relentless focus on aligning technical execution, **Quality Systems (per 21 CFR 820 & ISO 13485)**, and strategic capital projects.")
     
-    st.subheader("Key Program Health KPIs", divider='blue')
+    st.subheader("Key Program Health KPIs", divider='blue');
     kpi_cols = st.columns(3)
     with kpi_cols[0]:
         with st.container(border=True):
