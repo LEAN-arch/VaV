@@ -14,6 +14,7 @@ from sklearn.linear_model import LogisticRegression
 from scipy.stats import norm
 import shap
 import matplotlib.pyplot as plt
+from typing import Tuple # <-- FIX: Import Tuple for type hinting
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -454,7 +455,6 @@ def render_documentation_hub_page() -> None:
     with col2:
         with st.container(border=True):
             st.subheader("Interactive Document Viewer"); st.info("The following are professionally rendered digital artifacts that simulate documents within a validated eQMS.")
-            # --- FIX: Correct IndentationError by creating a proper 'with' block ---
             with st.expander("📄 **View Professional IQ/OQ Protocol Template**"):
                 _render_professional_protocol_template()
             with st.expander("📋 **View Professional PQ Report Template**"):
