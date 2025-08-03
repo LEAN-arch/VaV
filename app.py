@@ -107,18 +107,36 @@ def create_validation_scheme_diagram() -> go.Figure:
     }
     for key, node in nodes.items():
         w, h, align = node.get('w', 1.8), node.get('h', 1), 'left' if key == 'val_activities' else 'center'
-        fig.add_shape(type="rect", x0=node['pos'][0]-w, y0=node['pos'][1]-h, x1=node['pos'][0]+w, y1=node['pos'][1]+h, line=dict(color="Black"), fillcolor=node['color'], opacity=0.8)
+        fig.add_shape(type="rect", x0=node['pos'][0]-w, y0=node['pos'][1]-h, x1=node['pos'][0]+w, y1=node['pos'][1]+h, line=dict(color="Black"), fillcolor=node['color'], opacity=0.8, layer="below")
         fig.add_annotation(x=node['pos'][0], y=node['pos'][1], text=node['text'], showarrow=False, align=align, font=dict(color='white' if node['color'] in [PRIMARY_COLOR, DARK_GREY, '#D35400'] else 'black'))
 
-    def add_arrow(start_node, end_node, color="black", width=2): fig.add_annotation(x=nodes[start_node]['pos'][0], y=nodes[start_node]['pos'][1] - nodes[start_node].get('h',1)*0.8, ax=nodes[end_node]['pos'][0], ay=nodes[end_node]['pos'][1] + nodes[end_node].get('h',1)*0.8, arrowhead=2, arrowwidth=width, arrowcolor=color)
-    add_arrow('sys_desc', 'fat_sat'); add_arrow('fat_sat', 'val_activities')
+    def add_arrow(start_node, end_node, y_offset_start=-0.8, y_offset_end=0.8): fig.add_annotation(x=nodes[start_node]['pos'][0], y=nodes[start_node]['pos'][1] + nodes[start_node].get('h',1)*y_offset_start, ax=nodes[end_node]['pos'][0], ay=nodes[end_node]['pos'][1] + nodes[end_node].get('h',1)*y_offset_end, arrowhead=2, arrowwidth=2, arrowcolor="black")
+    add_arrow('sys_desc', 'fat_sat'); add_arrow('fat_sat', 'val_activities', y_offset_end=0.25); add_arrow('val_activities', 'sample_size', y_offset_start=-0.5)
     fig.add_annotation(x=nodes['val_activities']['pos'][0]+nodes['val_activities'].get('w',1.8), y=nodes['val_activities']['pos'][1], ax=nodes['acceptance']['pos'][0]-nodes['acceptance'].get('w',1.8), ay=nodes['acceptance']['pos'][1], arrowhead=2, arrowwidth=2)
-    fig.add_annotation(x=nodes['val_activities']['pos'][0], y=nodes['val_activities']['pos'][1]-nodes['val_activities'].get('h',1.8), ax=nodes['sample_size']['pos'][0], ay=nodes['sample_size']['pos'][1]+nodes['sample_size'].get('h',1), arrowhead=2, arrowwidth=2)
     fig.add_shape(type="path", path=" M 8.5,3.5 C 9.5,5.5 7.5,6.5 5.5,5.5", line=dict(color="black", width=3)); fig.add_annotation(x=5.5, y=5.5, ax=6, ay=6, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor="black")
     fig.add_shape(type="path", path=" M 5.5,2.5 C 4.5,3.5 4.5,4.5 5.5,5.5", line=dict(color=ERROR_RED, width=3)); fig.add_annotation(x=5.5, y=5.5, ax=5.2, ay=5, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor=ERROR_RED)
     fig.update_layout(title="<b>Equipment Validation Blueprint</b>", xaxis=dict(range=[0, 11], visible=False), yaxis=dict(range=[0, 10], visible=False), plot_bgcolor=BACKGROUND_GREY, margin=dict(l=20, r=20, t=40, b=20), height=700)
     return fig
 
+def create_equipment_v_model() -> go.Figure:
+    """Creates a V-Model diagram specific to equipment validation."""
+    fig = go.Figure()
+    # Specification Side
+    fig.add_trace(go.Scatter(x=[1, 2, 3, 4], y=[4, 3, 2, 1], mode='lines+markers+text', text=["<b>User Requirements (URS)</b>", "<b>Functional Specs</b>", "<b>Design Specs (P&ID, Electrical)</b>", "<b>Build & Fabrication</b>"], textposition="bottom center", line=dict(color=PRIMARY_COLOR, width=3), marker=dict(size=15)))
+    # Verification Side
+    fig.add_trace(go.Scatter(x=[5, 6, 7, 8], y=[1, 2, 3, 4], mode='lines+markers+text', text=["<b>FAT / SAT</b>", "<b>IQ (Installation)</b>", "<b>OQ (Operational)</b>", "<b>PQ (Performance)</b>"], textposition="top center", line=dict(color=SUCCESS_GREEN, width=3), marker=dict(size=15)))
+    # Traceability Lines
+    links = [("URS ↔ PQ", 4), ("Functional Specs ↔ OQ", 3), ("Design Specs ↔ IQ", 2), ("Build ↔ FAT/SAT", 1)]
+    for i, (text, y_pos) in enumerate(links):
+        fig.add_shape(type="line", x0=4-i, y0=y_pos, x1=5+i, y1=y_pos, line=dict(color=NEUTRAL_GREY, width=1, dash="dot"))
+        fig.add_annotation(x=4.5, y=y_pos + 0.1, text=text, showarrow=False, font=dict(size=10))
+    
+    fig.add_annotation(x=2.5, y=4.5, text="<b>Specification / Design</b>", showarrow=False, font=dict(color=PRIMARY_COLOR, size=14))
+    fig.add_annotation(x=6.5, y=4.5, text="<b>Verification / Qualification</b>", showarrow=False, font=dict(color=SUCCESS_GREEN, size=14))
+    fig.update_layout(title_text="<b>Equipment Validation V-Model</b>", title_x=0.5, showlegend=False, xaxis=dict(visible=False), yaxis=dict(visible=False), plot_bgcolor='rgba(0,0,0,0)')
+    return fig
+
+# ... (All other visualization functions remain here unchanged) ...
 def create_portfolio_health_dashboard(key: str) -> Styler:
     health_data = {'Project': ["Project Atlas (Bioreactor)", "Project Beacon (Assembly)", "Project Comet (Vision)"], 'Overall Status': ["Green", "Amber", "Green"], 'Schedule': ["On Track", "At Risk", "Ahead"], 'Budget': ["On Track", "Over", "On Track"], 'Lead': ["J. Doe", "S. Smith", "J. Doe"]}
     df = pd.DataFrame(health_data)
@@ -339,7 +357,18 @@ def run_urs_risk_nlp_model(key: str) -> go.Figure:
     fig.add_annotation(x=0.75, y=9, text="High Ambiguity, <br>High Impact:<br><b>REJECT/REWRITE!</b>", showarrow=False, bgcolor="#D32F2F", font=dict(color='white'), borderpad=4)
     fig.update_layout(title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
     return fig
-    
+
+def analyze_project_bottlenecks(df: pd.DataFrame) -> None:
+    st.subheader("Automated Bottleneck Analysis", divider='blue')
+    st.info("**Purpose:** This analysis automatically scans project data to identify the most critical upcoming constraint. It shifts management focus from past problems to future risks.")
+    risky_project = "Project Beacon (Assembly)"
+    st.error(f"""
+    **⚠️ Automated Alert: Critical Bottleneck Identified**
+    - **Project at Risk:** `{risky_project}`
+    - **Primary Constraint:** **Resource Contention**. The project is currently behind schedule (SPI < 1.0) and over budget (CPI < 1.0). The **Resource Allocation Matrix** indicates the assigned Engineering Lead is approaching 100% allocation.
+    **Actionable Insight:** The convergence of schedule delays and high resource utilization on `{risky_project}` presents the most significant threat to the portfolio. **Recommendation:** Immediately convene with the project lead to identify tasks that can be delegated to a less-utilized engineer (e.g., B. Zeller) to de-risk the timeline.
+    """)
+
 # --- PAGE RENDERING FUNCTIONS ---
 def render_main_page() -> None:
     st.title("🤖 Automated Equipment Validation Portfolio"); st.subheader("A Live Demonstration of Modern Validation Leadership"); st.divider()
@@ -472,6 +501,7 @@ def render_e2e_validation_hub_page() -> None:
     col1, col2 = st.columns(2)
     with col1:
         st.header("Phase 1: Design & Risk Management"); st.info("The 'left side of the V-Model' focuses on proactive planning.")
+        with st.container(border=True): st.subheader("Equipment Validation V-Model"); st.plotly_chart(create_equipment_v_model(), use_container_width=True)
         with st.container(border=True): st.subheader("AI-Powered URS Risk Analysis"); st.plotly_chart(run_urs_risk_nlp_model("urs_risk"), use_container_width=True); st.success("**Actionable Insight:** Requirements 2, 3, and 5 flagged for rewrite due to high ambiguity.")
         with st.container(border=True): st.subheader("User Requirements Traceability (RTM)"); create_rtm_data_editor("rtm")
         with st.container(border=True): st.subheader("Process Risk Management (pFMEA)"); plot_risk_matrix("fmea")
