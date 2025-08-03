@@ -458,25 +458,7 @@ def render_main_page() -> None:
           - **Significance:** While some CAPAs are expected, a high or increasing number can indicate systemic issues or an over-burdened team. It is a direct measure of the department's quality workload.
           - **Actionability:** Each open CAPA is tracked with a due date. A rising trend prompts a review of CAPA sources to identify systemic problems (e.g., a recurring issue with a specific vendor or technology) that need a broader solution.
         """)
-    st.markdown("---")
-    col_glossary, col_predictive = st.columns([2, 1])
 
-    with col_glossary:
-        with st.expander("📖 KPI Glossary: Definitions, Significance, and Actionability"):
-            # ... (all the markdown text for the glossary goes here, unchanged) ...
-            st.markdown("""
-            - **Validation Program Compliance:**
-              - **Definition:** Percentage of GxP systems that are in a validated state and within their scheduled periodic review window.
-              - **Significance:** This is a primary indicator of the site's overall audit readiness and compliance posture.
-              - **Actionability:** A downward trend triggers a root cause analysis, potentially leading to resource re-prioritization.
-            
-            - **Quality First Time Rate:**
-              - **Definition:** Percentage of validation protocols (IQ, OQ, PQ) executed without any deviations.
-              - **Significance:** A high rate indicates robust planning and well-designed equipment. It is a leading indicator of efficiency.
-              - **Actionability:** A declining rate prompts a review of recent deviations to improve templates or training.
-            
-            ... (and so on for all KPIs) ...
-            """)
 
     with col_predictive:
         with st.container(border=True):
