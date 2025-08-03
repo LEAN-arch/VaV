@@ -262,23 +262,49 @@ def render_specialized_validation_page() -> None:
     with tab3: st.subheader("Process Characterization using Design of Experiments (DOE)"); st.plotly_chart(plot_doe_optimization("doe"), use_container_width=True)
     with tab4: st.subheader("Shipping Lane Performance Qualification"); st.plotly_chart(plot_shipping_validation_temp("shipping"), use_container_width=True)
 
+# --- REPLACE THE OLD FUNCTION WITH THIS CORRECTED VERSION ---
+
 def render_validation_program_health_page() -> None:
     st.title("⚕️ 5. Validation Program Health & Continuous Improvement")
-    render_manager_briefing("Maintaining the Validated State", "This dashboard demonstrates the ongoing oversight required to manage the site's validation program health. It showcases a data-driven approach to **Periodic Review**, the development of a risk-based **Revalidation Strategy**, and the execution of **Continuous Improvement Initiatives**.", "FDA 21 CFR 820.75(c) (Revalidation), ISO 13485:2016 (Sec 8.4)", "Ensures long-term compliance, prevents costly process drifts, optimizes resource allocation for revalidation, and supports uninterrupted supply of medicine to patients.")
+    render_manager_briefing(
+        "Maintaining the Validated State",
+        "This dashboard demonstrates the ongoing oversight required to manage the site's validation program health. It showcases a data-driven approach to **Periodic Review**, the development of a risk-based **Revalidation Strategy**, and the execution of **Continuous Improvement Initiatives**.",
+        "FDA 21 CFR 820.75(c) (Revalidation), ISO 13485:2016 (Sec 8.4)",
+        "Ensures long-term compliance, prevents costly process drifts, optimizes resource allocation for revalidation, and supports uninterrupted supply of medicine to patients."
+    )
     st.subheader("Quarterly Validation Program Review")
-    col1, col2, col3 = st.columns(3); col1.metric("Systems Due for Periodic Review", "8"); col2.metric("Revalidations from Change Control", "3"); col3.metric("CAPA Effectiveness Rate", "95%")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Systems Due for Periodic Review", "8")
+    col2.metric("Revalidations from Change Control", "3")
+    col3.metric("CAPA Effectiveness Rate", "95%")
+    
     tab1, tab2 = st.tabs(["📊 Periodic Review & Revalidation Strategy", "📈 Continuous Improvement Tracker"])
+    
     with tab1:
         st.subheader("Risk-Based Periodic Review Schedule")
-        review_data = {"System": ["Bioreactor C", "Purification A", "WFI System", "HVAC - Grade A", "Inspection System", "CIP Skid B"], "Risk Level": ["High", "High", "High", "Medium", "Medium", "Low"], "Last Review": ["2023-01-15", "2023-02-22", "2023-08-10", "2022-11-05", "2023-09-01", "2022-04-20"], "Next Due": ["2024-01-15", "2024-02-22", "2024-08-10", "2024-11-05", "2025-09-01", "2025-04-20"], "Status": ["Complete", "Complete", "On Schedule", "DUE", "On Schedule", "On Schedule"]}
-        review_df = pd.DataFrame(review_data); def highlight_status(row): return ['background-color: #FFC7CE'] * len(row) if row["Status"] == "DUE" else [''] * len(row)
+        review_data = {
+            "System": ["Bioreactor C", "Purification A", "WFI System", "HVAC - Grade A", "Inspection System", "CIP Skid B"],
+            "Risk Level": ["High", "High", "High", "Medium", "Medium", "Low"],
+            "Last Review": ["2023-01-15", "2023-02-22", "2023-08-10", "2022-11-05", "2023-09-01", "2022-04-20"],
+            "Next Due": ["2024-01-15", "2024-02-22", "2024-08-10", "2024-11-05", "2025-09-01", "2025-04-20"],
+            "Status": ["Complete", "Complete", "On Schedule", "DUE", "On Schedule", "On Schedule"]
+        }
+        review_df = pd.DataFrame(review_data)
+
+        # --- FIX: The function definition now starts on its own line ---
+        def highlight_status(row):
+            return ['background-color: #FFC7CE'] * len(row) if row["Status"] == "DUE" else [''] * len(row)
+        
         st.dataframe(review_df.style.apply(highlight_status, axis=1), use_container_width=True, hide_index=True)
         st.error("**Actionable Insight:** The Periodic Review for the **HVAC - Grade A Area** is now due. I will assign a Validation Engineer to initiate the review this week.")
+        
     with tab2:
         st.subheader("Continuous Improvement (Kaizen) Initiative Tracker")
         col1, col2 = st.columns(2)
-        with col1: st.plotly_chart(plot_kaizen_roi_chart("kaizen_roi"), use_container_width=True)
-        with col2: st.plotly_chart(plot_deviation_trend_chart("deviation_trend"), use_container_width=True)
+        with col1:
+            st.plotly_chart(plot_kaizen_roi_chart("kaizen_roi"), use_container_width=True)
+        with col2:
+            st.plotly_chart(plot_deviation_trend_chart("deviation_trend"), use_container_width=True)
         st.success("**Actionable Insight:** The deviation trend chart validates the focus of our continuous improvement efforts. The ROI tracker provides a strong business case for future Kaizen events.")
 
 def render_documentation_hub_page() -> None:
