@@ -276,7 +276,7 @@ def plot_predictive_compliance_risk() -> go.Figure:
 def create_pfd_validation_scheme() -> go.Figure:
     """
     Digitally renders the Equipment Validation Scheme as a professional-grade process map
-    using clean, content-aware sized boxes.
+    using content-aware sized boxes and correct SVG paths for shapes.
     """
     fig = go.Figure()
     
@@ -328,20 +328,19 @@ def create_pfd_validation_scheme() -> go.Figure:
         shape_type = node.get('shape')
         font_size = 10.5 if key != 'val_activities' else 11
         
-        fig.add_shape(
-            type="rect", 
-            x0=x_c-w, y0=y_c-h, x1=x_c+w, y1=y_c+h, 
-            line=dict(color="Black"), 
-            fillcolor=node['color'], 
-            opacity=0.95, 
-            layer="below",
-            cornerradius=20 if shape_type == 'terminator' else 0 
-        )
-        fig.add_annotation(
-            x=x_c, y=y_c, text=node['text'], 
-            showarrow=False, align=align, 
-            font=dict(color='white' if node['color'] not in [NEUTRAL_GREY] else 'black', size=font_size)
-        )
+        path = ""
+        # Define SVG paths for each shape type
+        if shape_type == 'process': # Rectangle
+            path = f"M {x_c-w},{y_c-h} L {x_c+w},{y_c-h} L {x_c+w},{y_c+h} L {x_c-w},{y_c+h} Z"
+        elif shape_type == 'terminator': # Rounded Rectangle using SVG Arc paths
+            r = 0.4  # Radius of corners
+            path = (f"M {x_c-w+r},{y_c-h} L {x_c+w-r},{y_c-h} A {r},{r} 0 0 1 {x_c+w},{y_c-h+r} "
+                    f"L {x_c+w},{y_c+h-r} A {r},{r} 0 0 1 {x_c+w-r},{y_c+h} "
+                    f"L {x_c-w+r},{y_c+h} A {r},{r} 0 0 1 {x_c-w},{y_c+h-r} "
+                    f"L {x_c-w},{y_c-h+r} A {r},{r} 0 0 1 {x_c-w+r},{y_c-h} Z")
+        
+        fig.add_shape(type="path", path=path, line=dict(color="Black"), fillcolor=node['color'], opacity=0.95, layer="below")
+        fig.add_annotation(x=x_c, y=y_c, text=node['text'], showarrow=False, align=align, font=dict(color='white' if node['color'] not in [NEUTRAL_GREY] else 'black', size=font_size))
 
     # Add Arrows
     def add_arrow(start_key, end_key, start_anchor, end_anchor):
@@ -360,8 +359,8 @@ def create_pfd_validation_scheme() -> go.Figure:
     # Feedback Loops
     fig.add_shape(type="path", path=" M 9.5,4.6 C 10.5,6.5 8.5,7.5 7.5,7", line=dict(color="black", width=3, dash='dot'))
     fig.add_annotation(x=7.5, y=7, ax=8, ay=7.2, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor="black")
-    fig.add_shape(type="path", path=" M 6.5,2.9 C 5.5,3.7 5.5,4.7 6.5,5.8", line=dict(color=ERROR_RED, width=3, dash='dot'))
-    fig.add_annotation(x=6.5, y=5.8, ax=6.2, ay=5.4, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor=ERROR_RED)
+    fig.add_shape(type="path", path=" M 6.5,2.9 C 5.5,3.7 5.5,4.7 6.5,5.0", line=dict(color=ERROR_RED, width=3, dash='dot'))
+    fig.add_annotation(x=6.5, y=5.0, ax=6.2, ay=4.6, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor=ERROR_RED)
 
     # Horizontal connection for onboarding loop
     fig.add_shape(type="line", x0=nodes['acceptance']['pos'][0], y0=nodes['acceptance']['pos'][1], x1=nodes['onboarding']['pos'][0], y1=nodes['onboarding']['pos'][1], line=dict(color="black", width=2, dash='dot'))
