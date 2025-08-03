@@ -70,7 +70,46 @@ def plot_kpi_sparkline(data: list, is_good_down: bool = False) -> go.Figure:
     return fig
 
 # --- DATA GENERATORS & VISUALIZATIONS ---
-
+def display_team_skill_matrix(key: str) -> None:
+    """
+    Displays a team skill matrix to demonstrate strategic talent management.
+    This directly addresses the leadership and mentorship requirements of the role.
+    """
+    st.subheader("Team Skill Matrix & Development Plan", divider='blue')
+    st.info("""
+    **Purpose:** A skills matrix is a critical tool for a manager to visualize team capabilities, identify skill gaps, and plan targeted development. 
+    It ensures that resource allocation for new projects is backed by data and that individual growth aligns with the department's strategic needs.
+    *Proficiency Scale: 1 (Novice) to 5 (SME)*
+    """)
+    
+    skill_data = {
+        'Team Member': ['J. Doe (Lead)', 'S. Smith (Eng. II)', 'A. Wong (Spec. I)', 'B. Zeller (Eng. I)'],
+        'CSV & Part 11': [5, 3, 2, 2],
+        'Cleaning Validation': [4, 4, 3, 1],
+        'Statistics (Cpk/DOE)': [5, 3, 2, 3],
+        'Project Management': [5, 2, 1, 1],
+        'Development Goal': [
+            'Mentor team on advanced stats', 
+            'Lead CSV for Project Beacon', 
+            'Cross-train on Cleaning Val', 
+            'Achieve PMP certification'
+        ]
+    }
+    df = pd.DataFrame(skill_data)
+    
+    skill_cols = df.columns.drop(['Team Member', 'Development Goal'])
+    styled_df = df.style.background_gradient(
+        cmap='Greens', subset=skill_cols, vmin=1, vmax=5
+    ).set_properties(**{'text-align': 'center'}, subset=skill_cols)
+    
+    st.dataframe(styled_df, use_container_width=True, hide_index=True, height=215)
+    
+    st.success("""
+    **Actionable Insight:** The matrix identifies a potential bottleneck in Project Management skills among junior staff. 
+    Based on B. Zeller's development goal, the budget for PMP certification training will be approved. 
+    Furthermore, A. Wong will be assigned to the 'Atlas' Cleaning Validation PQ to gain hands-on experience, supported by S. Smith.
+    """)
+    
 def plot_predictive_compliance_risk() -> go.Figure:
     """Creates a gauge chart for a predictive compliance risk score."""
     risk_score = (1 * 50) + (3 * 10) + (0 * 5) # (overdue_reviews * w1 + open_capas * w2 + high_utilization * w3)
@@ -456,27 +495,42 @@ def render_main_page() -> None:
 
 def render_strategic_management_page() -> None:
     st.title("📈 1. Strategic Management & Business Acumen")
-    render_manager_briefing(title="Leading Validation as a Business Unit", content="An effective manager must translate technical excellence into business value. This dashboard demonstrates the ability to manage budgets, forecast resources, set strategic goals (OKRs), and articulate the financial value of a robust quality program.", reg_refs="ISO 13485:2016 (Sec 5 & 6), 21 CFR 820.20", business_impact="Ensures the validation department is a strategic, financially responsible partner that enables the company's growth and compliance goals.", quality_pillar="Resource Management & Financial Acumen.", risk_mitigation="Proactively identifies resource shortfalls and justifies the validation budget as a high-return investment in preventing failure costs.")
-    
-    st.subheader("Departmental Strategy & Performance")
-    col1, col2 = st.columns(2)
-    with col1:
-        with st.container(border=True): st.markdown("##### Annual Budget Performance"); st.plotly_chart(plot_budget_variance(key="budget"), use_container_width=True); st.success("**Actionable Insight:** Operating within overall budget. The slight CapEx overage was an approved expenditure for accelerated project timelines, offset by contractor savings.")
-    with col2:
-        with st.container(border=True): st.markdown("##### Headcount & Resource Forecasting"); st.plotly_chart(plot_headcount_forecast(key="headcount"), use_container_width=True); st.success("**Actionable Insight:** The forecast indicates a resource gap of 2 FTEs by Q3. This data justifies the hiring requisition for one Automation Engineer and one Validation Specialist.")
-    
-    st.subheader("Strategic Value & Talent Management")
-    col3, col4 = st.columns(2)
-    with col3:
-        with st.container(border=True):
-            st.plotly_chart(plot_cost_of_quality(key="coq"), use_container_width=True)
-            st.success("**Actionable Insight:** The CoQ model proves that for every **$1 spent on proactive validation**, we prevent an estimated **$4 in failure costs** (rework, deviations, batch loss). This data provides a powerful justification for our departmental budget and headcount.")
-    with col4:
-        with st.container(border=True):
-            display_team_skill_matrix(key="skills")
+    render_manager_briefing(
+        title="Leading Validation as a Business Unit", 
+        content="An effective manager must translate technical excellence into business value. This dashboard demonstrates the ability to manage budgets, forecast resources, set strategic goals (OKRs), and articulate the financial value of a robust quality program.", 
+        reg_refs="ISO 13485:2016 (Sec 5 & 6), 21 CFR 820.20", 
+        business_impact="Ensures the validation department is a strategic, financially responsible partner that enables the company's growth and compliance goals.", 
+        quality_pillar="Resource Management & Financial Acumen.", 
+        risk_mitigation="Proactively identifies resource shortfalls and justifies the validation budget as a high-return investment in preventing failure costs."
+    )
     
     with st.container(border=True):
-        st.subheader("AI-Powered Capital Project Duration Forecaster"); run_project_duration_forecaster("duration_ai")
+        st.subheader("Departmental OKRs (Objectives & Key Results)", divider='blue')
+        st.info("**Purpose:** OKRs provide a clear framework that connects the department's daily work to the company's high-level strategic objectives. They ensure the team is focused on impactful, measurable outcomes.")
+        display_departmental_okrs(key="okrs")
+        st.success("**Actionable Insight:** The team is on track to meet its efficiency and compliance goals for the year. The completion of the GAMP 5 certification directly supports our 'Enhance Team Capabilities' objective.")
+
+    st.subheader("Financial & Resource Planning")
+    col1, col2 = st.columns(2)
+    with col1:
+        with st.container(border=True): 
+            st.markdown("##### Annual Budget Performance")
+            st.plotly_chart(plot_budget_variance(key="budget"), use_container_width=True)
+            st.success("**Actionable Insight:** Operating within overall budget. The slight CapEx overage was an approved expenditure for accelerated project timelines, offset by contractor savings.")
+    with col2:
+        with st.container(border=True): 
+            st.markdown("##### Headcount & Resource Forecasting")
+            st.plotly_chart(plot_headcount_forecast(key="headcount"), use_container_width=True)
+            st.success("**Actionable Insight:** The forecast indicates a resource gap of 2 FTEs by Q3. This data justifies the hiring requisition for one Automation Engineer and one Validation Specialist.")
+    
+    st.subheader("Strategic Value Analysis")
+    with st.container(border=True):
+        st.plotly_chart(plot_cost_of_quality(key="coq"), use_container_width=True)
+        st.success("**Actionable Insight:** The CoQ model proves that for every **$1 spent on proactive validation**, we prevent an estimated **$4 in failure costs** (rework, deviations, batch loss). This data provides a powerful justification for our departmental budget and headcount.")
+    
+    with st.container(border=True):
+        st.subheader("AI-Powered Capital Project Duration Forecaster")
+        run_project_duration_forecaster("duration_ai")
 
 def render_project_portfolio_page() -> None:
     st.title("📂 2. Project & Portfolio Management")
@@ -502,7 +556,20 @@ def render_project_portfolio_page() -> None:
         health_data = {'Project': ["Project Atlas (Bioreactor)", "Project Beacon (Assembly)", "Project Comet (Vision)"], 'SPI': [1.02, 0.92, 1.1], 'CPI': [1.01, 0.85, 1.05], 'Lead': ["J. Doe", "S. Smith", "J. Doe"]}
         df_health = pd.DataFrame(health_data)
         analyze_project_bottlenecks(df_health)
-
+    with st.container(border=True):
+        # This section links the project portfolio directly to team capabilities and development.
+        c1, c2 = st.columns(2)
+        with c1:
+            display_team_skill_matrix(key="portfolio_skills")
+        with c2:
+            st.subheader("Validation Team Resource Allocation", divider='blue')
+            st.info("**Purpose:** The heatmap visualizes the current workload distribution across the team, immediately highlighting potential over-allocation risks.")
+            fig_alloc, over_allocated_df = create_resource_allocation_matrix("allocation")
+            st.plotly_chart(fig_alloc, use_container_width=True)
+            if not over_allocated_df.empty:
+                for _, row in over_allocated_df.iterrows():
+                    st.warning(f"**⚠️ Over-allocation Alert:** {row['Team Member']} is at {row['Total Allocation']:.0%} workload.")
+                    
 def render_e2e_validation_hub_page() -> None:
     st.title("🔩 Live E2E Validation Walkthrough: Project Atlas")
     render_manager_briefing(title="Executing a Compliant Validation Lifecycle (per ASTM E2500)", content="This hub presents the entire validation lifecycle in a single, comprehensive view, simulating the execution of a major capital project. It provides tangible evidence of owning deliverables from design and risk management through to final performance qualification.", reg_refs="FDA 21 CFR 820.75, ISO 13485:2016 (Sec 7.5.6), GAMP 5, ASTM E2500", business_impact="Ensures new manufacturing equipment is brought online on-time, on-budget, and in a fully compliant state, directly enabling production launch.", quality_pillar="Design Controls & Risk-Based Verification.", risk_mitigation="Prevents costly redesigns and validation failures by ensuring testability is built-in from the URS phase using tools like the V-Model and pFMEA.")
