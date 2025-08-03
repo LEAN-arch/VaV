@@ -51,8 +51,8 @@ def style_dataframe(df: pd.DataFrame) -> Styler:
         {'selector': 'th', 'props': [('background-color', PRIMARY_COLOR), ('color', 'white'), ('font-weight', 'bold')]}
     ]).hide(axis="index")
 
-def plot_kpi_sparkline(data: list, is_good_down: bool = False) -> go.Figure:
-    """Creates a compact sparkline chart for a KPI with subtle axes."""
+def plot_kpi_sparkline(data: list, unit: str, x_axis_label: str, is_good_down: bool = False) -> go.Figure:
+    """Creates a compact sparkline chart for a KPI with subtle axes, labels, and units."""
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=list(range(len(data))), y=data, mode='lines',
@@ -63,28 +63,17 @@ def plot_kpi_sparkline(data: list, is_good_down: bool = False) -> go.Figure:
         x=[0, len(data)-1], y=[data[0], data[-1]], mode='markers', marker=dict(size=[6, 10], color=['grey', end_color])
     ))
     
-    # --- ENHANCEMENT: Add subtle axes ---
+    # Add annotations for min, max, and x-axis label
+    min_val, max_val = min(data), max(data)
+    fig.add_annotation(x=0, y=max_val, text=f"{max_val:.1f}{unit}", showarrow=False, xanchor='left', yanchor='bottom', font=dict(size=10, color=DARK_GREY))
+    fig.add_annotation(x=0, y=min_val, text=f"{min_val:.1f}{unit}", showarrow=False, xanchor='left', yanchor='top', font=dict(size=10, color=DARK_GREY))
+    fig.add_annotation(x=(len(data)-1)/2, y=min_val, text=x_axis_label, showarrow=False, yanchor='top', yshift=-5, font=dict(size=9, color=NEUTRAL_GREY))
+
     fig.update_layout(
-        height=75,  # Increased height slightly for axes
-        margin=dict(l=10, r=5, t=10, b=10), # Added margin for axis lines
-        xaxis=dict(
-            visible=True, 
-            showline=True, # <-- THE FIX: This property draws the axis line
-            showticklabels=False, 
-            showgrid=False,
-            zeroline=False,
-            linecolor=NEUTRAL_GREY,
-            linewidth=1.5
-        ),
-        yaxis=dict(
-            visible=True, 
-            showline=True, # <-- THE FIX: This property draws the axis line
-            showticklabels=False,
-            showgrid=False,
-            zeroline=False,
-            linecolor=NEUTRAL_GREY,
-            linewidth=1.5
-        ),
+        height=100,
+        margin=dict(l=10, r=10, t=15, b=15),
+        xaxis=dict(visible=False),
+        yaxis=dict(visible=False),
         showlegend=False,
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)'
@@ -655,34 +644,34 @@ def render_main_page() -> None:
     st.title("🤖 Automated Equipment Validation Portfolio"); st.subheader("A Live Demonstration of Modern Validation Management Leadership"); st.divider()
     st.markdown("Welcome. This interactive environment provides **undeniable proof of expertise in the end-to-end validation of automated manufacturing equipment** in a strictly regulated GMP environment. It simulates how an effective leader manages a validation function, with a relentless focus on aligning technical execution, **Quality Systems (per 21 CFR 820 & ISO 13485)**, and strategic capital projects.")
     
-    st.subheader("Key Program Health KPIs", divider='blue');
+    st.subheader("Key Program Health KPIs", divider='blue')
     kpi_cols = st.columns(3)
     with kpi_cols[0]:
         with st.container(border=True):
             st.metric("Validation Program Compliance", "98%", delta="1%")
-            st.plotly_chart(plot_kpi_sparkline([96, 96, 97, 97, 97, 98]), use_container_width=True)
+            st.plotly_chart(plot_kpi_sparkline([96, 96, 97, 97, 97, 98], unit="%", x_axis_label="6-Mo Trend"), use_container_width=True)
     with kpi_cols[1]:
         with st.container(border=True):
             st.metric("Quality First Time Rate", "91%", delta="-2%")
-            st.plotly_chart(plot_kpi_sparkline([92, 94, 95, 93, 93, 91]), use_container_width=True)
+            st.plotly_chart(plot_kpi_sparkline([92, 94, 95, 93, 93, 91], unit="%", x_axis_label="6-Mo Trend"), use_container_width=True)
     with kpi_cols[2]:
         with st.container(border=True):
             st.metric("Capital Project On-Time Delivery", "95%", delta="5%")
-            st.plotly_chart(plot_kpi_sparkline([85, 88, 87, 90, 90, 95]), use_container_width=True)
+            st.plotly_chart(plot_kpi_sparkline([85, 88, 87, 90, 90, 95], unit="%", x_axis_label="6-Mo Trend"), use_container_width=True)
 
     kpi_cols2 = st.columns(3)
     with kpi_cols2[0]:
         with st.container(border=True):
             st.metric("CAPEX Validation Spend vs. Budget", "97%", delta="-3%", delta_color="inverse")
-            st.plotly_chart(plot_kpi_sparkline([95, 96, 98, 101, 100, 97], is_good_down=True), use_container_width=True)
+            st.plotly_chart(plot_kpi_sparkline([95, 96, 98, 101, 100, 97], unit="%", x_axis_label="6-Mo Trend", is_good_down=True), use_container_width=True)
     with kpi_cols2[1]:
         with st.container(border=True):
-            st.metric("Avg. Protocol Review Cycle Time", "8.2 Days", delta="1.5 Days", delta_color="inverse")
-            st.plotly_chart(plot_kpi_sparkline([11.5, 10.1, 9.5, 9.7, 9.7, 8.2], is_good_down=True), use_container_width=True)
+            st.metric("Avg. Protocol Review Cycle Time", "8.2 Days", delta="-1.5 Days", delta_color="inverse")
+            st.plotly_chart(plot_kpi_sparkline([11.5, 10.1, 9.5, 9.7, 9.7, 8.2], unit=" Days", x_axis_label="6-Mo Trend", is_good_down=True), use_container_width=True)
     with kpi_cols2[2]:
         with st.container(border=True):
             st.metric("Open Validation-Related CAPAs", "3", delta="1", delta_color="inverse")
-            st.plotly_chart(plot_kpi_sparkline([5, 4, 4, 2, 2, 3], is_good_down=True), use_container_width=True)
+            st.plotly_chart(plot_kpi_sparkline([5, 4, 4, 2, 2, 3], unit="", x_axis_label="6-Mo Trend", is_good_down=True), use_container_width=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
     col_glossary, col_predictive = st.columns([2, 1])
