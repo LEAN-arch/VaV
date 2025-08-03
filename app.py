@@ -82,7 +82,91 @@ def plot_kpi_sparkline(data: list, is_good_down: bool = False) -> go.Figure:
     return fig
 
 # --- DATA GENERATORS & VISUALIZATIONS ---
+def display_team_skill_matrix(key: str) -> None:
+    """
+    NEW: Displays a team skill matrix to demonstrate strategic talent management.
+    This directly addresses the leadership and mentorship requirements of the role.
+    """
+    skill_data = {
+        'Team Member': ['J. Doe (Lead)', 'S. Smith (Eng. II)', 'A. Wong (Spec. I)', 'B. Zeller (Eng. I)'],
+        'CSV & Part 11': [5, 3, 2, 2],
+        'Cleaning Validation': [4, 4, 3, 1],
+        'Statistics (Cpk/DOE)': [5, 3, 2, 3],
+        'Project Management': [5, 2, 1, 1],
+        'Development Goal': [
+            'Mentor team on advanced stats', 
+            'Lead CSV for Project Beacon', 
+            'Cross-train on Cleaning Val', 
+            'Achieve PMP certification'
+        ]
+    }
+    df = pd.DataFrame(skill_data)
+    
+    st.info("""
+    **Purpose:** A skills matrix is a critical tool for a manager to visualize team capabilities, identify skill gaps, and plan targeted development. 
+    It ensures that resource allocation for new projects is backed by data and that individual growth aligns with the department's strategic needs.
+    *Proficiency Scale: 1 (Novice) to 5 (SME)*
+    """)
+    
+    skill_cols = df.columns.drop(['Team Member', 'Development Goal'])
+    styled_df = df.style.background_gradient(
+        cmap='Greens', subset=skill_cols, vmin=1, vmax=5
+    ).set_properties(**{'text-align': 'center'}, subset=skill_cols)
+    
+    st.dataframe(styled_df, use_container_width=True, hide_index=True, height=215)
+    
+    st.success("""
+    **Actionable Insight:** The matrix identifies a potential bottleneck in Project Management skills among junior staff. 
+    Based on B. Zeller's development goal, I will approve the budget for PMP certification training. 
+    Furthermore, A. Wong will be assigned to the 'Atlas' Cleaning Validation PQ to gain hands-on experience, supported by S. Smith.
+    """)
 
+def plot_cost_of_quality(key: str) -> go.Figure:
+    """
+    NEW: Plots a Cost of Quality model to demonstrate strategic financial acumen.
+    This reframes the validation department from a cost center to a value-add function.
+    """
+    categories = ['Prevention Costs (e.g., Planning, Training)', 'Appraisal Costs (e.g., Testing, FAT/SAT)',
+                  'Internal Failure Costs (e.g., Rework, Deviations)', 'External Failure Costs (e.g., Recall, Audit Findings)']
+
+    fig = go.Figure()
+
+    # Scenario 1: WITH a proactive validation program
+    fig.add_trace(go.Bar(
+        name='With Proactive Validation',
+        x=[200, 300, 50, 10], # High investment, low failure
+        y=categories,
+        orientation='h',
+        marker_color=SUCCESS_GREEN
+    ))
+    
+    # Scenario 2: WITHOUT a proactive validation program
+    fig.add_trace(go.Bar(
+        name='Without Proactive Validation',
+        x=[50, 75, 800, 1500], # Low investment, catastrophic failure
+        y=categories,
+        orientation='h',
+        marker_color=ERROR_RED
+    ))
+
+    fig.update_layout(
+        barmode='stack',
+        title_text='<b>Strategic Value: The Cost of Quality (CoQ) Model</b>',
+        title_x=0.5,
+        xaxis_title='Annual Costs (in $ thousands)',
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        plot_bgcolor=BACKGROUND_GREY
+    )
+    # Add annotations for total costs
+    total_with = 200 + 300 + 50 + 10
+    total_without = 50 + 75 + 800 + 1500
+    fig.add_annotation(x=total_with, y=categories[0], text=f"<b>Total: ${total_with}k</b>", showarrow=False, xanchor='left', font_color=SUCCESS_GREEN)
+    fig.add_annotation(x=total_without, y=categories[0], text=f"<b>Total: ${total_without}k</b>", showarrow=False, xanchor='right', font_color=ERROR_RED)
+
+    return fig
+
+
+    #--------------------------------------------------------------------------------------------------------------------------------------------------------
 def create_portfolio_health_dashboard(key: str) -> Styler:
     """Creates a styled RAG status dashboard for the project portfolio."""
     health_data = {
@@ -406,14 +490,45 @@ def render_main_page() -> None:
 
 def render_strategic_management_page() -> None:
     st.title("📈 1. Strategic Management & Business Acumen")
-    render_manager_briefing(title="Leading Validation as a Business Unit", content="An effective manager must translate technical excellence into business value. This dashboard demonstrates the ability to manage budgets, plan for future headcount needs based on the project pipeline, and align departmental goals with the strategic objectives of the site.", reg_refs="ISO 13485:2016 (Sec 5 & 6), 21 CFR 820.20", business_impact="Ensures the validation department is a strategic, financially responsible partner that enables the company's growth and compliance goals.", quality_pillar="Resource Management & Financial Acumen.", risk_mitigation="Proactively identifies and mitigates resource shortfalls and budget variances before they impact project timelines.")
-    with st.container(border=True): st.subheader("Departmental OKRs (Objectives & Key Results)", help="Aligns team's daily work with high-level company goals."); display_departmental_okrs(key="okrs"); st.success("**Actionable Insight:** The team is on track to meet its efficiency and compliance goals for the year.")
+    render_manager_briefing(
+        title="Leading Validation as a Business Unit", 
+        content="An effective manager must translate technical excellence into business value. This dashboard demonstrates the ability to manage budgets, forecast resources, set strategic goals (OKRs), and articulate the financial value of a robust quality program.", 
+        reg_refs="ISO 13485:2016 (Sec 5 & 6), 21 CFR 820.20", 
+        business_impact="Ensures the validation department is a strategic, financially responsible partner that enables the company's growth and compliance goals.", 
+        quality_pillar="Resource Management & Financial Acumen.", 
+        risk_mitigation="Proactively identifies resource shortfalls and justifies the validation budget as a high-return investment in preventing failure costs."
+    )
+    
+    st.subheader("Departmental Strategy & Performance")
     col1, col2 = st.columns(2)
     with col1:
-        with st.container(border=True): st.subheader("Annual Budget Performance", help="Tracks actual spend against the department's annual budget."); st.plotly_chart(plot_budget_variance(key="budget"), use_container_width=True); st.success("**Actionable Insight:** Operating within overall budget. The slight CapEx overage was an approved expenditure for accelerated project timelines, offset by contractor savings.")
+        with st.container(border=True):
+            st.markdown("##### Annual Budget Performance")
+            st.plotly_chart(plot_budget_variance(key="budget"), use_container_width=True)
+            st.success("**Actionable Insight:** Operating within overall budget. The slight CapEx overage was an approved expenditure for accelerated project timelines, offset by contractor savings.")
+
     with col2:
-        with st.container(border=True): st.subheader("Headcount & Resource Forecasting", help="Compares current team size against forecasted resource needs."); st.plotly_chart(plot_headcount_forecast(key="headcount"), use_container_width=True); st.success("**Actionable Insight:** The forecast indicates a resource gap of 2 FTEs by Q3. This data justifies the hiring requisition for one Automation Engineer and one Validation Specialist.")
-    with st.container(border=True): st.subheader("AI-Powered Capital Project Duration Forecaster"); run_project_duration_forecaster("duration_ai")
+        with st.container(border=True):
+            st.markdown("##### Headcount & Resource Forecasting")
+            st.plotly_chart(plot_headcount_forecast(key="headcount"), use_container_width=True)
+            st.success("**Actionable Insight:** The forecast indicates a resource gap of 2 FTEs by Q3. This data justifies the hiring requisition for one Automation Engineer and one Validation Specialist.")
+    
+    st.subheader("Strategic Value & Talent Management")
+    col3, col4 = st.columns(2)
+    with col3:
+        with st.container(border=True):
+            st.plotly_chart(plot_cost_of_quality(key="coq"), use_container_width=True)
+            st.success("""
+            **Actionable Insight:** The CoQ model proves that for every **$1 spent on proactive validation**, we prevent an estimated **$4 in failure costs** (rework, deviations, batch loss). 
+            This data provides a powerful justification for our departmental budget and headcount.
+            """)
+    with col4:
+        with st.container(border=True):
+            display_team_skill_matrix(key="skills")
+    
+    with st.container(border=True):
+        st.subheader("AI-Powered Capital Project Duration Forecaster")
+        run_project_duration_forecaster("duration_ai")
 
 def render_project_portfolio_page() -> None:
     st.title("📂 2. Project & Portfolio Management")
