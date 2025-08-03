@@ -431,7 +431,6 @@ def render_validation_program_health_page() -> None:
         st.subheader("Risk-Based Periodic Review Schedule")
         review_data = {"System": ["Bioreactor C", "Purification A", "WFI System", "HVAC - Grade A", "Inspection System", "CIP Skid B"], "Risk Level": ["High", "High", "High", "Medium", "Medium", "Low"], "Last Review": ["2023-01-15", "2023-02-22", "2023-08-10", "2022-11-05", "2023-09-01", "2022-04-20"], "Next Due": ["2024-01-15", "2024-02-22", "2024-08-10", "2024-11-05", "2025-09-01", "2025-04-20"], "Status": ["Complete", "Complete", "On Schedule", "DUE", "On Schedule", "On Schedule"]}
         review_df = pd.DataFrame(review_data)
-        # --- FIX: Correct IndentationError ---
         def highlight_status(row):
             return ['background-color: #FFC7CE; color: black; font-weight: bold;'] * len(row) if row["Status"] == "DUE" else [''] * len(row)
         st.dataframe(review_df.style.apply(highlight_status, axis=1), use_container_width=True, hide_index=True)
@@ -453,9 +452,13 @@ def render_documentation_hub_page() -> None:
     with col1:
         with st.container(border=True): st.subheader("Document Approval Workflow"); st.info("Simulates the eQMS workflow."); st.markdown("Status for `VAL-MP-001_Project_Atlas`:"); st.divider(); st.markdown("✔️ **Validation Lead (Self):** Approved `2024-01-15`\n✔️ **Process Engineering Lead:** Approved `2024-01-16`\n✔️ **Quality Assurance Lead:** Approved `2024-01-17`\n🟠 **Manufacturing Lead:** Pending Review\n⬜ **Head of Engineering:** Not Started")
     with col2:
-        with st.container(border=True): st.subheader("Interactive Document Viewer"); st.info("The following are professionally rendered digital artifacts that simulate documents within a validated eQMS."); 
-            with st.expander("📄 **View Professional IQ/OQ Protocol Template**"): _render_professional_protocol_template()
-            with st.expander("📋 **View Professional PQ Report Template**"): _render_professional_report_template()
+        with st.container(border=True):
+            st.subheader("Interactive Document Viewer"); st.info("The following are professionally rendered digital artifacts that simulate documents within a validated eQMS.")
+            # --- FIX: Correct IndentationError by creating a proper 'with' block ---
+            with st.expander("📄 **View Professional IQ/OQ Protocol Template**"):
+                _render_professional_protocol_template()
+            with st.expander("📋 **View Professional PQ Report Template**"):
+                _render_professional_report_template()
 
 def _render_professional_report_template() -> None:
     st.header("PQ Report: VAL-TR-201"); st.subheader("Automated Bioreactor Suite (ASSET-123)"); st.divider()
