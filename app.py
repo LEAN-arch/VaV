@@ -132,7 +132,8 @@ def create_opex_dashboard(key: str) -> Tuple[go.Figure, go.Figure]:
     months = pd.date_range(start="2023-01-01", periods=12, freq='ME').strftime('%b')
     monthly_budget = np.ones(12) * (budget / 12)
     np.random.seed(42)
-    actual_spend = monthly_budget + np.random.normal(0, 30000, 12)
+    rng = np.random.default_rng(seed=42)
+    actual_spend = monthly_budget + rng.normal(0, 30000, 12)
     df = pd.DataFrame({'Month': months, 'Budget': monthly_budget, 'Actual': actual_spend})
     df['Variance'] = df['Budget'] - df['Actual']
     df['Cumulative Variance'] = df['Variance'].cumsum()
