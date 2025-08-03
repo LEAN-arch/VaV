@@ -4,6 +4,7 @@ numpy<2.0
 plotly
 scikit-learn
 scipy
+shap
 statsmodels
 matplot
 vaderSentiment
