@@ -458,7 +458,7 @@ def render_main_page() -> None:
           - **Significance:** While some CAPAs are expected, a high or increasing number can indicate systemic issues or an over-burdened team. It is a direct measure of the department's quality workload.
           - **Actionability:** Each open CAPA is tracked with a due date. A rising trend prompts a review of CAPA sources to identify systemic problems (e.g., a recurring issue with a specific vendor or technology) that need a broader solution.
         """)
-st.markdown("---")
+    st.markdown("---")
     col_glossary, col_predictive = st.columns([2, 1])
 
     with col_glossary:
