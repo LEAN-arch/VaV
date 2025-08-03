@@ -973,24 +973,42 @@ def render_e2e_validation_hub_page() -> None:
         with st.container(border=True):
             display_rpn_table(key="e2e_rpn")
     with col2:
-        st.header("Phases 2-4: Execution & Qualification"); st.info("The 'right side of the V-Model' focuses on generating objective evidence.")
+        st.header("Phases 2-4: Execution & Qualification"); 
+        st.info("The 'right side of the V-Model' focuses on generating documented, objective evidence that the as-built system meets all requirements and is fit for its intended use in a GMP environment.")
+        
         st.subheader("Phase 2: Factory & Site Acceptance Testing", divider='blue')
-        with st.container(border=True): st.markdown("Purpose: To execute acceptance testing at the vendor's facility (FAT) and our site (SAT). The goal is to catch as many issues as possible *before* formal qualification begins."); display_fat_sat_summary("fat_sat")
+        with st.container(border=True):
+            st.info("**Context:** FAT is performed at the vendor's site to identify and fix issues *before* shipping, saving significant time and cost. SAT confirms that no damage or changes occurred during transit and installation.")
+            display_fat_sat_summary("fat_sat")
+            st.success("""
+            **Actionable Insight:** The 100% SAT pass rate and zero new major deviations confirm a successful transfer from the vendor to our site. The statistical equivalence demonstrated by TOST provides high confidence that the equipment is ready for formal qualification. **Decision:** Authorize the start of IQ/OQ execution.
+            """)
+
         st.subheader("Phase 3: Installation & Operational Qualification", divider='blue')
-        with st.container(border=True): st.markdown("Purpose: The IQ provides documented evidence of correct installation. The OQ challenges the equipment's functions to prove it operates as intended throughout its specified operating ranges."); st.plotly_chart(plot_oq_challenge_results("oq_plot"), use_container_width=True)
+        with st.container(border=True):
+            st.info("**Context:** IQ verifies the physical installation against design specs (e.g., correct materials of construction, P&ID checks). OQ challenges the system's functions by testing it at the edges of its operating ranges (e.g., highest/lowest temperatures, speeds).")
+            st.plotly_chart(plot_oq_challenge_results("oq_plot"), use_container_width=True)
+            st.success("""
+            **Actionable Insight:** The temperature control loop performed well within the acceptance criteria (±0.5°C), even during the most aggressive ramp to 45°C. This demonstrates the system is robust and capable of maintaining a critical process parameter. **Decision:** Approve the OQ results and proceed to the final PQ phase.
+            """)
+
         st.subheader("Phase 4: Performance Qualification", divider='blue')
         with st.container(border=True):
-            st.markdown("Purpose: The PQ is the final step, providing documented evidence that the equipment can consistently produce quality product under normal, real-world manufacturing conditions.")
+            st.info("**Context:** PQ is the final qualification step, designed to prove the equipment can consistently and repeatably produce quality product under normal, real-world manufacturing conditions using production personnel and materials.")
             c1, c2 = st.columns(2)
-            with c1: st.subheader("Process Capability"); st.plotly_chart(plot_cpk_analysis("pq_cpk"), use_container_width=True)
+            with c1: 
+                st.markdown("###### Process Capability")
+                st.plotly_chart(plot_cpk_analysis("pq_cpk"), use_container_width=True)
+                st.success("""
+                **Actionable Insight:** The Cpk of 1.67 is well above the industry standard target of ≥1.33. This high value indicates that the process is well-centered and has very low variability, meaning it is highly capable of consistently producing product that meets its specification for Titer.
+                """)
             with c2: 
-                st.subheader("Process Stability")
+                st.markdown("###### Process Stability")
                 spc_fig, spc_alerts = plot_process_stability_chart("pq_spc")
                 st.plotly_chart(spc_fig, use_container_width=True)
                 if spc_alerts:
                     st.error(f"**🚨 Automated SPC Alert Detected:** {spc_alerts[0]}")
-                    st.success("**Actionable Insight:** The automated rule check has detected a process shift. This would trigger an immediate investigation with Process Engineering to identify the root cause before qualifying the equipment.")
-
+                    st.success("**Actionable Insight:** The automated rule check has detected a process shift. This would trigger an immediate investigation with Process Engineering to identify the root cause (e.g., raw material change, sensor drift) before the final validation report can be signed.")
 
 def render_specialized_validation_page() -> None:
     st.title("🧪 4. Specialized Validation Hubs")
