@@ -546,7 +546,6 @@ def run_predictive_maintenance_model(key):
     st.markdown("This Random Forest model is trained on historical sensor data to predict the likelihood of an instrument failing. The SHAP plot below explains *why* the model makes its predictions.")
     
     np.random.seed(42)
-    # [Existing data generation code remains the same]
     data = []
     for i in range(10):
         will_fail = i >= 7
@@ -570,13 +569,13 @@ def run_predictive_maintenance_model(key):
     shap_values = explainer.shap_values(X)
     
     st.subheader("Explainable AI (XAI): Why the Model Predicts Failure")
-    fig, ax = plt.subplots(figsize=(10, 4))
     
     # --- FIX START ---
-    # The fix is to explicitly pass the numpy array of the data (X.values)
-    # and the feature names (X.columns) separately to avoid ambiguity
-    # that can cause the AssertionError in some shap/pandas versions.
-    shap.summary_plot(shap_values[1], X.values, feature_names=X.columns, plot_type="dot", show=False)
+    # The fix is to pass the ENTIRE `shap_values` list to the summary plot.
+    # The plot function is designed to handle this multi-class output and will color-code the results.
+    # This resolves the internal AssertionError.
+    fig, ax = plt.subplots(figsize=(10, 4))
+    shap.summary_plot(shap_values, X, plot_type="dot", show=False)
     # --- FIX END ---
 
     plt.title("SHAP Summary Plot: Key Predictors of Instrument Failure")
