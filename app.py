@@ -273,65 +273,101 @@ def plot_predictive_compliance_risk() -> go.Figure:
     fig.update_layout(height=250, margin=dict(l=30, r=30, t=50, b=20))
     return fig
     
-def create_responsive_process_map() -> go.Figure:
+def create_process_map_diagram() -> go.Figure:
     """
-    Digitally renders the Equipment Validation Scheme as a professional-grade,
-    fully responsive process map using a relative coordinate system.
+    Digitally renders the Equipment Validation Scheme as a professional-grade process map
+    using clean, content-aware sized boxes.
     """
     fig = go.Figure()
     
-    # Define nodes in a normalized (0-1) paper coordinate system for responsiveness
+    # Define nodes with manually tuned w/h properties for a balanced, professional layout
     nodes = {
-        'sys_desc': {'pos': [0.25, 0.92], 'w': 0.20, 'h': 0.08, 'text': '<b>System Description</b><br>• Specifications<br>• Functional/Performance Requirements', 'color': DARK_GREY, 'shape': 'terminator'},
-        'fat_sat': {'pos': [0.25, 0.75], 'w': 0.20, 'h': 0.1, 'text': '<b>FAT/SAT</b><br><i>Instrument/Manufacturer Related</i><br>• Instrument Components P&ID<br>• Instrument Performance, CV', 'color': PRIMARY_COLOR, 'shape': 'terminator'},
-        'val_activities': {'pos': [0.25, 0.42], 'w': 0.22, 'h': 0.28, 'text': '<b>Validation Activities</b><br><br><u>Installation Qualification (IQ)</u><br> • Meet manufacturer’s specs<br> • Manuals, maintenance plans<br><u>Operational Qualification (OQ)</u><br> • Test accuracy, precision<br> • Confirm instrument resolution<br><u>Performance Qualification (PQ)</u><br> • Meet production throughput<br> • Repeatability of batches<br> • Accuracy and precision', 'color': NEUTRAL_GREY, 'shape': 'terminator'},
-        'sample_size': {'pos': [0.25, 0.08], 'w': 0.20, 'h': 0.06, 'text': '<b>Sample Size</b><br>Determined by “Binomial Power Analysis” or AQL table', 'color': '#D35400', 'shape': 'process'},
-        'acceptance': {'pos': [0.60, 0.58], 'w': 0.16, 'h': 0.09, 'text': '<b>Acceptance Criteria</b><br>• IQ Acceptance Criteria<br>• OQ Acceptance Criteria<br>• PQ Acceptance Criteria', 'color': PRIMARY_COLOR, 'shape': 'process'},
-        'docs': {'pos': [0.8, 0.8], 'w': 0.22, 'h': 0.11, 'text': '<b>Documentation</b><br>• IQ, OQ, PQ Documentation<br>• Master Validation Plan (MVP)<br>• Design History File (DHF)<br>• Device Master Record (DMR)', 'color': PRIMARY_COLOR, 'shape': 'terminator'},
-        'onboarding': {'pos': [0.60, 0.38], 'w': 0.16, 'h': 0.08, 'text': '<b>Equipment Onboarding</b><br>• Defining calibration<br>• Maintenance schedule', 'color': PRIMARY_COLOR, 'shape': 'process'},
-        'sops': {'pos': [0.85, 0.38], 'w': 0.14, 'h': 0.08, 'text': '<b>Protocols & SOPs</b><br>• Personnel Training<br>• <span style="color:red">SOPs/Protocols</span>', 'color': PRIMARY_COLOR, 'shape': 'terminator'},
-        'change_control': {'pos': [0.60, 0.18], 'w': 0.16, 'h': 0.11, 'text': '<b>Change Control: ECOs/DCOs</b><br>• Change Request<br>• Impact Assessment<br>• Revalidation Requirement<br>• Engineering/Docs', 'color': PRIMARY_COLOR, 'shape': 'process'},
+        'sys_desc': {
+            'pos': [2.5, 9.2], 'w': 2.3, 'h': 0.8,
+            'text': '<b>System Description</b><br> • Specifications<br> • Functional/Performance Requirements', 
+            'color': DARK_GREY, 'shape': 'terminator'},
+        'fat_sat': {
+            'pos': [2.5, 7.5], 'w': 2.3, 'h': 1.0,
+            'text': '<b>FAT/SAT</b><br><i>Instrument/Manufacturer Related</i><br> • Instrument Components P&ID, electrical<br> • Instrument Performance, CV, repeatability', 
+            'color': PRIMARY_COLOR, 'shape': 'terminator'},
+        'val_activities': {
+            'pos': [2.5, 4.2], 'w': 2.5, 'h': 2.8,
+            'text': '''<b>Validation Activities</b><br><br><u>Installation Qualification (IQ)</u><br> • Meet manufacturer’s specifications<br> • Manuals, maintenance plans<br><u>Operational Qualification (OQ)</u><br> • Test accuracy, precision and repeatability<br> • Confirm instrument resolution<br><u>Performance Qualification (PQ)</u><br><i>Production scale testing (define batch numbers, procure<br>material, align w/R&D)</i>''', 
+            'color': NEUTRAL_GREY, 'shape': 'terminator'},
+        'sample_size': {
+            'pos': [2.5, 0.8], 'w': 2.3, 'h': 0.6,
+            'text': '<b>Sample Size</b><br>Determined by “Binomial Power Analysis”<br>or AQL table', 
+            'color': '#D35400', 'shape': 'process'},
+        'acceptance': {
+            'pos': [6.5, 5.8], 'w': 1.8, 'h': 0.9,
+            'text': '<b>Acceptance Criteria</b><br> • IQ Acceptance Criteria<br> • OQ Acceptance Criteria<br> • PQ Acceptance Criteria', 
+            'color': PRIMARY_COLOR, 'shape': 'process'},
+        'docs': {
+            'pos': [8.5, 8.0], 'w': 2.5, 'h': 1.1,
+            'text': '<b>Documentation</b><br> • IQ, OQ, PQ Documentation<br> • Master Validation Plan (MVP)<br> • Design History File (DHF)<br> • Device Master Record (DMR)', 
+            'color': PRIMARY_COLOR, 'shape': 'terminator'},
+        'onboarding': {
+            'pos': [6.5, 3.8], 'w': 1.8, 'h': 0.8,
+            'text': '<b>Equipment Onboarding</b><br> • Defining calibration<br>   points/frequency<br> • Maintenance schedule', 
+            'color': PRIMARY_COLOR, 'shape': 'process'},
+        'sops': {
+            'pos': [9.5, 3.8], 'w': 1.5, 'h': 0.8,
+            'text': '<b>Protocols & SOPs</b><br> • Personnel Training<br> • <span style="color:red">SOPs/Protocols</span>', 
+            'color': PRIMARY_COLOR, 'shape': 'terminator'},
+        'change_control': {
+            'pos': [6.5, 1.8], 'w': 1.8, 'h': 1.1,
+            'text': '<b>Change Control: ECOs/DCOs</b><br> • Change Request<br> • Impact Assessment<br> • Revalidation Requirement<br> • Engineering/Docs', 
+            'color': PRIMARY_COLOR, 'shape': 'process'},
     }
 
-    # Add Shapes and Annotations using the 'paper' coordinate system
+    # Add Shapes and Annotations for each node
     for key, node in nodes.items():
         x_c, y_c, w, h = node['pos'][0], node['pos'][1], node['w'], node['h']
         align = 'left' if key == 'val_activities' else 'center'
+        shape_type = node.get('shape')
+        font_size = 11
         
-        fig.add_shape(type="rect", xref="paper", yref="paper",
-            x0=x_c-w, y0=y_c-h, x1=x_c+w, y1=y_c+h,
-            line=dict(color="Black"), fillcolor=node['color'], opacity=0.95, layer="below",
-            cornerradius=10 if node['shape'] == 'terminator' else 0)
-        
-        fig.add_annotation(xref="paper", yref="paper",
-            x=x_c, y=y_c, text=node['text'], showarrow=False, align=align,
-            font=dict(color='white' if node['color'] not in [NEUTRAL_GREY] else 'black', size=11),
-            width=(w*2*600) # Auto-wrap text based on shape width (assuming ~600px chart width)
+        fig.add_shape(
+            type="rect", 
+            x0=x_c-w, y0=y_c-h, x1=x_c+w, y1=y_c+h, 
+            line=dict(color="Black"), 
+            fillcolor=node['color'], 
+            opacity=0.95, 
+            layer="below",
+            cornerradius=20 if shape_type == 'terminator' else 0 
+        )
+        fig.add_annotation(
+            x=x_c, y=y_c, text=node['text'], showarrow=False, align=align, 
+            font=dict(color='white' if node['color'] not in [NEUTRAL_GREY] else 'black', size=font_size)
         )
 
-    # Add Arrows using paper coordinates
+    # Add Arrows
     def add_arrow(start_key, end_key, start_anchor, end_anchor):
         start, end = nodes[start_key], nodes[end_key]
-        fig.add_annotation(xref="paper", yref="paper", axref="paper", ayref="paper",
-            x=end['pos'][0] + end_anchor[0]*end['w'], y=end['pos'][1] + end_anchor[1]*end['h'],
-            ax=start['pos'][0] + start_anchor[0]*start['w'], ay=start['pos'][1] + start_anchor[1]*start['h'],
-            showarrow=True, arrowhead=2, arrowwidth=2, arrowcolor="black")
-
+        x0 = start['pos'][0] + start_anchor[0] * start['w']
+        y0 = start['pos'][1] + start_anchor[1] * start['h']
+        x1 = end['pos'][0] + end_anchor[0] * end['w']
+        y1 = end['pos'][1] + end_anchor[1] * end['h']
+        fig.add_annotation(x=x1, y=y1, ax=x0, ay=y0, showarrow=True, arrowhead=2, arrowwidth=2, arrowcolor="black")
+    
     add_arrow('sys_desc', 'fat_sat', (0, -1), (0, 1))
     add_arrow('fat_sat', 'val_activities', (0, -1), (0, 1))
     add_arrow('val_activities', 'sample_size', (0, -1), (0, 1))
     add_arrow('val_activities', 'acceptance', (1, 0), (-1, 0))
+    
+    # Feedback Loops
+    fig.add_shape(type="path", path=" M 9.5,4.6 C 10.5,6.5 8.5,7.5 7.5,7", line=dict(color="black", width=3, dash='dot'))
+    fig.add_annotation(x=7.5, y=7, ax=8, ay=7.2, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor="black")
+    fig.add_shape(type="path", path=" M 6.5,2.9 C 5.5,3.7 5.5,4.7 6.5,5.0", line=dict(color=ERROR_RED, width=3, dash='dot'))
+    fig.add_annotation(x=6.5, y=5.0, ax=6.2, ay=4.6, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor=ERROR_RED)
 
-    # Feedback Loops and connections using SVG paths in paper coordinates
-    fig.add_shape(type="path", xref="paper", yref="paper", path="M 0.85,0.46 C 0.9,0.6 0.8,0.7 0.7,0.68", line=dict(color="black", width=3, dash='dot'))
-    fig.add_annotation(xref="paper", yref="paper", axref="paper", ayref="paper", x=0.7, y=0.68, ax=0.73, ay=0.7, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor="black")
-    fig.add_shape(type="path", xref="paper", yref="paper", path="M 0.6,0.29 C 0.5,0.35 0.5,0.45 0.6,0.49", line=dict(color=ERROR_RED, width=3, dash='dot'))
-    fig.add_annotation(xref="paper", yref="paper", axref="paper", ayref="paper", x=0.6, y=0.49, ax=0.58, ay=0.45, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor=ERROR_RED)
-    fig.add_shape(type="line", xref="paper", yref="paper", x0=nodes['acceptance']['pos'][0], y0=nodes['acceptance']['pos'][1], x1=nodes['onboarding']['pos'][0], y1=nodes['onboarding']['pos'][1], line=dict(color="black", width=2, dash='dot'))
+    # Horizontal connection for onboarding loop
+    fig.add_shape(type="line", x0=nodes['acceptance']['pos'][0], y0=nodes['acceptance']['pos'][1], x1=nodes['onboarding']['pos'][0], y1=nodes['onboarding']['pos'][1], line=dict(color="black", width=2, dash='dot'))
 
     fig.update_layout(
         title="<b>Equipment Validation Process Map</b>",
-        xaxis=dict(visible=False), yaxis=dict(visible=False),
+        xaxis=dict(range=[0, 11.5], visible=False),
+        yaxis=dict(range=[0, 10.5], visible=False),
         plot_bgcolor=BACKGROUND_GREY,
         margin=dict(l=20, r=20, t=40, b=20),
         height=800
