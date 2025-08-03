@@ -874,14 +874,15 @@ def render_project_portfolio_page() -> None:
                     st.warning(f"**⚠️ Over-allocation Alert:** {row['Team Member']} is at {row['Total Allocation']:.0%} workload.")
                     
 # This is the complete, final version of this function to replace the old one.
-
 def render_e2e_validation_hub_page() -> None:
     st.title("🔩 Live E2E Validation Walkthrough: Project Atlas")
     render_manager_briefing(title="Executing a Compliant Validation Lifecycle (per ASTM E2500)", content="This hub presents the entire validation lifecycle in a single, comprehensive view, simulating the execution of a major capital project. It provides tangible evidence of owning deliverables from design and risk management through to final performance qualification.", reg_refs="FDA 21 CFR 820.75, ISO 13485:2016 (Sec 7.5.6), GAMP 5, ASTM E2500", business_impact="Ensures new manufacturing equipment is brought online on-time, on-budget, and in a fully compliant state, directly enabling production launch.", quality_pillar="Design Controls & Risk-Based Verification.", risk_mitigation="Prevents costly redesigns and validation failures by ensuring testability is built-in from the URS phase using tools like the V-Model and pFMEA.")
     
     with st.container(border=True):
         st.info("**Purpose:** This Process Map illustrates our end-to-end equipment validation methodology, serving as a standardized framework for all capital projects. It defines the required deliverables, control gates, and feedback loops that ensure a compliant and efficient process.")
+        # --- CORRECTED FUNCTION CALL ---
         st.plotly_chart(create_process_map_diagram(), use_container_width=True)
+        # --- END CORRECTION ---
         st.success("**Actionable Insight:** This standardized scheme ensures all projects meet regulatory requirements consistently, reduces ambiguity for project teams, and accelerates equipment onboarding by defining clear deliverables and acceptance criteria upfront.")
     
     st.subheader("Live Project Artifacts", divider='blue')
@@ -908,10 +909,11 @@ def render_e2e_validation_hub_page() -> None:
             with c2: 
                 st.subheader("Process Stability")
                 spc_fig, spc_alerts = plot_process_stability_chart("pq_spc")
-                st.plotly_chart(create_process_map_diagram(), use_container_width=True)
+                st.plotly_chart(spc_fig, use_container_width=True)
                 if spc_alerts:
                     st.error(f"**🚨 Automated SPC Alert Detected:** {spc_alerts[0]}")
                     st.success("**Actionable Insight:** The automated rule check has detected a process shift. This would trigger an immediate investigation with Process Engineering to identify the root cause before qualifying the equipment.")
+
 
 def render_specialized_validation_page() -> None:
     st.title("🧪 4. Specialized Validation Hubs")
