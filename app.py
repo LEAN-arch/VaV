@@ -276,7 +276,7 @@ def plot_predictive_compliance_risk() -> go.Figure:
 def create_process_map_diagram() -> go.Figure:
     """
     Digitally renders the Equipment Validation Scheme as a professional-grade process map
-    using clean, content-aware sized boxes and correct SVG paths for shapes.
+    using clean, content-aware sized boxes with enhanced font sizes.
     """
     fig = go.Figure()
     
@@ -325,10 +325,14 @@ def create_process_map_diagram() -> go.Figure:
         x_c, y_c, w, h = node['pos'][0], node['pos'][1], node['w'], node['h']
         align = 'left' if key == 'val_activities' else 'center'
         shape_type = node.get('shape')
-        font_size = 11
+        
+        # --- ENHANCEMENT: Increased Font Size for better readability ---
+        font_size = 15
+        if key == 'val_activities':
+            font_size = 15.5 # Slightly larger for the main box
         
         path = ""
-        # --- FIX for ValueError: Use SVG paths for all shapes ---
+        # Define SVG paths for each shape type to ensure correct rendering
         if shape_type == 'process': # Standard Rectangle
             path = f"M {x_c-w},{y_c-h} L {x_c+w},{y_c-h} L {x_c+w},{y_c+h} L {x_c-w},{y_c+h} Z"
         elif shape_type == 'terminator': # Rounded Rectangle using SVG Arc paths
@@ -339,7 +343,6 @@ def create_process_map_diagram() -> go.Figure:
                     f"L {x_c-w},{y_c-h+r} A {r},{r} 0 0 1 {x_c-w+r},{y_c-h} Z")
         
         fig.add_shape(type="path", path=path, line=dict(color="Black"), fillcolor=node['color'], opacity=0.95, layer="below")
-        
         fig.add_annotation(
             x=x_c, y=y_c, text=node['text'], showarrow=False, align=align, 
             font=dict(color='white' if node['color'] not in [NEUTRAL_GREY] else 'black', size=font_size)
