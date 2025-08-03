@@ -52,7 +52,7 @@ def style_dataframe(df: pd.DataFrame) -> Styler:
     ]).hide(axis="index")
 
 def plot_kpi_sparkline(data: list, is_good_down: bool = False) -> go.Figure:
-    """Creates a compact sparkline chart for a KPI."""
+    """Creates a compact sparkline chart for a KPI with subtle axes."""
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=list(range(len(data))), y=data, mode='lines',
@@ -62,10 +62,30 @@ def plot_kpi_sparkline(data: list, is_good_down: bool = False) -> go.Figure:
     fig.add_trace(go.Scatter(
         x=[0, len(data)-1], y=[data[0], data[-1]], mode='markers', marker=dict(size=[6, 10], color=['grey', end_color])
     ))
+    
+    # --- ENHANCEMENT: Add subtle axes ---
     fig.update_layout(
-        width=150, height=50, margin=dict(l=0, r=0, t=5, b=0),
-        xaxis=dict(visible=False), yaxis=dict(visible=False), showlegend=False,
-        plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)'
+        width=150, height=70,  # Increased height slightly for axes
+        margin=dict(l=5, r=5, t=5, b=5),
+        xaxis=dict(
+            visible=True, 
+            showticklabels=False, 
+            showgrid=False,
+            zeroline=False,
+            linecolor=NEUTRAL_GREY,
+            linewidth=1
+        ),
+        yaxis=dict(
+            visible=True, 
+            showticklabels=False,
+            showgrid=False,
+            zeroline=False,
+            linecolor=NEUTRAL_GREY,
+            linewidth=1
+        ),
+        showlegend=False,
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)'
     )
     return fig
 
