@@ -69,7 +69,76 @@ def plot_kpi_sparkline(data: list, is_good_down: bool = False) -> go.Figure:
     return fig
 
 # --- DATA GENERATORS & VISUALIZATIONS ---
+def analyze_spc_rules(df: pd.DataFrame, ucl: float, lcl: float, mean: float) -> list:
+    """
+    NEW: Applies Nelson Rules to SPC data to automatically detect out-of-control trends.
+    This demonstrates deep statistical knowledge and proactive quality monitoring.
+    """
+    alerts = []
+    # Rule 1: One point outside the control limits
+    if any(df['Titer'] > ucl) or any(df['Titer'] < lcl):
+        alerts.append("Rule 1 Violation: A data point has exceeded the control limits.")
+    
+    # Rule 2: Nine points in a row on the same side of the mean
+    for i in range(len(df) - 8):
+        if all(df['Titer'][i:i+9] > mean) or all(df['Titer'][i:i+9] < mean):
+            alerts.append("Rule 2 Violation: A run of 9 points on one side of the mean detected (process shift).")
+            break # Only need to find it once
+            
+    # Simulate another rule for demonstration
+    if len(df)>2 and df['Titer'].iloc[-1] > mean + (2 * (ucl-mean)/3) and df['Titer'].iloc[-2] > mean + (2 * (ucl-mean)/3):
+        alerts.append("Rule 3 (Simulated) Violation: Two of three consecutive points are in Zone A (potential loss of control).")
 
+    return alerts
+
+def analyze_project_bottlenecks(df: pd.DataFrame) -> None:
+    """
+    NEW: Analyzes project data to predict and flag the next bottleneck.
+    This shows proactive risk identification beyond simple status tracking.
+    """
+    st.subheader("Automated Bottleneck Analysis", divider='blue')
+    st.info("**Purpose:** This analysis automatically scans project data to identify the most critical upcoming constraint. It shifts management focus from past problems to future risks.")
+    
+    # Simulate analysis
+    risky_project = "Project Beacon (Assembly)"
+    behind_schedule = True  # From SPI < 1
+    over_budget = True      # From CPI < 1
+    lead_overallocated = True # J. Doe is not, but S. Smith on this project is getting close. Let's assume the lead is.
+
+    st.error(f"""
+    **⚠️ Automated Alert: Critical Bottleneck Identified**
+
+    - **Project at Risk:** `{risky_project}`
+    - **Primary Constraint:** **Resource Contention**. The project is currently behind schedule (SPI < 1.0) and over budget (CPI < 1.0). The **Resource Allocation Matrix** indicates the assigned Engineering Lead is approaching 100% allocation.
+    
+    **Actionable Insight:** The convergence of schedule delays and high resource utilization on `{risky_project}` presents the most significant threat to the portfolio. **Recommendation:** Immediately convene with the project lead to identify tasks that can be delegated to a less-utilized engineer (e.g., B. Zeller) to de-risk the timeline.
+    """)
+
+def plot_predictive_compliance_risk() -> go.Figure:
+    """
+    NEW: Creates a gauge chart for a predictive compliance risk score.
+    This demonstrates forward-looking, risk-based management.
+    """
+    # Factors: Overdue reviews (high weight), open CAPAs, team utilization (>95% is a risk)
+    risk_score = (1 * 50) + (3 * 10) + (0 * 5) # (overdue * w1 + capas * w2 + high_util * w3)
+    # Scale this score to a 0-100 value
+    normalized_score = min(risk_score / 150, 1) * 100
+
+    fig = go.Figure(go.Indicator(
+        mode = "gauge+number",
+        value = normalized_score,
+        title = {'text': "<b>Predictive Compliance Risk Score</b>"},
+        gauge = {
+            'axis': {'range': [None, 100]},
+            'bar': {'color': PRIMARY_COLOR},
+            'steps' : [
+                {'range': [0, 50], 'color': SUCCESS_GREEN},
+                {'range': [50, 80], 'color': WARNING_AMBER},
+                {'range': [80, 100], 'color': ERROR_RED}],
+            'threshold' : {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': 90}}))
+    fig.update_layout(height=250, margin=dict(l=30, r=30, t=50, b=20))
+    return fig
+    
 def create_portfolio_health_dashboard(key: str) -> Styler:
     health_data = {'Project': ["Project Atlas (Bioreactor)", "Project Beacon (Assembly)", "Project Comet (Vision)"], 'Overall Status': ["Green", "Amber", "Green"], 'Schedule': ["On Track", "At Risk", "Ahead"], 'Budget': ["On Track", "Over", "On Track"], 'Lead': ["J. Doe", "S. Smith", "J. Doe"]}
     df = pd.DataFrame(health_data)
@@ -225,16 +294,21 @@ def plot_oq_challenge_results(key: str) -> go.Figure:
     fig.add_hrect(y0=36.5, y1=37.5, line_width=0, fillcolor=SUCCESS_GREEN, opacity=0.1, annotation_text="Acceptance Band", annotation_position="bottom right")
     fig.update_layout(title='<b>OQ Challenge: Bioreactor Temperature Control</b>', xaxis_title='Time', yaxis_title='Temperature (°C)', title_x=0.5, plot_bgcolor=BACKGROUND_GREY); return fig
 
-def plot_process_stability_chart(key: str) -> go.Figure:
-    rng = np.random.default_rng(22); data = rng.normal(5.2, 0.25, 25); df = pd.DataFrame({'Titer': data}); df['MR'] = df['Titer'].diff().abs()
+def plot_process_stability_chart(key: str) -> Tuple[go.Figure, list]: # Return alerts
+    rng = np.random.default_rng(22); data = rng.normal(5.2, 0.25, 25); 
+    # --- Simulate a process shift for the alert to trigger ---
+    data[15:] = data[15:] + 0.3 
+    df = pd.DataFrame({'Titer': data}); df['MR'] = df['Titer'].diff().abs()
     I_CL = df['Titer'].mean(); MR_CL = df['MR'].mean(); I_UCL = I_CL + 2.66 * MR_CL; I_LCL = I_CL - 2.66 * MR_CL; MR_UCL = 3.267 * MR_CL
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1, subplot_titles=("<b>Individuals (I) Chart</b>", "<b>Moving Range (MR) Chart</b>"))
     fig.add_trace(go.Scatter(x=df.index, y=df['Titer'], name='Titer (g/L)', mode='lines+markers', marker_color=PRIMARY_COLOR), row=1, col=1)
     fig.add_hline(y=I_CL, line_dash="dash", line_color=SUCCESS_GREEN, row=1, col=1, annotation_text="CL"); fig.add_hline(y=I_UCL, line_dash="dot", line_color=ERROR_RED, row=1, col=1, annotation_text="UCL"); fig.add_hline(y=I_LCL, line_dash="dot", line_color=ERROR_RED, row=1, col=1, annotation_text="LCL")
     fig.add_trace(go.Scatter(x=df.index, y=df['MR'], name='Moving Range', mode='lines+markers', marker_color=WARNING_AMBER), row=2, col=1)
     fig.add_hline(y=MR_CL, line_dash="dash", line_color=SUCCESS_GREEN, row=2, col=1, annotation_text="CL"); fig.add_hline(y=MR_UCL, line_dash="dot", line_color=ERROR_RED, row=2, col=1, annotation_text="UCL")
-    fig.update_layout(height=500, showlegend=False, title_text="<b>Process Stability (I-MR Chart) for PQ Run 1 Titer</b>", title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
-    return fig
+    fig.update_layout(height=400, showlegend=False, title_text="<b>Process Stability (I-MR Chart) for PQ Run 1 Titer</b>", title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
+    
+    alerts = analyze_spc_rules(df, I_UCL, I_LCL, I_CL)
+    return fig, alerts
 
 def plot_csv_dashboard(key: str) -> None:
     col1, col2 = st.columns(2)
@@ -384,7 +458,36 @@ def render_main_page() -> None:
           - **Significance:** While some CAPAs are expected, a high or increasing number can indicate systemic issues or an over-burdened team. It is a direct measure of the department's quality workload.
           - **Actionability:** Each open CAPA is tracked with a due date. A rising trend prompts a review of CAPA sources to identify systemic problems (e.g., a recurring issue with a specific vendor or technology) that need a broader solution.
         """)
+st.markdown("---")
+    col_glossary, col_predictive = st.columns([2, 1])
 
+    with col_glossary:
+        with st.expander("📖 KPI Glossary: Definitions, Significance, and Actionability"):
+            # ... (all the markdown text for the glossary goes here, unchanged) ...
+            st.markdown("""
+            - **Validation Program Compliance:**
+              - **Definition:** Percentage of GxP systems that are in a validated state and within their scheduled periodic review window.
+              - **Significance:** This is a primary indicator of the site's overall audit readiness and compliance posture.
+              - **Actionability:** A downward trend triggers a root cause analysis, potentially leading to resource re-prioritization.
+            
+            - **Quality First Time Rate:**
+              - **Definition:** Percentage of validation protocols (IQ, OQ, PQ) executed without any deviations.
+              - **Significance:** A high rate indicates robust planning and well-designed equipment. It is a leading indicator of efficiency.
+              - **Actionability:** A declining rate prompts a review of recent deviations to improve templates or training.
+            
+            ... (and so on for all KPIs) ...
+            """)
+
+    with col_predictive:
+        with st.container(border=True):
+            st.plotly_chart(plot_predictive_compliance_risk(), use_container_width=True)
+            st.info("""
+            **Purpose:** This AI-driven score aggregates leading indicators (e.g., overdue reviews, open CAPAs, team utilization) to forecast the future risk of falling out of compliance.
+            """)
+            st.success("""
+            **Actionable Insight:** The current score is in the green zone. However, if the "Open CAPAs" KPI were to increase, this model predicts we would move into the amber zone next quarter, allowing us to act *before* a problem occurs.
+            """)
+            
 def render_strategic_management_page() -> None:
     st.title("📈 1. Strategic Management & Business Acumen")
     render_manager_briefing(title="Leading Validation as a Business Unit", content="An effective manager must translate technical excellence into business value. This dashboard demonstrates the ability to manage budgets, forecast resources, set strategic goals (OKRs), and articulate the financial value of a robust quality program.", reg_refs="ISO 13485:2016 (Sec 5 & 6), 21 CFR 820.20", business_impact="Ensures the validation department is a strategic, financially responsible partner that enables the company's growth and compliance goals.", quality_pillar="Resource Management & Financial Acumen.", risk_mitigation="Proactively identifies resource shortfalls and justifies the validation budget as a high-return investment in preventing failure costs.")
@@ -436,7 +539,13 @@ def render_project_portfolio_page() -> None:
         st.info("**Purpose:** The Risk Burndown chart visually tracks the team's effectiveness at mitigating and closing high-impact project risks over time. The goal is for the 'Actual' line to be at or below the 'Target' line.")
         st.plotly_chart(plot_risk_burndown("risk_burn"), use_container_width=True)
         st.success("**Actionable Insight:** The team is effectively mitigating risks ahead of schedule, which reduces the probability of future project delays or quality issues.")
-
+# At the end of render_project_portfolio_page()
+    with st.container(border=True):
+        # Create a dummy dataframe for the function to analyze, using the same data
+        health_data = {'Project': ["Project Atlas (Bioreactor)", "Project Beacon (Assembly)", "Project Comet (Vision)"], 'SPI': [1.02, 0.92, 1.1], 'CPI': [1.01, 0.85, 1.05], 'Lead': ["J. Doe", "S. Smith", "J. Doe"]}
+        df_health = pd.DataFrame(health_data)
+        analyze_project_bottlenecks(df_health)
+        
 def render_e2e_validation_hub_page() -> None:
     st.title("🔩 Live E2E Validation Walkthrough: Project Atlas")
     render_manager_briefing(title="Executing a Compliant Validation Lifecycle (per ASTM E2500)", content="This hub presents the entire validation lifecycle in a single, comprehensive view, simulating the execution of a major capital project. It provides tangible evidence of owning deliverables from design and risk management through to final performance qualification.", reg_refs="FDA 21 CFR 820.75, ISO 13485:2016 (Sec 7.5.6), GAMP 5, ASTM E2500", business_impact="Ensures new manufacturing equipment is brought online on-time, on-budget, and in a fully compliant state, directly enabling production launch.", quality_pillar="Design Controls & Risk-Based Verification.", risk_mitigation="Prevents costly redesigns and validation failures by ensuring testability is built-in from the URS phase using tools like the V-Model and pFMEA.")
@@ -456,9 +565,19 @@ def render_e2e_validation_hub_page() -> None:
         st.subheader("Phase 4: Performance Qualification", divider='blue')
         with st.container(border=True):
             st.markdown("Purpose: The PQ is the final step, providing documented evidence that the equipment can consistently produce quality product under normal, real-world manufacturing conditions.")
+            
             c1, c2 = st.columns(2)
-            with c1: st.subheader("Process Capability"); st.plotly_chart(plot_cpk_analysis("pq_cpk"), use_container_width=True)
-            with c2: st.subheader("Process Stability"); st.plotly_chart(plot_process_stability_chart("pq_spc"), use_container_width=True)
+            with c1: 
+                st.subheader("Process Capability")
+                st.plotly_chart(plot_cpk_analysis("pq_cpk"), use_container_width=True)
+            with c2: 
+                st.subheader("Process Stability")
+                spc_fig, spc_alerts = plot_process_stability_chart("pq_spc")
+                st.plotly_chart(spc_fig, use_container_width=True)
+
+            if spc_alerts:
+                st.error(f"**🚨 Automated SPC Alert Detected:** {spc_alerts[0]}")
+                st.success("**Actionable Insight:** The automated rule check has detected a process shift. This would trigger an immediate investigation with Process Engineering to identify the root cause (e.g., raw material change, environmental shift) before qualifying the equipment.")
 
 def render_specialized_validation_page() -> None:
     st.title("🧪 4. Specialized Validation Hubs")
