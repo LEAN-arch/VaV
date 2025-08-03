@@ -584,13 +584,65 @@ def render_documentation_hub_page() -> None:
             with st.expander("📋 **View Professional PQ Report Template**"):
                 _render_professional_report_template()
 
+# --- ENHANCED DOCUMENTATION HUB (REPLACE THE OLD SECTION WITH THIS) ---
+
+def _render_professional_protocol_template() -> None:
+    """Renders a world-class, professional IQ/OQ Protocol Template."""
+    st.header("IQ/OQ Protocol: VAL-TP-101")
+    st.subheader("Automated Bioreactor Suite (ASSET-123)")
+    st.divider()
+    
+    st.markdown("##### 1.0 Purpose & Scope")
+    st.write("The purpose of this protocol is to provide documented evidence that the Automated Bioreactor Suite (ASSET-123) is installed correctly per manufacturer and design specifications (Installation Qualification - IQ) and operates according to its functional specifications throughout its intended operating ranges (Operational Qualification - OQ).")
+    st.info("**Compliance Focus (GDP):** A clear purpose and scope are essential for audit readiness, defining the boundaries and intent of the validation activity upfront.", icon="🧠")
+
+    st.markdown("##### 2.0 System Description")
+    st.write("This protocol applies to the Automated Bioreactor Suite (ASSET-123) located in Building X, Room Y. The system consists of a 500L stainless steel bioreactor, an integrated control system running 'BioCommand' software v2.1, and associated critical instrumentation (e.g., pH, DO, temperature sensors).")
+
+    st.markdown("##### 3.0 Roles & Responsibilities")
+    st.table(pd.DataFrame({
+        'Role': ['Validation', 'Engineering', 'Manufacturing', 'Quality Assurance'],
+        'Responsibility': ['Author, execute, and report on this protocol.', 'Provide technical support during execution.', 'Provide operational support and confirm system readiness.', 'Review and approve the protocol, deviations, and final report.']
+    }))
+    
+    st.markdown("##### 4.0 Test Procedures - OQ Section (Example)")
+    st.info("**ALCOA+ Principle:** Each test case includes fields for 'Executed By/Date' and 'Reviewed By/Date' to ensure all activities are Attributable, Contemporaneous, and Legible.", icon="✍️")
+    test_case_data = {
+        'Test ID': ['OQ-TC-001', 'OQ-TC-002', 'OQ-TC-003'],
+        'Test Description': ['Verify Temperature Control Loop', 'Challenge Agitator Speed Control', 'Test Critical Alarms (High Temp)'],
+        'Acceptance Criteria': ['Maintain setpoint ± 0.5°C for 60 mins', 'Maintain setpoint ± 2 RPM across range', 'Alarm activates within 5s of exceeding setpoint'],
+        'Result (Pass/Fail)': ['PASS', 'PASS', 'PASS'],
+        'Executed By / Date': ['A. Wong / 15-Jan-2024', 'A. Wong / 15-Jan-2024', 'A. Wong / 16-Jan-2024'],
+        'Reviewed By / Date': ['J. Doe / 17-Jan-2024', 'J. Doe / 17-Jan-2024', 'J. Doe / 17-Jan-2024']
+    }
+    st.dataframe(style_dataframe(pd.DataFrame(test_case_data)), use_container_width=True)
+
+    st.markdown("##### 5.0 Deviation Handling")
+    st.write("Any discrepancy from the expected results or test procedure must be documented as a deviation. The deviation must be assessed for its impact on product quality and system suitability by a cross-functional team (Validation, QA, Engineering) before further execution. All deviations must be resolved or have a corrective action plan in place prior to the approval of the final report.")
+    
+    st.divider()
+    st.warning("This is a simplified template for demonstration purposes.")
+
 def _render_professional_report_template() -> None:
-    st.header("PQ Report: VAL-TR-201"); st.subheader("Automated Bioreactor Suite (ASSET-123)"); st.divider()
+    """Renders a world-class, professional PQ Report Template."""
+    st.header("PQ Report: VAL-TR-201")
+    st.subheader("Automated Bioreactor Suite (ASSET-123)")
+    st.divider()
     meta_cols = st.columns(4); meta_cols[0].metric("Document ID", "VAL-TR-201"); meta_cols[1].metric("Version", "1.0"); meta_cols[2].metric("Status", "Final"); meta_cols[3].metric("Approval Date", "2024-03-01"); st.divider()
+    
     st.markdown("##### 1.0 Summary & Conclusion")
     col1, col2 = st.columns([2, 1])
-    with col1: st.write("Three successful, consecutive Performance Qualification (PQ) runs were executed on the Bioreactor System per protocol VAL-TP-201. The results confirm that the system reliably produces product meeting all pre-defined Critical Quality Attributes (CQAs) under normal manufacturing conditions."); st.success("**Conclusion:** The Automated Bioreactor System (ASSET-123) has met all PQ acceptance criteria and is **qualified for use in commercial GMP manufacturing.**")
+    with col1:
+        st.write("Three successful, consecutive Performance Qualification (PQ) runs were executed on the Bioreactor System per protocol VAL-TP-201. The results confirm that the system reliably produces product meeting all pre-defined Critical Quality Attributes (CQAs) under normal manufacturing conditions.")
+        st.success("**Conclusion:** The Automated Bioreactor System (ASSET-123) has met all PQ acceptance criteria and is **qualified for use in commercial GMP manufacturing.**")
     with col2: st.metric("Overall Result", "PASS"); st.metric("Final CpK (Product Titer)", "1.67", help="Exceeds target of >= 1.33")
+    
+    st.markdown("##### 2.0 Deviations & Impact Assessment")
+    st.info("**Compliance Focus (Audit Readiness):** A dedicated section for deviations demonstrates transparency and robust quality oversight. It shows auditors that unexpected events are controlled, assessed, and documented properly.", icon="🧠")
+    with st.container(border=True):
+        st.write("**DEV-001 (Run 2):** A pH sensor required recalibration mid-run. The event was documented in the batch record, the sensor was recalibrated per SOP, and the run successfully continued.")
+        st.success("**Impact Assessment:** None. All CQA data for the batch remained within specification. The event and its resolution were reviewed and approved by QA.")
+        
     st.markdown("##### 3.0 Results vs. Acceptance Criteria")
     results_data = {'CQA': ['Titer (g/L)', 'Viability (%)', 'Impurity A (%)'], 'Specification': ['>= 5.0', '>= 95%', '<= 0.5%'], 'Run 1 Result': [5.2, 97, 0.41], 'Run 2 Result': [5.1, 96, 0.44], 'Run 3 Result': [5.3, 98, 0.39], 'Pass/Fail': ['PASS', 'PASS', 'PASS']}
     results_df = pd.DataFrame(results_data)
@@ -599,6 +651,75 @@ def _render_professional_report_template() -> None:
         return f"background-color: {color}; color: white; text-align: center; font-weight: bold;"
     styled_df = results_df.style.map(style_pass_fail, subset=['Pass/Fail'])
     st.dataframe(styled_df, use_container_width=True, hide_index=True)
+    
+    st.markdown("##### 4.0 Traceability")
+    st.warning("This report provides the objective evidence that fulfills user requirements **URS-001** (Titer) and **URS-040** (Purity) as documented in the Requirements Traceability Matrix (QA-DOC-105). This closes the loop on the V-Model.")
+
+def render_documentation_hub_page() -> None:
+    st.title("🗂️ 6. Validation Documentation & Audit Defense Hub")
+    render_manager_briefing(title="Orchestrating Compliant Validation Documentation", content="This hub demonstrates the ability to generate, manage, and defend the compliant, auditable documentation that forms the core of a successful validation package. The simulations below prove expertise in creating documents that meet the stringent requirements of **21 CFR Part 820** and **ISO 13485**.", reg_refs="21 CFR 820.40 (Document Controls), GAMP 5 Good Documentation Practice, 21 CFR Part 11", business_impact="Ensures audit-proof documentation, accelerates review cycles, and fosters seamless collaboration between Engineering, Manufacturing, and Quality.", quality_pillar="Good Documentation Practice (GDP) & Audit Readiness.", risk_mitigation="Minimizes review cycles and audit findings by ensuring documentation is attributable, legible, contemporaneous, original, and accurate (ALCOA+).")
+
+    tab1, tab2, tab3 = st.tabs(["📄 Document Generation Hub", "🔄 eQMS Approval Workflow Simulation", "🛡️ Interactive Audit Defense Simulation"])
+
+    with tab1:
+        st.subheader("Compliant Document Templates")
+        st.info("These interactive templates showcase the structure and key compliance elements of core validation deliverables, serving as a best-practice guide for the team.")
+        with st.expander("📄 **View Professional IQ/OQ Protocol Template**"):
+            _render_professional_protocol_template()
+        with st.expander("📋 **View Professional PQ Report Template**"):
+            _render_professional_report_template()
+
+    with tab2:
+        st.subheader("eQMS Document Workflow")
+        st.info("This simulates tracking a document through its cross-functional review and approval lifecycle within an electronic Quality Management System.")
+        
+        doc_choice = st.selectbox("Select a Document to View its Workflow Status:",
+                                  ['VAL-MP-001 (Validation Master Plan)', 'VAL-TP-101 (IQ/OQ Protocol)', 'VAL-TR-101 (IQ/OQ Report)'])
+        
+        st.markdown(f"#### Status for `{doc_choice.split(' ')[0]}`:")
+        st.divider()
+        
+        if "MP" in doc_choice:
+            st.markdown("✔️ **Validation Lead (Self):** Approved `2024-01-15`\n✔️ **Process Engineering Lead:** Approved `2024-01-16`\n✔️ **Quality Assurance Lead:** Approved `2024-01-17`\n🟠 **Manufacturing Lead:** Pending Review\n⬜ **Head of Engineering:** Not Started")
+        elif "TP" in doc_choice:
+            st.markdown("✔️ **Validation Lead (Self):** Approved `2024-02-01`\n✔️ **Process Engineering Lead:** Approved `2024-02-02`\n✔️ **Quality Assurance Lead:** Approved `2024-02-05`\n✔️ **Manufacturing Lead:** Approved `2024-02-05`\n✅ **STATUS: RELEASED FOR EXECUTION**")
+        elif "TR" in doc_choice:
+            st.markdown("✔️ **Validation Lead (Self):** Approved `2024-03-01`\n✔️ **Process Engineering Lead:** Approved `2024-03-01`\n✔️ **Quality Assurance Lead:** Approved `2024-03-02`\n✔️ **Manufacturing Lead:** Approved `2024-03-02`\n✅ **STATUS: FINAL & ARCHIVED**")
+
+    with tab3:
+        st.subheader("Audit Defense Simulation")
+        st.info("This interactive module simulates how to respond to common, challenging questions from a regulatory auditor, demonstrating deep SME knowledge and audit readiness.")
+        
+        questions = {
+            "Select a question...": "Select a question from the dropdown to see a world-class response.",
+            "How did you justify your PQ sample size?": """
+            **Answer:** "That's an excellent question. We justified our sample size for the PQ runs using a risk-based statistical approach. For the critical quality attribute of Product Titer, we performed a **Binomial Power Analysis**. 
+            
+            Our goal was to demonstrate with 95% confidence that our process can produce product with a defect rate of less than 1%. The analysis, documented in our Validation Plan VAL-MP-001, determined that three successful runs of 100 samples each would provide the necessary statistical power to meet this acceptance criterion. This approach aligns with **ICH Q8** principles for process understanding and is detailed in our internal SOP-STAT-005."
+            """,
+            "There was a deviation in PQ Run 2. How can you be sure the system is robust?": """
+            **Answer:** "Correct, Deviation DEV-001 was documented in the PQ report, VAL-TR-201, Section 2.0. The deviation was a pH sensor recalibration, which is a routine maintenance activity.
+            
+            Critically, the event was immediately bracketed, and an impact assessment was performed, as per our procedure SOP-QA-021. We demonstrated that **1)** no product was affected as all CQA data remained well within specification, and **2)** the control system correctly placed the process in a safe state until the issue was resolved.
+            
+            Therefore, this event actually serves as a successful challenge to the system's robustness and procedural controls, rather than a concern. It proved our deviation management and maintenance procedures function as intended, which is a key requirement of **21 CFR 820.75**."
+            """,
+            "How do you ensure data integrity for the electronic records generated by this system?": """
+            **Answer:** "We ensure data integrity through a multi-layered approach, as required by **21 CFR Part 11**.
+            
+            First, during IQ, we verified that the system's security settings were configured correctly, including unique user logins and password controls.
+            
+            Second, during OQ, we specifically challenged the system's audit trail functionality. We demonstrated that all critical actions—such as changing a setpoint, acknowledging an alarm, or creating a batch—are captured in a secure, time-stamped, and unalterable audit log.
+            
+            Finally, our procedural controls, like SOP-QA-033 on 'Periodic Review of Audit Trails', ensure that these records are reviewed by QA on a routine basis to detect any anomalies. This combination of technical and procedural controls provides a robust data integrity framework."
+            """
+        }
+        
+        question = st.selectbox("Select an Auditor's Question:", list(questions.keys()))
+        
+        if question != "Select a question...":
+            st.error(f"**Auditor's Question:** \"{question}\"", icon="❓")
+            st.success(f"**SME Response:** {questions[question]}", icon="✔️")
 
 # --- SIDEBAR NAVIGATION AND PAGE ROUTING ---
 PAGES = { "Executive Summary": render_main_page, "1. Strategic Management": render_strategic_management_page, "2. Project & Portfolio Management": render_project_portfolio_page, "3. E2E Validation Walkthrough": render_e2e_validation_hub_page, "4. Specialized Validation Hubs": render_specialized_validation_page, "5. Validation Program Health": render_validation_program_health_page, "6. Documentation & Audit Defense": render_documentation_hub_page }
