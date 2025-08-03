@@ -276,10 +276,11 @@ def plot_predictive_compliance_risk() -> go.Figure:
 def create_process_map_diagram() -> go.Figure:
     """
     Digitally renders the Equipment Validation Scheme as a professional-grade process map
-    using clean, content-aware sized boxes.
+    using clean, content-aware sized boxes with enhanced font sizes.
     """
     fig = go.Figure()
     
+    # Define nodes with manually tuned w/h properties for a balanced, professional layout
     nodes = {
         'sys_desc': {
             'pos': [2.5, 9.2], 'w': 2.3, 'h': 0.8,
@@ -318,33 +319,66 @@ def create_process_map_diagram() -> go.Figure:
             'text': '<b>Change Control: ECOs/DCOs</b><br> • Change Request<br> • Impact Assessment<br> • Revalidation Requirement<br> • Engineering/Docs', 
             'color': PRIMARY_COLOR, 'shape': 'process'},
     }
+
+    # Add Shapes and Annotations for each node
     for key, node in nodes.items():
         x_c, y_c, w, h = node['pos'][0], node['pos'][1], node['w'], node['h']
         align = 'left' if key == 'val_activities' else 'center'
         shape_type = node.get('shape')
-        font_size = 11
+        
+        # --- ENHANCEMENT: Increased Font Size ---
+        font_size = 12.5 if key == 'val_activities' else 12
+        
         path = ""
-        if shape_type == 'process':
+        # Define SVG paths for each shape type to ensure correct rendering
+        if shape_type == 'process': # Standard Rectangle
             path = f"M {x_c-w},{y_c-h} L {x_c+w},{y_c-h} L {x_c+w},{y_c+h} L {x_c-w},{y_c+h} Z"
-        elif shape_type == 'terminator':
-            r = 0.4
+        elif shape_type == 'terminator': # Rounded Rectangle using SVG Arc paths
+            r = 0.4  # Radius of corners
             path = (f"M {x_c-w+r},{y_c-h} L {x_c+w-r},{y_c-h} A {r},{r} 0 0 1 {x_c+w},{y_c-h+r} "
                     f"L {x_c+w},{y_c+h-r} A {r},{r} 0 0 1 {x_c+w-r},{y_c+h} "
                     f"L {x_c-w+r},{y_c+h} A {r},{r} 0 0 1 {x_c-w},{y_c+h-r} "
                     f"L {x_c-w},{y_c-h+r} A {r},{r} 0 0 1 {x_c-w+r},{y_c-h} Z")
+        
         fig.add_shape(type="path", path=path, line=dict(color="Black"), fillcolor=node['color'], opacity=0.95, layer="below")
-        fig.add_annotation(x=x_c, y=y_c, text=node['text'], showarrow=False, align=align, font=dict(color='white' if node['color'] not in [NEUTRAL_GREY] else 'black', size=font_size))
+        fig.add_annotation(
+            x=x_c, y=y_c, text=node['text'], showarrow=False, align=align, 
+            font=dict(color='white' if node['color'] not in [NEUTRAL_GREY] else 'black', size=font_size)
+        )
+
+    # Add Arrows
     def add_arrow(start_key, end_key, start_anchor, end_anchor):
         start, end = nodes[start_key], nodes[end_key]
-        x0, y0 = start['pos'][0] + start_anchor[0] * start['w'], start['pos'][1] + start_anchor[1] * start['h']
-        x1, y1 = end['pos'][0] + end_anchor[0] * end['w'], end['pos'][1] + end_anchor[1] * end['h']
+        x0 = start['pos'][0] + start_anchor[0] * start['w']
+        y0 = start['pos'][1] + start_anchor[1] * start['h']
+        x1 = end['pos'][0] + end_anchor[0] * end['w']
+        y1 = end['pos'][1] + end_anchor[1] * end['h']
         fig.add_annotation(x=x1, y=y1, ax=x0, ay=y0, showarrow=True, arrowhead=2, arrowwidth=2, arrowcolor="black")
-    add_arrow('sys_desc', 'fat_sat', (0, -1), (0, 1)); add_arrow('fat_sat', 'val_activities', (0, -1), (0, 1)); add_arrow('val_activities', 'sample_size', (0, -1), (0, 1)); add_arrow('val_activities', 'acceptance', (1, 0), (-1, 0))
-    fig.add_shape(type="path", path=" M 9.5,4.6 C 10.5,6.5 8.5,7.5 7.5,7", line=dict(color="black", width=3, dash='dot')); fig.add_annotation(x=7.5, y=7, ax=8, ay=7.2, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor="black")
-    fig.add_shape(type="path", path=" M 6.5,2.9 C 5.5,3.7 5.5,4.7 6.5,5.0", line=dict(color=ERROR_RED, width=3, dash='dot')); fig.add_annotation(x=6.5, y=5.0, ax=6.2, ay=4.6, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor=ERROR_RED)
+    
+    add_arrow('sys_desc', 'fat_sat', (0, -1), (0, 1))
+    add_arrow('fat_sat', 'val_activities', (0, -1), (0, 1))
+    add_arrow('val_activities', 'sample_size', (0, -1), (0, 1))
+    add_arrow('val_activities', 'acceptance', (1, 0), (-1, 0))
+    
+    # Feedback Loops
+    fig.add_shape(type="path", path=" M 9.5,4.6 C 10.5,6.5 8.5,7.5 7.5,7", line=dict(color="black", width=3, dash='dot'))
+    fig.add_annotation(x=7.5, y=7, ax=8, ay=7.2, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor="black")
+    fig.add_shape(type="path", path=" M 6.5,2.9 C 5.5,3.7 5.5,4.7 6.5,5.0", line=dict(color=ERROR_RED, width=3, dash='dot'))
+    fig.add_annotation(x=6.5, y=5.0, ax=6.2, ay=4.6, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor=ERROR_RED)
+
+    # Horizontal connection for onboarding loop
     fig.add_shape(type="line", x0=nodes['acceptance']['pos'][0], y0=nodes['acceptance']['pos'][1], x1=nodes['onboarding']['pos'][0], y1=nodes['onboarding']['pos'][1], line=dict(color="black", width=2, dash='dot'))
-    fig.update_layout(title="<b>Equipment Validation Process Map</b>", xaxis=dict(range=[0, 11.5], visible=False), yaxis=dict(range=[0, 10.5], visible=False), plot_bgcolor=BACKGROUND_GREY, margin=dict(l=20, r=20, t=40, b=20), height=800)
+
+    fig.update_layout(
+        title="<b>Equipment Validation Process Map</b>",
+        xaxis=dict(range=[0, 11.5], visible=False),
+        yaxis=dict(range=[0, 10.5], visible=False),
+        plot_bgcolor=BACKGROUND_GREY,
+        margin=dict(l=20, r=20, t=40, b=20),
+        height=800
+    )
     return fig
+    
 def create_equipment_v_model() -> go.Figure:
     """Creates a V-Model diagram specific to equipment validation."""
     fig = go.Figure()
