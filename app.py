@@ -1336,8 +1336,56 @@ def render_operations_page():
         st.plotly_chart(fig_forecast, use_container_width=True)
         st.error("**Actionable Insight:** The heatmap reveals our primary analytical platform is severely bottlenecked during standard work hours. The AI forecast confirms that we will exceed 90% capacity within 4 months, jeopardizing the timelines for two upcoming projects. This data forms the basis of a CapEx request for a new instrument in the next budget cycle.")
 
+def render_qms_cockpit_page():
+    st.title("✅ 10. The Integrated QMS Cockpit")
+    render_director_briefing(
+        "Ensuring an 'Always Audit Ready' State",
+        "A V&V leader is a key steward of the Quality Management System (QMS). This cockpit provides a real-time view of the department's compliance posture, tracking audit performance and the status of V&V's involvement in critical quality records like CAPAs and Non-Conformance Reports (NCMRs).",
+        "21 CFR 820 (QSR), ISO 13485: 8.2.4 (Internal Audit), 8.5.2 (CAPA)",
+        "Fosters a culture of proactive quality, ensures the department is prepared for unannounced inspections, and provides visibility into V&V's workload and cycle times for supporting the broader QMS, enabling better resource planning."
+    )
+    
+    st.subheader("Audit & Inspection Readiness")
+    with st.container(border=True):
+        st.dataframe(create_audit_dashboard("audit"), use_container_width=True, hide_index=True)
+        kpi_cols = st.columns(3)
+        kpi_cols[0].metric("V&V-related Findings (Last 4 Audits)", 4, delta="-2 vs. prior period")
+        kpi_cols[1].metric("Avg. Finding Closure Time (Days)", 25, delta="-5 days", delta_color="inverse")
+        kpi_cols[2].metric("V&V SOPs Updated (Last 12 Mo.)", "95%")
+        st.success("**Actionable Insight:** The downward trend in audit findings and faster closure times are direct results of targeted SOP updates and training initiatives from the previous year, demonstrating a successful continuous improvement loop.")
+
+    with st.container(border=True):
+        create_qms_kanban("qms")
+        st.info("**Actionable Insight:** The Kanban board shows a potential bottleneck forming in the 'Investigation' phase. This indicates a need to either allocate more resources to initial investigations or to analyze the incoming quality records for recurring themes that could be addressed systemically.")
+
+#-----------------------------------------------------------------------------------------------------
+def render_business_metrics_page():
+    st.title("💰 11. V&V Business & Quality Metrics Hub")
+    render_director_briefing(
+        "Driving V&V as a Business Unit",
+        "This dashboard transcends project-level tracking to demonstrate leadership of the V&V department as a financially responsible business unit. It provides visibility into departmental OpEx and, crucially, quantifies V&V's role in reducing the company-wide Cost of Poor Quality (COPQ). This is how a V&V leader communicates value in the language of the C-suite.",
+        "ISO 13485: 5.6 (Management Review), 21 CFR 820.20 (Management Responsibility)",
+        "Provides clear financial stewardship of departmental budgets and demonstrates the direct, positive ROI of investing in robust V&V by showing its impact on preventing costly internal and external failures."
+    )
+    
+    st.subheader("Departmental Operational Expense (OpEx) Management")
+    with st.container(border=True):
+        col1, col2 = st.columns(2)
+        with col1:
+            fig_gauge, fig_bar = create_opex_dashboard("opex")
+            st.plotly_chart(fig_gauge, use_container_width=True)
+        with col2:
+            st.plotly_chart(fig_bar, use_container_width=True)
+        st.success("**Actionable Insight:** The department is tracking at 84% of its annual OpEx budget, indicating strong financial control. The consistent monthly burn rate allows for predictable financial forecasting and resource planning for the remainder of the fiscal year.")
+    
+    with st.container(border=True):
+        fig_corr = create_copq_modeler("copq")
+        st.plotly_chart(fig_corr, use_container_width=True)
+        st.error("**Actionable Insight:** The AI-powered model, trained on historical project data, clearly demonstrates that for every dollar invested in V&V during development, the company saves approximately $1.50 in post-launch COPQ. This provides a powerful, data-driven argument for fully funding V&V activities to maximize long-term profitability.")
+
+
 def render_portfolio_page():
-    st.title("📂 10. V&V Portfolio Command Center")
+    st.title("📂 12. V&V Portfolio Command Center")
     render_director_briefing(
         "Managing the V&V Portfolio",
         "An effective director manages a portfolio of projects, not just a single timeline. This requires balancing competing priorities, allocating finite resources, and providing clear, high-level status updates to executive leadership. This command center demonstrates the ability to manage these complexities and make data-driven trade-off decisions.",
@@ -1359,7 +1407,7 @@ def render_portfolio_page():
                 st.warning(f"**⚠️ Over-allocation Alert:** {index} is allocated at {row['Total']}%. This is unsustainable and poses a risk of burnout and project delays.")
 
 def render_learning_hub_page():
-    st.title("🧠 11. Organizational Learning & Knowledge Hub")
+    st.title("🧠 13. Organizational Learning & Knowledge Hub")
     render_director_briefing(
         "Building a Learning Organization",
         "A V&V department's greatest asset is its cumulative experience. A key leadership function is to capture, organize, and democratize this knowledge to prevent repeating past mistakes and accelerate future projects. This hub demonstrates a system for turning historical data into an active, intelligent resource.",
@@ -1371,6 +1419,33 @@ def render_learning_hub_page():
     with st.container(border=True):
         st.info("This tool uses Natural Language Processing (NLP) to search the entire history of V&V reports, CAPAs, and ECOs to find relevant insights for new projects.")
         create_lessons_learned_search("lessons_learned")
+
+def render_global_strategy_page():
+    st.title("🌎 14. The Global V&V Strategy & R&D Pipeline Advisor")
+    render_director_briefing(
+        "Using V&V Data to Drive Corporate Strategy",
+        "A visionary V&V leader uses data from past and present projects to de-risk and influence the future. This dashboard demonstrates the capability to manage global, multi-site V&V operations and provides a forward-looking AI tool that advises the R&D and Business Development teams on the risks and costs of the future product pipeline.",
+        "ICH Q10 (Pharmaceutical Quality System), GHTF/SG3/N17 (Risk Management)",
+        "Ensures consistent product quality and performance across global manufacturing sites, and transforms V&V from a downstream testing function into an upstream strategic partner that helps the company make smarter, data-driven investment decisions."
+    )
+    
+    st.subheader("Global Method Transfer & Harmonization")
+    with st.container(border=True):
+        col1, col2 = st.columns(2)
+        with col1:
+            fig_bar, df_status = create_method_transfer_dashboard("transfer")
+            st.plotly_chart(fig_bar, use_container_width=True)
+        with col2:
+            st.markdown("##### Transfer Protocol Status")
+            st.dataframe(df_status, use_container_width=True, hide_index=True)
+        st.success("**Actionable Insight:** The method transfer is proceeding well, with comparable performance on key metrics. The slight increase in %CV and bias at the receiving site are within acceptable limits defined in the transfer plan. This data provides high confidence for proceeding with the validation of the Athens site.")
+        
+    st.subheader("AI-Powered R&D Pipeline Risk Advisor")
+    with st.container(border=True):
+        fig_quad = create_pipeline_advisor("pipeline")
+        st.plotly_chart(fig_quad, use_container_width=True)
+        st.error("**Actionable Insight:** Our AI model, based on historical data, predicts that Project Delta, while having the highest ROI, also carries the highest V&V cost and complexity. It recommends that executive leadership fully fund the projected V&V budget and timeline for this project, or risk significant delays. Conversely, Project Alpha is a low-risk, quick win that can be executed with minimal resource strain.")
+#-------------------------------------------------------------------------------------------------------------------------
 # --- SIDEBAR NAVIGATION AND PAGE ROUTING ---
 PAGES = {
     "Executive Summary": render_main_page,
