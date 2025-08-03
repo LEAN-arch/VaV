@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
+import shap
 from plotly.subplots import make_subplots
 from scipy import stats
 import statsmodels.api as sm
@@ -50,29 +51,34 @@ def render_metric_card(title, description, viz_function, insight, reg_context, k
 
 # --- VISUALIZATION & DATA GENERATORS ---
 def create_opex_dashboard(key):
-    """Generates charts for the departmental OpEx dashboard."""
+    """Generates an enhanced OpEx dashboard with budget, actuals, and variance."""
     budget = 5000000
     actual = 4200000
     
     fig_gauge = go.Figure(go.Indicator(
-        mode = "gauge+number",
-        value = actual,
-        domain = {'x': [0, 1], 'y': [0, 1]},
+        mode = "gauge+number", value = actual,
         title = {'text': "Annual V&V OpEx: Budget vs. Actual"},
-        gauge = {
-            'axis': {'range': [None, budget], 'tickwidth': 1, 'tickcolor': "darkblue"},
-            'bar': {'color': "cornflowerblue"},
-            'steps' : [
-                {'range': [0, budget * 0.8], 'color': 'lightgreen'},
-                {'range': [budget * 0.8, budget * 0.95], 'color': 'lightyellow'}],
-            'threshold' : {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': budget}}))
+        gauge = {'axis': {'range': [None, budget]}, 'bar': {'color': "cornflowerblue"},
+                 'steps' : [{'range': [0, budget * 0.9], 'color': 'lightgreen'}, {'range': [budget * 0.9, budget], 'color': 'lightyellow'}],
+                 'threshold' : {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': budget}}))
 
-    months = pd.date_range(start="2023-01-01", periods=12, freq='ME')
-    burn_rate = np.random.normal(loc=actual/12, scale=20000, size=12)
-    df_burn = pd.DataFrame({'Month': months, 'Spend': burn_rate})
-    fig_bar = px.bar(df_burn, x='Month', y='Spend', title='Monthly OpEx Burn Rate')
+    months = pd.date_range(start="2023-01-01", periods=12, freq='ME').strftime('%b')
+    monthly_budget = np.ones(12) * (budget / 12)
+    actual_spend = monthly_budget + np.random.normal(0, 30000, 12)
+    df = pd.DataFrame({'Month': months, 'Budget': monthly_budget, 'Actual': actual_spend})
+    df['Variance'] = df['Budget'] - df['Actual']
+    df['Cumulative Variance'] = df['Variance'].cumsum()
+
+    fig_burn = make_subplots(specs=[[{"secondary_y": True}]])
+    fig_burn.add_trace(go.Bar(x=df['Month'], y=df['Actual'], name='Actual Spend', marker_color='cornflowerblue'), secondary_y=False)
+    fig_burn.add_trace(go.Scatter(x=df['Month'], y=df['Budget'], name='Budget', mode='lines+markers', line=dict(color='black', dash='dash')), secondary_y=False)
+    fig_burn.add_trace(go.Scatter(x=df['Month'], y=df['Cumulative Variance'], name='Cumulative Variance', line=dict(color='red')), secondary_y=True)
     
-    return fig_gauge, fig_bar
+    fig_burn.update_layout(title_text='Monthly OpEx: Actual vs. Budget & Cumulative Variance')
+    fig_burn.update_yaxes(title_text="Monthly Spend ($)", secondary_y=False)
+    fig_burn.update_yaxes(title_text="Cumulative Variance ($)", secondary_y=True, showgrid=False)
+    
+    return fig_gauge, fig_burn
 
 def create_copq_modeler(key):
     """Creates an interactive modeler for Cost of Poor Quality and its relation to V&V spend."""
@@ -290,25 +296,38 @@ def create_portfolio_health_dashboard(key):
     return styled_df
 
 def create_resource_allocation_matrix(key):
-    """Generates the resource allocation heatmap."""
-    team = ['Alice', 'Bob', 'Charlie', 'Diana', 'Ethan', 'Fiona']
-    projects = ["ImmunoPro-A", "MolecularDX-2", "CardioScreen-X", "Sustaining"]
-    alloc_data = np.array([
-        [50, 10, 40, 0],   # Alice: 100%
-        [50, 25, 0, 25],  # Bob: 100%
-        [0, 60, 40, 10],   # Charlie: 110% (Over-allocated)
-        [0, 5, 60, 35],    # Diana: 100%
-        [0, 0, 50, 50],    # Ethan: 100%
-        [0, 0, 0, 0]      # Fiona: Unassigned
-    ])
-    df = pd.DataFrame(alloc_data, index=team, columns=projects)
-    fig = px.imshow(df, text_auto=True, aspect="auto", color_continuous_scale='Blues',
-                    title='V&V Team Resource Allocation Matrix (%)')
+    """Generates an enhanced, actionable resource allocation dashboard."""
+    team_data = {
+        'Team Member': ['Alice', 'Bob', 'Charlie', 'Diana', 'Ethan', 'Fiona'],
+        'Primary Skill': ['qPCR', 'Statistics (Python)', 'ELISA', 'ISO 14971', 'Statistics (Python)', 'qPCR (Junior)'],
+        'ImmunoPro-A': [50, 50, 0, 0, 0, 0],
+        'MolecularDX-2': [10, 25, 60, 5, 0, 0],
+        'CardioScreen-X': [40, 0, 40, 60, 50, 0],
+        'Sustaining': [0, 25, 10, 35, 50, 0]
+    }
+    df = pd.DataFrame(team_data)
+    df['Total Allocation'] = df[['ImmunoPro-A', 'MolecularDX-2', 'CardioScreen-X', 'Sustaining']].sum(axis=1)
+    df['Status'] = df['Total Allocation'].apply(lambda x: 'Over-allocated' if x > 100 else ('At Capacity' if x >= 90 else 'Available'))
     
-    # Check for over-allocation
-    df['Total'] = df.sum(axis=1)
-    over_allocated = df[df['Total'] > 100]
-    return fig, over_allocated
+    fig = px.bar(df.sort_values('Total Allocation'), 
+                 x='Total Allocation', 
+                 y='Team Member',
+                 color='Status',
+                 text=df['Primary Skill'],
+                 orientation='h',
+                 title='V&V Team Capacity & Strategic Alignment',
+                 color_discrete_map={'Over-allocated': 'red', 'At Capacity': 'orange', 'Available': 'green'})
+    
+    fig.add_vline(x=100, line_width=2, line_dash="dash", line_color="black", annotation_text="100% Capacity")
+    fig.update_layout(xaxis_title="Total Allocation (%)", yaxis_title="Team Member", legend_title="Status")
+    fig.update_traces(textposition='inside', textfont_size=12)
+    
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Note: This function now directly renders the plot, so we adjust the calling page.
+    # We return the dataframe to check for over-allocation alerts.
+    over_allocated = df[df['Total Allocation'] > 100]
+    return over_allocated
 
 def create_lessons_learned_search(key):
     """Simulates an NLP-powered search engine for the knowledge base."""
@@ -347,37 +366,40 @@ def create_lessons_learned_search(key):
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def run_requirement_risk_nlp_model(key):
-    """
-    Uses NLP to classify the risk of a requirement based on its text.
-    Demonstrates proactive risk identification at the earliest stage.
-    """
+    """Uses NLP to create a risk quadrant for requirements."""
     reqs = [
-        "The system shall process samples in under 5 minutes.", # Clear
-        "The assay must have a clinical sensitivity of 95% for Target A.", # Clear
-        "The user interface should be intuitive and easy to use.", # Ambiguous
-        "Results must be displayed quickly after the run is complete.", # Ambiguous
-        "The software must not crash during normal operation.", # Clear
-        "The system shall be robust against common user errors.", # Ambiguous
-        "Analytical sensitivity (LoD) shall be <= 25 copies/mL.", # Clear
+        "The system shall process samples in under 5 minutes.", 
+        "The assay must have a clinical sensitivity of 95% for Target A.", 
+        "The user interface should be intuitive and easy to use.",
+        "Results must be displayed quickly after the run is complete.",
+        "The software must not crash during normal operation.",
+        "The system shall be robust against common user errors.", 
+        "Analytical sensitivity (LoD) shall be <= 25 copies/mL.",
     ]
-    labels = [0, 0, 1, 1, 0, 1, 0] # 0 = Low Risk, 1 = High Risk (Ambiguous)
-    df = pd.DataFrame({'Requirement': reqs, 'Risk_Label': labels})
+    labels = [0, 0, 1, 1, 0, 1, 0] # Ambiguity Label
+    criticality = [7, 10, 5, 6, 9, 8, 10] # SME-assigned criticality score
+    df = pd.DataFrame({'Requirement': reqs, 'Risk_Label': labels, 'Criticality': criticality})
 
-    # AI/ML Model: TF-IDF Vectorizer + Logistic Regression
     tfidf = TfidfVectorizer(stop_words='english')
     X = tfidf.fit_transform(df['Requirement'])
     y = df['Risk_Label']
     model = LogisticRegression(random_state=42).fit(X, y)
 
-    # Predict probabilities for visualization
-    df['Risk_Probability'] = model.predict_proba(X)[:, 1]
-    df['Status'] = df['Risk_Label'].apply(lambda x: 'High Risk (Ambiguous)' if x == 1 else 'Low Risk (Clear)')
+    df['Ambiguity Score'] = model.predict_proba(X)[:, 1]
     
-    fig = px.bar(df.sort_values('Risk_Probability'), 
-                 x='Risk_Probability', y='Requirement', color='Status', 
-                 orientation='h', title='AI-Powered Requirement Clarity & Risk Analysis',
-                 color_discrete_map={'High Risk (Ambiguous)': 'red', 'Low Risk (Clear)': 'blue'})
-    fig.update_layout(xaxis_title="Predicted Ambiguity Risk Score")
+    fig = px.scatter(df, x='Ambiguity Score', y='Criticality', text=df.index,
+                     title='Requirement Prioritization Matrix',
+                     labels={'Ambiguity Score': 'Predicted Ambiguity / V&V Risk', 'Criticality': 'Business & Patient Safety Criticality'})
+    
+    fig.update_traces(textposition='top_center', textfont_size=12)
+    fig.add_vline(x=0.5, line_width=1, line_dash="dash", line_color="black")
+    fig.add_hline(y=7.5, line_width=1, line_dash="dash", line_color="black")
+    
+    fig.add_annotation(x=0.75, y=9, text="High Risk - Clarify Now!", showarrow=False, font=dict(color='red'))
+    fig.add_annotation(x=0.25, y=9, text="Low Risk - Proceed", showarrow=False, font=dict(color='green'))
+    fig.add_annotation(x=0.75, y=6, text="Clarify if Time Permits", showarrow=False, font=dict(color='orange'))
+    fig.add_annotation(x=0.25, y=6, text="Monitor", showarrow=False, font=dict(color='grey'))
+
     return fig
 
 def run_cqa_forecasting_model(key):
@@ -436,37 +458,44 @@ def run_defect_root_cause_model(key):
     return fig
 
 def run_sentiment_analysis_model(key):
-    """
-    Applies sentiment analysis to complaint free-text to gauge customer frustration.
-    """
-    complaint_docs = [
-        "The reagent cartridge was leaking from the bottom seal upon opening the box.", # Neutral
-        "This is the third time this month a leaky pack has ruined a run. This is unacceptable and costing us a fortune!", # Negative
-        "Error code 503 appeared on screen, the manual is not clear on this.", # Neutral
-        "I cannot believe you released software with such an obvious calibration bug. I've wasted two days on this. Absolutely terrible.", # Negative
-        "The machine is making a loud grinding noise.", # Neutral
-        "The new user interface is fantastic, much easier to use than the old version. Great job!", # Positive
-    ] * 3
-    
-    # AI/ML Tool: VADER for sentiment analysis
+    """Applies sentiment analysis and creates advanced visualizations."""
+    complaint_data = {
+        'Date': pd.to_datetime(['2023-01-10', '2023-01-15', '2023-02-05', '2023-02-20', '2023-03-12', '2023-03-25']),
+        'Type': ['Reagent Leak', 'Software Glitch', 'Instrument Error', 'Reagent Leak', 'Software Glitch', 'Instrument Error'],
+        'Text': [
+            "The reagent cartridge was leaking from the bottom seal.",
+            "This is the third time this month the software has crashed mid-run. This is unacceptable and costing us a fortune!",
+            "Error code 503 appeared on screen, the manual is not clear.",
+            "Another leaky pack ruined a full plate. Absolutely terrible product quality.",
+            "The new user interface is fantastic, much easier to use!",
+            "The machine is making a loud grinding noise."
+        ]
+    }
+    df = pd.DataFrame(complaint_data)
+    df = pd.concat([df]*5, ignore_index=True) # Amplify data for better viz
+
     analyzer = SentimentIntensityAnalyzer()
-    sentiments = []
-    for doc in complaint_docs:
-        vs = analyzer.polarity_scores(doc)
-        if vs['compound'] >= 0.05:
-            sentiments.append('Positive')
-        elif vs['compound'] <= -0.05:
-            sentiments.append('Negative')
-        else:
-            sentiments.append('Neutral')
+    df['compound'] = df['Text'].apply(lambda x: analyzer.polarity_scores(x)['compound'])
+    df['Sentiment'] = df['compound'].apply(lambda c: 'Positive' if c >= 0.05 else ('Negative' if c <= -0.05 else 'Neutral'))
+
+    # Treemap Visualization
+    fig_tree = px.treemap(df, path=[px.Constant("All Complaints"), 'Type', 'Sentiment'],
+                          title='Hierarchical View of Complaint Sentiment by Category',
+                          color='compound', color_continuous_scale='RdYlGn',
+                          color_continuous_midpoint=0)
+    fig_tree.update_layout(margin = dict(t=50, l=25, r=25, b=25))
+    st.plotly_chart(fig_tree, use_container_width=True)
+
+    # Time-Series Visualization
+    df['Month'] = df['Date'].dt.to_period('M').dt.to_timestamp()
+    monthly_sentiment = df.groupby('Month')['Sentiment'].value_counts(normalize=True).unstack().fillna(0)
+    monthly_sentiment['Negative_Pct'] = monthly_sentiment.get('Negative', 0) * 100
     
-    sentiment_counts = pd.Series(sentiments).value_counts().reset_index()
+    fig_ts = px.area(monthly_sentiment, x=monthly_sentiment.index, y='Negative_Pct',
+                     title='Trend of Negative Sentiment in Complaints Over Time')
+    fig_ts.update_layout(yaxis_title='Percentage of Complaints with Negative Sentiment (%)')
     
-    fig = px.bar(sentiment_counts, x='index', y='count', color='index',
-                 title='AI-Powered Complaint Sentiment Analysis',
-                 color_discrete_map={'Negative': 'red', 'Neutral': 'grey', 'Positive': 'green'})
-    fig.update_layout(xaxis_title="Sentiment", yaxis_title="Number of Complaints")
-    return fig
+    return fig_ts # Return the time-series plot to be rendered
 # --- NEW AI/ML VISUALIZATION & DATA GENERATORS ---
 
 
@@ -505,49 +534,40 @@ def plot_multivariate_anomaly_detection(key):
     return fig
 
 def run_predictive_maintenance_model(key):
-    """
-    Simulates instrument sensor data drift over time to predict impending failure.
-    Uses a Random Forest Classifier and shows feature importance.
-    """
+    """Simulates instrument sensor data and uses SHAP for an explainable AI model."""
+    st.markdown("This Random Forest model is trained on historical sensor data to predict the likelihood of an instrument failing. The SHAP plot below explains *why* the model makes its predictions.")
+    
     np.random.seed(42)
-    # Simulate data for 10 instruments over 100 days
+    # [Existing data generation code remains the same]
     data = []
     for i in range(10):
-        # Instruments 0-6 are healthy, 7-9 will fail
         will_fail = i >= 7
         for day in range(100):
             laser_drift = (day / 100) * 0.5 if will_fail else 0
             pressure_spike = (day / 100)**2 * 3 if will_fail else 0
-            
             laser_intensity = np.random.normal(5 - laser_drift, 0.1)
             pump_pressure = np.random.normal(50 + pressure_spike, 0.5)
             temp_fluctuation = np.random.normal(37, 0.2 + (day/1000 if will_fail else 0))
-            
-            # Label failure in the last 5 days
             failure = 1 if will_fail and day > 95 else 0
             data.append([i, day, laser_intensity, pump_pressure, temp_fluctuation, failure])
-
     df = pd.DataFrame(data, columns=['Instrument_ID', 'Day', 'Laser_Intensity', 'Pump_Pressure', 'Temp_Fluctuation', 'Failure'])
     
-    # AI/ML Model: Random Forest Classifier
     features = ['Laser_Intensity', 'Pump_Pressure', 'Temp_Fluctuation']
     X = df[features]
     y = df['Failure']
     
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
+    model = RandomForestClassifier(n_estimators=100, random_state=42).fit(X, y)
     
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
-    model.fit(X_train, y_train)
+    # AI/ML Explainability with SHAP
+    explainer = shap.TreeExplainer(model)
+    shap_values = explainer.shap_values(X)
     
-    # Display Model Performance
-    y_pred = model.predict(X_test)
-    accuracy = accuracy_score(y_test, y_pred)
-    st.metric("Model Accuracy on Test Data", f"{accuracy:.2%}")
-
-    # Feature Importance Plot
-    importance_df = pd.DataFrame({'Feature': features, 'Importance': model.feature_importances_}).sort_values('Importance', ascending=False)
-    fig = px.bar(importance_df, x='Importance', y='Feature', orientation='h', title='Key Predictors of Instrument Failure')
-    return fig
+    st.subheader("Explainable AI (XAI): Why the Model Predicts Failure")
+    fig, ax = plt.subplots()
+    shap.summary_plot(shap_values[1], X, plot_type="dot", show=False)
+    st.pyplot(fig)
+    
+    return None # Plot is rendered directly
 
 def run_nlp_topic_modeling(key):
     """
