@@ -274,18 +274,51 @@ def render_documentation_hub_page() -> None:
                 _render_professional_report_template()
 
 def _render_professional_protocol_template() -> None:
-    st.header("IQ/OQ Protocol: VAL-TP-101"); st.subheader("Automated Bioreactor Suite (ASSET-123)"); st.divider()
-    meta_cols = st.columns(4); meta_cols[0].metric("Document ID", "VAL-TP-101"); meta_cols[1].metric("Version", "1.0"); meta_cols[2].metric("Status", "Approved"); meta_cols[3].metric("Effective Date", "2024-01-15"); st.divider()
-    st.subheader("1.0 Purpose"); st.write("To provide documented evidence that the Automated Bioreactor Suite (ASSET-123) and its ancillary components are installed correctly (Installation Qualification) and operate according to their functional specifications (Operational Qualification).")
-    st.subheader("2.0 Scope"); st.write("This protocol applies to the Bioreactor System located in Manufacturing Suite C, including the vessel, control skid, HMI, and associated critical utilities (WFI, CSG).")
-    with st.container(border=True): st.subheader("3.0 Traceability & Risk Management"); st.markdown("This protocol provides test evidence for URS items as defined in the **Validation Master Plan (VAL-MP-001)** and the **Traceability Matrix (QA-DOC-105)**. All tests are derived from the system's **pFMEA (RISK-034)** to ensure a risk-based approach per **ISO 14971**.")
-    with st.container(border=True): st.subheader("4.0 Installation Qualification (IQ)"); st.markdown("##### 4.1 Documentation Verification\n- Verify P&ID and electrical drawings are as-built.\n- Confirm receipt of vendor documentation package, including material certifications."); st.markdown("##### 4.2 Equipment Verification\n- Verify equipment model and serial numbers match the bill of materials (BOM).\n- Confirm software and firmware versions match design specifications."); st.markdown("##### 4.3 Statistical Sampling Plan\nFor repeated checks (e.g., gasket verification), a sampling plan based on **ANSI/ASQ Z1.4** will be used, with an AQL of 1.0.")
-    with st.container(border=True): st.subheader("5.0 Operational Qualification (OQ)"); st.markdown("##### 5.1 Critical Function & Interlock Challenges\n- **Alarm Tests:** Challenge high/low alarms for temperature, pressure, and pH.\n- **Interlock Tests:** Verify agitator does not run when vessel pressure is high; verify E-Stop functionality."); st.markdown("##### 5.2 Computer System Validation (CSV) Tests\n- Verify HMI screen transitions and data entry function correctly.\n- Confirm audit trail functionality per **21 CFR Part 11** requirements.")
-    with st.container(border=True): st.markdown("##### 🛡️ Simulate Audit Defense");
+    """
+    Renders a world-class, professional IQ/OQ Protocol, mimicking an eQMS.
+    This version fixes a critical IndentationError.
+    """
+    st.header("IQ/OQ Protocol: VAL-TP-101")
+    st.subheader("Automated Bioreactor Suite (ASSET-123)")
+    st.divider()
+
+    meta_cols = st.columns(4)
+    meta_cols[0].metric("Document ID", "VAL-TP-101")
+    meta_cols[1].metric("Version", "1.0")
+    meta_cols[2].metric("Status", "Approved")
+    meta_cols[3].metric("Effective Date", "2024-01-15")
+    st.divider()
+
+    st.subheader("1.0 Purpose")
+    st.write("To provide documented evidence that the Automated Bioreactor Suite (ASSET-123) and its ancillary components are installed correctly (Installation Qualification) and operate according to their functional specifications (Operational Qualification).")
+    
+    st.subheader("2.0 Scope")
+    st.write("This protocol applies to the Bioreactor System located in Manufacturing Suite C, including the vessel, control skid, HMI, and associated critical utilities (WFI, CSG).")
+    
+    with st.container(border=True):
+        st.subheader("3.0 Traceability & Risk Management")
+        st.markdown("This protocol provides test evidence for URS items as defined in the **Validation Master Plan (VAL-MP-001)** and the **Traceability Matrix (QA-DOC-105)**. All tests are derived from the system's **pFMEA (RISK-034)** to ensure a risk-based approach per **ISO 14971**.")
+    
+    with st.container(border=True):
+        st.subheader("4.0 Installation Qualification (IQ)")
+        st.markdown("##### 4.1 Documentation Verification\n- Verify P&ID and electrical drawings are as-built.\n- Confirm receipt of vendor documentation package, including material certifications.")
+        st.markdown("##### 4.2 Equipment Verification\n- Verify equipment model and serial numbers match the bill of materials (BOM).\n- Confirm software and firmware versions match design specifications.")
+        st.markdown("##### 4.3 Statistical Sampling Plan\nFor repeated checks (e.g., gasket verification), a sampling plan based on **ANSI/ASQ Z1.4** will be used, with an AQL of 1.0.")
+    
+    with st.container(border=True):
+        st.subheader("5.0 Operational Qualification (OQ)")
+        st.markdown("##### 5.1 Critical Function & Interlock Challenges\n- **Alarm Tests:** Challenge high/low alarms for temperature, pressure, and pH.\n- **Interlock Tests:** Verify agitator does not run when vessel pressure is high; verify E-Stop functionality.")
+        st.markdown("##### 5.2 Computer System Validation (CSV) Tests\n- Verify HMI screen transitions and data entry function correctly.\n- Confirm audit trail functionality per **21 CFR Part 11** requirements.")
+    
+    # --- START OF THE FIX ---
+    # This container and its contents have been un-indented by one level to align
+    # correctly with the main flow of the function.
+    with st.container(border=True):
+        st.markdown("##### 🛡️ Simulate Audit Defense")
         if st.button("Query this protocol's strategy", key="audit_proto_001"):
             st.warning("**Auditor Query:** 'Your OQ does not test the full operating range of the agitator speed. Please provide your rationale.'")
             st.success('**My Response:** "An excellent question. Our risk assessment (pFMEA) and process characterization data (from the DOE in the Specialized Hub) showed that operating outside the specified range of 50-150 RPM results in unacceptable sheer stress on the cells, which negatively impacts a Critical Quality Attribute. Therefore, we qualified the normal operating range and formally locked out the higher speeds in the control system. This is a risk-based approach aligned with **ASTM E2500**. The OQ verifies both the accuracy within the qualified range and that the software lock-out is effective."')
-
+    # --- END OF THE FIX ---
 def _render_professional_report_template() -> None:
     st.header("PQ Report: VAL-TR-201"); st.subheader("Automated Bioreactor Suite (ASSET-123)"); st.divider()
     meta_cols = st.columns(4); meta_cols[0].metric("Document ID", "VAL-TR-201"); meta_cols[1].metric("Version", "1.0"); meta_cols[2].metric("Status", "Final"); meta_cols[3].metric("Approval Date", "2024-03-01"); st.divider()
