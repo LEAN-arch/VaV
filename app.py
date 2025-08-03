@@ -273,10 +273,10 @@ def plot_predictive_compliance_risk() -> go.Figure:
     fig.update_layout(height=250, margin=dict(l=30, r=30, t=50, b=20))
     return fig
     
-def create_pfd_validation_scheme() -> go.Figure:
+def create_process_map_diagram() -> go.Figure:
     """
     Digitally renders the Equipment Validation Scheme as a professional-grade process map
-    using content-aware sized boxes and correct SVG paths for shapes.
+    using clean, content-aware sized boxes.
     """
     fig = go.Figure()
     
@@ -322,33 +322,25 @@ def create_pfd_validation_scheme() -> go.Figure:
 
     # Add Shapes and Annotations for each node
     for key, node in nodes.items():
-        x_c, y_c = node['pos']
-        w, h = node.get('w'), node.get('h')
+        x_c, y_c, w, h = node['pos'][0], node['pos'][1], node['w'], node['h']
         align = 'left' if key == 'val_activities' else 'center'
         shape_type = node.get('shape')
-        font_size = 10.5 if key != 'val_activities' else 11
         
-        path = ""
-        # Define SVG paths for each shape type
-        if shape_type == 'process': # Rectangle
-            path = f"M {x_c-w},{y_c-h} L {x_c+w},{y_c-h} L {x_c+w},{y_c+h} L {x_c-w},{y_c+h} Z"
-        elif shape_type == 'terminator': # Rounded Rectangle using SVG Arc paths
-            r = 0.4  # Radius of corners
-            path = (f"M {x_c-w+r},{y_c-h} L {x_c+w-r},{y_c-h} A {r},{r} 0 0 1 {x_c+w},{y_c-h+r} "
-                    f"L {x_c+w},{y_c+h-r} A {r},{r} 0 0 1 {x_c+w-r},{y_c+h} "
-                    f"L {x_c-w+r},{y_c+h} A {r},{r} 0 0 1 {x_c-w},{y_c+h-r} "
-                    f"L {x_c-w},{y_c-h+r} A {r},{r} 0 0 1 {x_c-w+r},{y_c-h} Z")
-        
-        fig.add_shape(type="path", path=path, line=dict(color="Black"), fillcolor=node['color'], opacity=0.95, layer="below")
-        fig.add_annotation(x=x_c, y=y_c, text=node['text'], showarrow=False, align=align, font=dict(color='white' if node['color'] not in [NEUTRAL_GREY] else 'black', size=font_size))
+        fig.add_shape(
+            type="rect", x0=x_c-w, y0=y_c-h, x1=x_c+w, y1=y_c+h, 
+            line=dict(color="Black"), fillcolor=node['color'], opacity=0.95, layer="below",
+            cornerradius=20 if shape_type == 'terminator' else 0 
+        )
+        fig.add_annotation(
+            x=x_c, y=y_c, text=node['text'], showarrow=False, align=align, 
+            font=dict(color='white' if node['color'] not in [NEUTRAL_GREY] else 'black', size=11)
+        )
 
     # Add Arrows
     def add_arrow(start_key, end_key, start_anchor, end_anchor):
         start, end = nodes[start_key], nodes[end_key]
-        x0 = start['pos'][0] + start_anchor[0] * start['w']
-        y0 = start['pos'][1] + start_anchor[1] * start['h']
-        x1 = end['pos'][0] + end_anchor[0] * end['w']
-        y1 = end['pos'][1] + end_anchor[1] * end['h']
+        x0, y0 = start['pos'][0] + start_anchor[0] * start['w'], start['pos'][1] + start_anchor[1] * start['h']
+        x1, y1 = end['pos'][0] + end_anchor[0] * end['w'], end['pos'][1] + end_anchor[1] * end['h']
         fig.add_annotation(x=x1, y=y1, ax=x0, ay=y0, showarrow=True, arrowhead=2, arrowwidth=2, arrowcolor="black")
     
     add_arrow('sys_desc', 'fat_sat', (0, -1), (0, 1))
