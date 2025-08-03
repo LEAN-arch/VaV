@@ -546,6 +546,7 @@ def run_predictive_maintenance_model(key):
     st.markdown("This Random Forest model is trained on historical sensor data to predict the likelihood of an instrument failing. The SHAP plot below explains *why* the model makes its predictions.")
     
     np.random.seed(42)
+    # [Existing data generation code remains the same]
     data = []
     for i in range(10):
         will_fail = i >= 7
@@ -571,17 +572,19 @@ def run_predictive_maintenance_model(key):
     st.subheader("Explainable AI (XAI): Why the Model Predicts Failure")
     
     # --- FIX START ---
-    # The fix is to pass the ENTIRE `shap_values` list to the summary plot.
-    # The plot function is designed to handle this multi-class output and will color-code the results.
-    # This resolves the internal AssertionError.
-    fig, ax = plt.subplots(figsize=(10, 4))
-    shap.summary_plot(shap_values, X, plot_type="dot", show=False)
-    # --- FIX END ---
-
-    plt.title("SHAP Summary Plot: Key Predictors of Instrument Failure")
-    plt.tight_layout() # Improves spacing
+    # 1. Let shap.summary_plot create its own figure on the global state.
+    # 2. Capture this global figure object using plt.gcf().
+    # 3. Clear the global figure state with plt.clf() to prevent it from affecting other plots.
+    # 4. Return the captured figure object to the calling function.
     
-    # This function now returns a matplotlib figure object
+    shap.summary_plot(shap_values, X, plot_type="dot", show=False)
+    fig = plt.gcf() # Get current figure
+    plt.title("SHAP Summary Plot: Key Predictors of Instrument Failure")
+    plt.tight_layout()
+    plt.clf() # Clear the figure from the global state
+    
+    # --- FIX END ---
+    
     return fig
 
 def run_nlp_topic_modeling(key):
