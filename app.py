@@ -65,23 +65,25 @@ def plot_kpi_sparkline(data: list, is_good_down: bool = False) -> go.Figure:
     
     # --- ENHANCEMENT: Add subtle axes ---
     fig.update_layout(
-        width=150, height=70,  # Increased height slightly for axes
-        margin=dict(l=5, r=5, t=5, b=5),
+        height=75,  # Increased height slightly for axes
+        margin=dict(l=10, r=5, t=10, b=10), # Added margin for axis lines
         xaxis=dict(
             visible=True, 
+            showline=True, # <-- THE FIX: This property draws the axis line
             showticklabels=False, 
             showgrid=False,
             zeroline=False,
             linecolor=NEUTRAL_GREY,
-            linewidth=1
+            linewidth=1.5
         ),
         yaxis=dict(
             visible=True, 
+            showline=True, # <-- THE FIX: This property draws the axis line
             showticklabels=False,
             showgrid=False,
             zeroline=False,
             linecolor=NEUTRAL_GREY,
-            linewidth=1
+            linewidth=1.5
         ),
         showlegend=False,
         plot_bgcolor='rgba(0,0,0,0)',
