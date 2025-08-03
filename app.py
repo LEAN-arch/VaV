@@ -23,6 +23,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import statsmodels.api as sm
 from statsmodels.tsa.arima.model import ARIMA
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from pandas.io.formats.style import Styler
 import streamlit as st
 
 
@@ -198,15 +199,10 @@ def create_copq_modeler(key: str) -> go.Figure:
     return fig_corr
 
 
-def create_audit_dashboard(key: str) -> pd.io.formats.style.Styler:
+def create_audit_dashboard(key: str) -> Styler:
     """
     Generates a styled DataFrame for the audit readiness dashboard.
-
-    Args:
-        key (str): A unique key for Streamlit widgets (unused).
-
-    Returns:
-        pd.io.formats.style.Styler: A styled DataFrame of audit history.
+    The return type hint has been corrected to use the imported 'Styler' class.
     """
     audit_data = {
         "Audit/Inspection": ["FDA QSR Inspection", "ISO 13485 Recertification", "Internal Audit Q2", "MDSAP Audit"],
@@ -402,15 +398,10 @@ def create_instrument_utilization_dashboard(key: str) -> Tuple[go.Figure, go.Fig
     return fig_heatmap, fig_forecast
 
 
-def create_portfolio_health_dashboard(key: str) -> pd.io.formats.style.Styler:
+def create_portfolio_health_dashboard(key: str) -> Styler:
     """
     Generates the RAG status styled DataFrame for the project portfolio.
-
-    Args:
-        key (str): A unique key for Streamlit widgets (unused).
-
-    Returns:
-        pd.io.formats.style.Styler: A styled DataFrame showing portfolio health.
+    The return type hint has been corrected to use the imported 'Styler' class.
     """
     data = {
         'Project': ["ImmunoPro-A", "MolecularDX-2", "CardioScreen-X", "NextGen Platform SW"],
