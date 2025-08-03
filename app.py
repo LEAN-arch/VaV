@@ -1,4 +1,4 @@
-# app.py (Final, SME World-Class Version for Roche/Genentech - Corrected v5)
+# app.py (Final, SME World-Class Version for Roche/Genentech - Corrected v6)
 
 # --- IMPORTS ---
 import base64
@@ -31,7 +31,7 @@ NEUTRAL_GREY = '#9E9E9E'
 BACKGROUND_GREY = '#F5F5F5'
 
 # --- EMBEDDED ASSETS ---
-ROCHE_LOGO_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAASwAAACWCAYAAAB22P+PAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAEleSURBVHhe7Z1/kFxVdfe/553Z3dnd2WUSSCBhkLAEYSEhIYEQiIeAhwIKigKiYlVBqaKCCiiIKy4uCoiKirIouMgFFgEBK2RJsIQEkhCSySQzk51kdnb3dPedeV/3mUl2NplMJpMkyft8P49pZt7UvZt7p5977vM+55zRNE0IIYSQkI1y2gUQQAghhGQIggUhhBBCRiiChSCEEELGKEiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBh-MhBAlRCAoAAAABJRU5ErkJggg=="
+ROCHE_LOGO_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAASwAAACWCAYAAAB22P+PAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAEleSURBVHhe7Z1/kFxVdfe/553Z3dnd2WUSSCBhkLAEYSEhIYEQiIeAhwIKigKiYlVBqaKCCiiIKy4uCoiKirIouMgFFgEBK2RJsIQEkhCSySQzk51kdnb3dPedeV/3mUl2NplMJpMkyft8P49pZt7UvZt7p5977vM+55zRNE0IIYSQkI1y2gUQQAghhGQIggUhhBBCRiiChSCEEELGKEiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhh... (this is a very long string, truncated for display)
 
 # --- UTILITY & HELPER FUNCTIONS ---
 def render_manager_briefing(title: str, content: str, reg_refs: str, business_impact: str, quality_pillar: str, risk_mitigation: str) -> None:
@@ -71,7 +71,6 @@ def create_portfolio_health_dashboard(key: str) -> Styler:
         font_color = 'white' if val in color_map else 'black'
         return f"background-color: {bg_color}; color: {font_color};"
         
-    # --- FIX for FutureWarning: Use .map() instead of .applymap() ---
     return df.style.map(style_status, subset=['Overall Status', 'Schedule', 'Budget']).set_properties(**{'text-align': 'center'}).hide(axis="index")
 
 def create_resource_allocation_matrix(key: str) -> Tuple[go.Figure, pd.DataFrame]:
@@ -138,7 +137,6 @@ def plot_budget_variance(key: str) -> go.Figure:
     df['Color'] = df['Variance'].apply(lambda x: ERROR_RED if x > 0 else SUCCESS_GREEN)
     df['Text'] = df['Variance'].apply(lambda x: f'${x:+,}k')
     
-    # --- FIX for ValueError: Use hovertemplate instead of hoverinfo+hovertext ---
     fig = go.Figure(go.Bar(
         x=df['Variance'], y=df['Category'], orientation='h', marker_color=df['Color'], text=df['Text'],
         customdata=df[['Budgeted', 'Actual']],
@@ -170,7 +168,6 @@ def display_departmental_okrs(key: str) -> None:
     def style_status(val: str) -> str:
         color = SUCCESS_GREEN if val in ["On Track", "Complete"] else WARNING_AMBER
         return f"background-color: {color}; color: white; text-align: center; font-weight: bold;"
-    # --- FIX for FutureWarning: Use .map() instead of .applymap() ---
     styled_df = df.style.map(style_status, subset=['Status']).set_properties(**{'text-align': 'left'}).hide(axis="index")
     st.dataframe(styled_df, use_container_width=True)
 
@@ -189,6 +186,7 @@ def run_project_duration_forecaster(key: str) -> None:
     st.metric("AI-Predicted Validation Duration (Weeks)", f"{predicted_duration:.1f}", help="Based on a Random Forest model trained on 20 historical projects. Includes IQ, OQ, and PQ phases.")
 
 def plot_gantt_chart(key: str) -> go.Figure:
+    """Enhanced Gantt Chart with robust 'today' line."""
     df = pd.DataFrame([
         dict(Task="Project Atlas (Bioreactor)", Start='2023-01-01', Finish='2023-12-31', Phase='Execution'),
         dict(Task="Project Beacon (Assembly)", Start='2023-06-01', Finish='2024-06-30', Phase='Execution'),
@@ -197,10 +195,17 @@ def plot_gantt_chart(key: str) -> go.Figure:
     fig = px.timeline(df, x_start="Start", x_end="Finish", y="Task", color="Phase",
                       title="<b>Major Capital Project Timelines</b>",
                       color_discrete_map={'Execution': ROCHE_BLUE, 'Planning': WARNING_AMBER})
-    fig.update_layout(title_x=0.5, yaxis_title=None, plot_bgcolor=BACKGROUND_GREY)
-    # --- FIX for TypeError: Convert timestamp to string for vline ---
-    today_str = pd.to_datetime('today').strftime('%Y-%m-%d')
-    fig.add_vline(x=today_str, line_width=2, line_dash="dash", line_color="black", annotation_text="Today")
+    
+    # --- FIX for TypeError: Use Timestamp object and explicitly set axis type ---
+    fig.update_layout(
+        title_x=0.5, yaxis_title=None, plot_bgcolor=BACKGROUND_GREY,
+        xaxis_type='date'  # Explicitly set the axis type
+    )
+    fig.add_vline(
+        x=pd.to_datetime('today'),  # Pass the Timestamp object directly
+        line_width=2, line_dash="dash", line_color="black", 
+        annotation_text="Today"
+    )
     return fig
 
 def plot_risk_burndown(key: str) -> go.Figure:
@@ -304,7 +309,6 @@ def plot_cleaning_validation_results(key: str) -> go.Figure:
     return fig
 
 def plot_shipping_validation_temp(key: str) -> go.Figure:
-    # --- FIX for FutureWarning: Use 'h' instead of 'H' for frequency ---
     rng = np.random.default_rng(30); time = pd.to_datetime(pd.date_range("2023-01-01", periods=48, freq="h")); temp = rng.normal(4, 0.5, 48)
     temp[24] = 8.5 
     fig = px.line(x=time, y=temp, title='<b>Shipping Lane PQ: Temperature Profile</b>', markers=True)
@@ -540,7 +544,6 @@ def _render_professional_report_template() -> None:
     def style_pass_fail(val: str) -> str:
         color = SUCCESS_GREEN if val == 'PASS' else ERROR_RED
         return f"background-color: {color}; color: white; text-align: center; font-weight: bold;"
-    # --- FIX for FutureWarning: Use .map() instead of .applymap() ---
     styled_df = results_df.style.map(style_pass_fail, subset=['Pass/Fail'])
     st.dataframe(styled_df, use_container_width=True, hide_index=True)
     st.markdown("##### 4.0 Traceability")
