@@ -705,20 +705,26 @@ def plot_multivariate_anomaly_detection(key: str) -> go.Figure:
 def run_predictive_maintenance_model(key: str) -> plt.Figure:
     """
     Simulates instrument sensor data and uses SHAP for an explainable AI model.
-    This version provides the definitive fix for the blank plot rendering issue by
-    removing the premature plt.clf() call.
+    This version is updated to use the modern NumPy random number generator (RNG)
+    to eliminate the FutureWarning.
     """
-    # --- Data Generation & Model Training (No changes here) ---
-    np.random.seed(42)
+    # --- Data Generation & Model Training ---
+    
+    # 1. Create a local Random Number Generator instance. This is the new best practice.
+    rng = np.random.default_rng(seed=42)
+    
     data = []
-    for i in range(10): # Simulate 10 instruments
-        will_fail = i >= 7 # Last 3 instruments are prone to failure
+    for i in range(10):
+        will_fail = i >= 7
         for day in range(100):
             laser_drift = (day / 100) * 0.5 if will_fail else 0
             pressure_spike = (day / 100)**2 * 3 if will_fail else 0
-            laser_intensity = np.random.normal(5 - laser_drift, 0.1)
-            pump_pressure = np.random.normal(50 + pressure_spike, 0.5)
-            temp_fluctuation = np.random.normal(37, 0.2 + (day/1000 if will_fail else 0))
+            
+            # 2. Use the 'rng' instance for all random calls instead of 'np.random'.
+            laser_intensity = rng.normal(5 - laser_drift, 0.1)
+            pump_pressure = rng.normal(50 + pressure_spike, 0.5)
+            temp_fluctuation = rng.normal(37, 0.2 + (day/1000 if will_fail else 0))
+            
             failure = 1 if will_fail and day > 95 else 0
             data.append([i, day, laser_intensity, pump_pressure, temp_fluctuation, failure])
     
@@ -730,27 +736,14 @@ def run_predictive_maintenance_model(key: str) -> plt.Figure:
     
     # --- SHAP Analysis ---
     explainer = shap.TreeExplainer(model)
-    # This returns a list of two arrays for our binary classifier
     shap_values = explainer.shap_values(X)
     
-    # --- FIX: ROBUSTLY CAPTURE THE MATPLOTLIB FIGURE ---
-    
-    # 1. Draw the plot to matplotlib's global state. `show=False` prevents it from popping up.
-    #    We pass the full list of shap_values. SHAP correctly creates a beeswarm plot
-    #    color-coded by the output class.
+    # --- Matplotlib Figure Capture ---
+    # This part remains the same as the previous fix.
     shap.summary_plot(shap_values, X, show=False)
-    
-    # 2. Add any further customizations, like a title, to the global figure.
     plt.title("SHAP Summary Plot: Feature Impact on Failure Prediction")
-    
-    # 3. Get a reference to the fully-drawn global figure.
     fig = plt.gcf()
     
-    # 4. CRITICAL FIX: DO NOT call plt.clf() here.
-    #    Calling it would erase the plot before Streamlit can render it.
-    #    We will allow Streamlit's st.pyplot() to handle the figure clearing and display.
-    
-    # 5. Return the complete figure object.
     return fig
 
 def run_nlp_topic_modeling(key: str) -> None:
