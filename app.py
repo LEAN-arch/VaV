@@ -284,7 +284,7 @@ def create_pfd_validation_scheme() -> go.Figure:
     nodes = {
         'sys_desc': {'pos': [2.5, 9], 'text': '<b>System Description</b><br> • Specifications<br> • Functional/Performance Requirements', 'color': DARK_GREY, 'shape': 'terminator'},
         'fat_sat': {'pos': [2.5, 7.5], 'text': '<b>FAT/SAT</b><br><i>Instrument/Manufacturer Related</i><br> • Instrument Components P&ID, electrical<br> • Instrument Performance, CV, repeatability', 'color': PRIMARY_COLOR, 'shape': 'process'},
-        'val_activities': {'pos': [2.5, 4.5], 'text': '''<b>Validation Activities</b><br><br><u>Installation Qualification (IQ)</u><br> • Meet manufacturer’s specifications<br> • Manuals, maintenance plans<br><u>Operational Qualification (OQ)</u><br> • Test accuracy, precision and repeatability<br> • Confirm instrument resolution<br><u>Performance Qualification (PQ)</u><br><i>Production scale testing (define batch numbers, procure material, align w/R&D)</i>''', 'color': NEUTRAL_GREY, 'h': 3, 'w': 2.5, 'shape': 'process'},
+        'val_activities': {'pos': [2.5, 4.5], 'text': '''<b>Validation Activities</b><br><br><u>Installation Qualification (IQ)</u><br> • Meet manufacturer’s specifications<br> • Manuals, maintenance plans<br><u>Operational Qualification (OQ)</u><br> • Test accuracy, precision and repeatability<br> • Confirm instrument resolution<br><u>Performance Qualification (PQ)</u><br><i>Production scale testing (define batch numbers, procure<br>material, align w/R&D)</i>''', 'color': NEUTRAL_GREY, 'h': 3, 'w': 2.5, 'shape': 'process'},
         'sample_size': {'pos': [2.5, 1], 'text': '<b>Sample Size</b><br>Determined by “Binomial Power Analysis”<br>or AQL table', 'color': '#D35400', 'shape': 'data'},
         'acceptance': {'pos': [6, 5.5], 'text': '<b>Acceptance<br>Criteria</b>', 'color': PRIMARY_COLOR, 'shape': 'decision', 'h': 1.2, 'w': 1.2},
         'docs': {'pos': [8.5, 8], 'text': '<b>Documentation</b><br> • IQ, OQ, PQ Documentation<br> • MVP, DHF, DMR', 'color': PRIMARY_COLOR, 'shape': 'terminator'},
@@ -300,15 +300,20 @@ def create_pfd_validation_scheme() -> go.Figure:
         align = 'left' if key == 'val_activities' else 'center'
         shape_type = node.get('shape', 'process')
         
+        path = ""
         # Draw shape based on type
         if shape_type in ['process', 'data']: # Rectangle
-            fig.add_shape(type="rect", x0=x_c-w, y0=y_c-h, x1=x_c+w, y1=y_c+h, line=dict(color="Black"), fillcolor=node['color'], opacity=0.9, layer="below")
-        elif shape_type == 'terminator': # Rounded Rectangle
-             fig.add_shape(type="rect", x0=x_c-w, y0=y_c-h, x1=x_c+w, y1=y_c+h, line=dict(color="Black"), fillcolor=node['color'], opacity=0.9, layer="below", corner_radius=20)
+            path = f"M {x_c-w},{y_c-h} L {x_c+w},{y_c-h} L {x_c+w},{y_c+h} L {x_c-w},{y_c+h} Z"
+        elif shape_type == 'terminator': # Rounded Rectangle using SVG Arc paths
+            r = 0.4  # Radius of corners
+            path = (f"M {x_c-w+r},{y_c-h} L {x_c+w-r},{y_c-h} A {r},{r} 0 0 1 {x_c+w},{y_c-h+r} "
+                    f"L {x_c+w},{y_c+h-r} A {r},{r} 0 0 1 {x_c+w-r},{y_c+h} "
+                    f"L {x_c-w+r},{y_c+h} A {r},{r} 0 0 1 {x_c-w},{y_c+h-r} "
+                    f"L {x_c-w},{y_c-h+r} A {r},{r} 0 0 1 {x_c-w+r},{y_c-h} Z")
         elif shape_type == 'decision': # Diamond
             path = f"M {x_c},{y_c+h} L {x_c+w},{y_c} L {x_c},{y_c-h} L {x_c-w},{y_c} Z"
-            fig.add_shape(type="path", path=path, line=dict(color="Black"), fillcolor=node['color'], opacity=0.9, layer="below")
-            
+
+        fig.add_shape(type="path", path=path, line=dict(color="Black"), fillcolor=node['color'], opacity=0.9, layer="below")
         fig.add_annotation(x=x_c, y=y_c, text=node['text'], showarrow=False, align=align, font=dict(color='white' if node['color'] not in [NEUTRAL_GREY] else 'black', size=11))
 
     # Add Arrows
@@ -319,7 +324,7 @@ def create_pfd_validation_scheme() -> go.Figure:
         fig.add_annotation(x=x1, y=y1, ax=x0, ay=y0, xref="x", yref="y", axref="x", ayref="y", showarrow=True, arrowhead=2, arrowwidth=2, arrowcolor="black")
 
     add_arrow('sys_desc', 'fat_sat', (0, -1), (0, 1))
-    add_arrow('fat_sat', 'val_activities', (0, -1), (0, 1))
+    add_arrow('fat_sat', 'val_activities', (0, -1), (0, 0.8))
     add_arrow('val_activities', 'sample_size', (0, -1), (0, 1))
     add_arrow('val_activities', 'acceptance', (1, 0), (-1, 0))
 
@@ -327,9 +332,8 @@ def create_pfd_validation_scheme() -> go.Figure:
     fig.add_shape(type="path", path=" M 9.5,4.3 C 10.5,6 8.5,7 7,6.5", line=dict(color="black", width=3, dash='dot')); fig.add_annotation(x=7, y=6.5, ax=7.5, ay=6.8, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor="black")
     fig.add_shape(type="path", path=" M 6,2.7 C 5,3.5 5,4.5 6,5.5", line=dict(color=ERROR_RED, width=3, dash='dot')); fig.add_annotation(x=6, y=5.5, ax=5.7, ay=5, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor=ERROR_RED)
 
-    fig.update_layout(title="<b>Equipment Validation Process Flow Diagram (PFD)</b>", xaxis=dict(range=[0, 11], visible=False), yaxis=dict(range=[0, 10], visible=False), plot_bgcolor=BACKGROUND_GREY, margin=dict(l=20, r=20, t=40, b=20), height=750)
+    fig.update_layout(title="<b>Equipment Validation Process Flow Diagram (PFD)</b>", xaxis=dict(range=[0, 11.5], visible=False), yaxis=dict(range=[0, 10], visible=False), plot_bgcolor=BACKGROUND_GREY, margin=dict(l=20, r=20, t=40, b=20), height=750)
     return fig
-
 def create_equipment_v_model() -> go.Figure:
     """Creates a V-Model diagram specific to equipment validation."""
     fig = go.Figure()
