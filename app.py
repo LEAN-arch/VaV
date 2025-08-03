@@ -692,7 +692,7 @@ def render_main_page() -> None:
             st.info("**Purpose:** This AI-driven score aggregates leading indicators to forecast the future risk of falling out of compliance.")
             st.success("**Actionable Insight:** The current score is green. However, if 'Open CAPAs' were to increase, this model predicts a move into the amber zone next quarter, allowing us to act *before* a problem occurs.")
         with st.container(border=True):
-        run_rft_prediction_model(key="main_rft")
+            run_rft_prediction_model(key="main_rft")
 
 def render_strategic_management_page() -> None:
     st.title("📈 1. Strategic Management & Business Acumen")
