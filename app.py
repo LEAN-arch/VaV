@@ -1787,16 +1787,21 @@ def render_dhf_hub_page() -> None:
                 **Version:** 1.0
                 ---
                 **1.0 Purpose:** To determine the Limit of Detection (LoD) of the ImmunoPro-A Assay, defined as the lowest concentration of analyte that can be detected with 95% probability.
+
                 **2.0 Scope:** This protocol applies to the ImmunoPro-A Assay on the QuidelOrtho-100 platform.
+
                 **3.0 Traceability to Requirements:**
                 - **DI-002:** Analytical sensitivity (LoD) shall be <= 50 copies/mL.
+
                 **4.0 Method/Procedure:**
                 - Prepare a dilution series of the analyte standard from 100 copies/mL down to 5 copies/mL.
                 - Test each dilution level with 20 replicates across 3 different reagent lots and 2 instruments.
                 - Run a negative control (0 copies/mL) with 60 replicates.
+                
                 **5.0 Acceptance Criteria:**
                 - The hit rate at the claimed LoD (50 copies/mL) must be ≥ 95%.
                 - The hit rate for the negative control must be ≤ 5%.
+
                 **6.0 Data Analysis Plan:**
                 - Data will be analyzed using Probit regression to calculate the 95% detection probability concentration.
                 - Results will be summarized in a table showing hit rates for each level.
