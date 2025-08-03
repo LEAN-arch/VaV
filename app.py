@@ -1,27 +1,31 @@
 # app.py (Final, Monolithic, World-Class Version with ALL Content and Enhancements)
 
-import streamlit as st
-import pandas as pd
+# --- IMPORTS (CLEANED & ORGANIZED) ---
+
+# Standard Library
+from typing import List, Dict, Any, Tuple, Optional, Callable
+
+# Third-Party Libraries
+import matplotlib.pyplot as plt
 import numpy as np
-import plotly.graph_objects as go
+import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import shap
 from scipy import stats
-import statsmodels.api as sm
-from sklearn.ensemble import IsolationForest, RandomForestClassifier
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.ensemble import IsolationForest, RandomForestClassifier, RandomForestRegressor
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix, accuracy_score
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics.pairwise import cosine_similarity
+import statsmodels.api as sm
 from statsmodels.tsa.arima.model import ARIMA
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-import matplotlib.pyplot as plt
-import shap
+import streamlit as st
+
+
 # --- PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
 st.set_page_config(
     layout="wide",
@@ -29,45 +33,105 @@ st.set_page_config(
     page_icon="🎯"
 )
 
+
 # --- UTILITY & HELPER FUNCTIONS ---
 
-def render_director_briefing(title, content, reg_refs, business_impact):
-    """Renders a formatted container for strategic context."""
+def render_director_briefing(title: str, content: str, reg_refs: str, business_impact: str) -> None:
+    """
+    Renders a formatted container for strategic context and director-level briefings.
+
+    Args:
+        title (str): The title of the briefing.
+        content (str): The main markdown content of the briefing.
+        reg_refs (str): A string listing relevant regulatory references.
+        business_impact (str): A string describing the business impact.
+    """
     with st.container(border=True):
         st.subheader(f"🎯 {title}")
         st.markdown(content)
         st.info(f"**Business Impact:** {business_impact}")
         st.warning(f"**Regulatory Mapping:** {reg_refs}")
 
-def render_metric_card(title, description, viz_function, insight, reg_context, key=""):
-    """Renders a formatted container for a specific metric or visualization."""
+
+def render_metric_card(
+    title: str, 
+    description: str, 
+    viz_function: Callable[[str], Any], 
+    insight: str, 
+    reg_context: str, 
+    key: str = ""
+) -> None:
+    """
+    Renders a formatted container for a specific metric or visualization.
+    This function is now robustly handling Plotly, Matplotlib, and DataFrame objects.
+
+    Args:
+        title (str): The title of the metric card.
+        description (str): A markdown description of the metric.
+        viz_function (Callable[[str], Any]): The function that generates the visualization.
+        insight (str): A string containing the actionable insight derived from the viz.
+        reg_context (str): A string describing the regulatory context.
+        key (str, optional): A unique key for Streamlit widgets. Defaults to "".
+    """
     with st.container(border=True):
         st.subheader(title)
         st.markdown(f"*{description}*")
         st.warning(f"**Regulatory Context:** {reg_context}")
-        fig = viz_function(key)
-        if fig is not None:
-            if isinstance(fig, plt.Figure):
-                st.pyplot(fig)
-        else:
-            st.plotly_chart(fig, use_container_width=True)
+        
+        # Generate the visualization object from the provided function
+        viz_object = viz_function(key)
+        
+        # --- ROBUST VISUALIZATION RENDERING ---
+        if viz_object is not None:
+            if isinstance(viz_object, plt.Figure):
+                st.pyplot(viz_object)
+            elif isinstance(viz_object, go.Figure):
+                st.plotly_chart(viz_object, use_container_width=True)
+            elif isinstance(viz_object, pd.io.formats.style.Styler):
+                st.dataframe(viz_object, use_container_width=True, hide_index=True)
+            elif isinstance(viz_object, pd.DataFrame):
+                st.dataframe(viz_object, use_container_width=True, hide_index=True)
+            else:
+                # Fallback for functions that render their own content and return None
+                pass 
+        
         st.success(f"**Actionable Insight:** {insight}")
 
+
 # --- VISUALIZATION & DATA GENERATORS ---
-def create_opex_dashboard(key):
-    """Generates an enhanced OpEx dashboard with budget, actuals, and variance."""
-    budget = 5000000
-    actual = 4200000
+# Note: Functions are standardized to return visualization objects where applicable.
+
+def create_opex_dashboard(key: str) -> Tuple[go.Figure, go.Figure]:
+    """
+    Generates an enhanced OpEx dashboard with a budget gauge and a burndown chart.
+
+    Args:
+        key (str): A unique key for Streamlit widgets (unused here but kept for consistency).
+
+    Returns:
+        Tuple[go.Figure, go.Figure]: A tuple containing the gauge figure and the burndown figure.
+    """
+    budget = 5_000_000
+    actual = 4_200_000
     
     fig_gauge = go.Figure(go.Indicator(
-        mode = "gauge+number", value = actual,
-        title = {'text': "Annual V&V OpEx: Budget vs. Actual"},
-        gauge = {'axis': {'range': [None, budget]}, 'bar': {'color': "cornflowerblue"},
-                 'steps' : [{'range': [0, budget * 0.9], 'color': 'lightgreen'}, {'range': [budget * 0.9, budget], 'color': 'lightyellow'}],
-                 'threshold' : {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': budget}}))
+        mode="gauge+number",
+        value=actual,
+        title={'text': "Annual V&V OpEx: Budget vs. Actual"},
+        gauge={
+            'axis': {'range': [None, budget]},
+            'bar': {'color': "cornflowerblue"},
+            'steps': [
+                {'range': [0, budget * 0.9], 'color': 'lightgreen'},
+                {'range': [budget * 0.9, budget], 'color': 'lightyellow'}
+            ],
+            'threshold': {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': budget}
+        }
+    ))
 
     months = pd.date_range(start="2023-01-01", periods=12, freq='ME').strftime('%b')
     monthly_budget = np.ones(12) * (budget / 12)
+    np.random.seed(42)
     actual_spend = monthly_budget + np.random.normal(0, 30000, 12)
     df = pd.DataFrame({'Month': months, 'Budget': monthly_budget, 'Actual': actual_spend})
     df['Variance'] = df['Budget'] - df['Actual']
@@ -84,23 +148,33 @@ def create_opex_dashboard(key):
     
     return fig_gauge, fig_burn
 
-def create_copq_modeler(key):
-    """Creates an interactive modeler for Cost of Poor Quality and its relation to V&V spend."""
+
+def create_copq_modeler(key: str) -> go.Figure:
+    """
+    Creates an interactive modeler for Cost of Poor Quality and its relation to V&V spend.
+    Also renders the interactive widgets directly.
+
+    Args:
+        key (str): A unique key prefix for Streamlit widgets.
+
+    Returns:
+        go.Figure: A scatter plot showing the modeled impact of V&V spend on COPQ.
+    """
     st.subheader("Interactive Cost of Poor Quality (COPQ) Modeler")
     col1, col2 = st.columns(2)
     with col1:
         st.markdown("**Internal Failure Costs (Annualized)**")
         scrap_rate = st.slider("Scrap Rate (%)", 0.5, 5.0, 2.5, 0.1, key=f"copq_scrap_{key}")
-        rework_hours = st.number_input("Rework Hours (per month)", value=250)
+        rework_hours = st.number_input("Rework Hours (per month)", value=250, key=f"copq_rework_{key}")
         
         st.markdown("**External Failure Costs (Annualized)**")
-        complaint_hours = st.number_input("Complaint Investigation Hours (per month)", value=150)
-        warranty_claims = st.number_input("Warranty Claims ($ per year)", value=75000)
+        complaint_hours = st.number_input("Complaint Investigation Hours (per month)", value=150, key=f"copq_complaint_{key}")
+        warranty_claims = st.number_input("Warranty Claims ($ per year)", value=75000, key=f"copq_warranty_{key}")
     
     # Constants for calculation
     cost_per_rework_hr = 120
     cost_per_complaint_hr = 150
-    cost_of_goods = 10000000 # Annual COGS
+    cost_of_goods = 10_000_000  # Annual COGS
     
     internal_scrap = (scrap_rate / 100) * cost_of_goods
     internal_rework = rework_hours * cost_per_rework_hr * 12
@@ -113,8 +187,8 @@ def create_copq_modeler(key):
 
     # AI/ML Model: Correlation between V&V Spend and COPQ
     np.random.seed(42)
-    v_v_spend = np.random.uniform(200000, 1000000, 20)
-    copq = 2500000 - (1.5 * v_v_spend) + np.random.normal(0, 200000, 20)
+    v_v_spend = np.random.uniform(200_000, 1_000_000, 20)
+    copq = 2_500_000 - (1.5 * v_v_spend) + np.random.normal(0, 200_000, 20)
     df_corr = pd.DataFrame({'V&V Spend during Development ($)': v_v_spend, 'Post-Launch COPQ ($)': copq})
     
     fig_corr = px.scatter(df_corr, x='V&V Spend during Development ($)', y='Post-Launch COPQ ($)', 
@@ -122,8 +196,17 @@ def create_copq_modeler(key):
                           title='AI-Modeled Impact of V&V Investment on COPQ')
     return fig_corr
 
-def create_audit_dashboard(key):
-    """Generates the audit readiness dashboard components."""
+
+def create_audit_dashboard(key: str) -> pd.io.formats.style.Styler:
+    """
+    Generates a styled DataFrame for the audit readiness dashboard.
+
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
+
+    Returns:
+        pd.io.formats.style.Styler: A styled DataFrame of audit history.
+    """
     audit_data = {
         "Audit/Inspection": ["FDA QSR Inspection", "ISO 13485 Recertification", "Internal Audit Q2", "MDSAP Audit"],
         "Date": ["2023-11-15", "2023-08-20", "2023-06-10", "2023-03-05"],
@@ -132,17 +215,25 @@ def create_audit_dashboard(key):
     }
     df = pd.DataFrame(audit_data)
 
-    def style_outcome(val):
+    def style_outcome(val: str) -> str:
         color = 'white'
-        if "NAI" in val or val == "Passed": color = 'lightgreen'
-        elif "Minor" in val: color = 'lightyellow'
+        if "NAI" in val or val == "Passed":
+            color = 'lightgreen'
+        elif "Minor" in val:
+            color = 'lightyellow'
         return f'background-color: {color}'
     
     styled_df = df.style.map(style_outcome, subset=['Outcome'])
     return styled_df
 
-def create_qms_kanban(key):
-    """Simulates a Kanban board for V&V tasks in the QMS."""
+
+def create_qms_kanban(key: str) -> None:
+    """
+    Simulates and directly renders a Kanban board for V&V tasks in the QMS.
+
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
+    """
     tasks = {
         "New": [],
         "Investigation": ["CAPA-2024-001: Investigate Lot A2301-B False Positives", "NCMR-1088: OOT result in stability pull"],
@@ -151,22 +242,33 @@ def create_qms_kanban(key):
         "Closed": ["CAPA-2023-009: Software patch for UI freeze", "NCMR-1056: Raw material equivalency"]
     }
     st.subheader("V&V Tasks in the Quality System")
-    col1, col2, col3, col4, col5 = st.columns(5)
-    cols = [col1, col2, col3, col4, col5]
+    cols = st.columns(len(tasks))
     for i, (status, items) in enumerate(tasks.items()):
         with cols[i]:
             st.markdown(f"**{status}**")
-            for item in items:
-                st.info(item)
+            if items:
+                for item in items:
+                    st.info(item)
+            else:
+                st.markdown("_No items_")
 
-def create_method_transfer_dashboard(key):
-    """Generates charts for the global method transfer dashboard."""
+
+def create_method_transfer_dashboard(key: str) -> Tuple[go.Figure, pd.DataFrame]:
+    """
+    Generates charts for the global method transfer dashboard.
+
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
+
+    Returns:
+        Tuple[go.Figure, pd.DataFrame]: A tuple containing the bar chart and the status DataFrame.
+    """
     metrics = ['Precision (%CV)', 'Bias (%)', 'TMV Protocol Pass Rate (%)']
     san_diego = [1.8, 0.5, 100]
     athens_oh = [2.1, -0.8, 95]
-    df = pd.DataFrame({'Metric': metrics, 'San Diego (Source)': san_diego, 'Athens, OH (Receiving)': athens_oh})
+    df_metrics = pd.DataFrame({'Metric': metrics, 'San Diego (Source)': san_diego, 'Athens, OH (Receiving)': athens_oh})
     
-    fig_bar = px.bar(df, x='Metric', y=['San Diego (Source)', 'Athens, OH (Receiving)'], 
+    fig_bar = px.bar(df_metrics, x='Metric', y=['San Diego (Source)', 'Athens, OH (Receiving)'], 
                      barmode='group', title='Method Performance: Inter-site Comparability')
     
     transfer_status = {
@@ -176,8 +278,17 @@ def create_method_transfer_dashboard(key):
     df_status = pd.DataFrame(transfer_status)
     return fig_bar, df_status
 
-def create_pipeline_advisor(key):
-    """Creates the AI-powered R&D pipeline risk advisor."""
+
+def create_pipeline_advisor(key: str) -> go.Figure:
+    """
+    Creates the AI-powered R&D pipeline risk advisor, including UI widgets.
+
+    Args:
+        key (str): A unique key prefix for Streamlit widgets.
+
+    Returns:
+        go.Figure: A scatter plot functioning as a "Magic Quadrant" for the R&D pipeline.
+    """
     # AI/ML Model: Train a model on historical data
     np.random.seed(42)
     historical_data = pd.DataFrame({
@@ -187,7 +298,7 @@ def create_pipeline_advisor(key):
         'V_V_Duration': np.random.uniform(3, 18, 20)
     })
     feature_names = ['New_Tech_Count', 'Complexity_Score', 'Target_LoD_Tightness']
-    X = historical_data[['New_Tech_Count', 'Complexity_Score', 'Target_LoD_Tightness']]
+    X = historical_data[feature_names]
     y = historical_data['V_V_Duration']
     model = RandomForestRegressor(n_estimators=100, random_state=42).fit(X, y)
     
@@ -202,10 +313,7 @@ def create_pipeline_advisor(key):
         lod_tightness = st.slider("Target LoD Tightness (vs. Predicate)", 0.1, 2.0, 1.0, 0.1, key=f"pipe_lod_{key}")
     
     # Prediction
-    new_project_data = pd.DataFrame(
-        [[new_tech, complexity, lod_tightness]],
-        columns=feature_names
-    )
+    new_project_data = pd.DataFrame([[new_tech, complexity, lod_tightness]], columns=feature_names)
     predicted_duration = model.predict(new_project_data)[0]
     
     col1, col2 = st.columns(2)
@@ -227,16 +335,22 @@ def create_pipeline_advisor(key):
                           color='Project', text='Project', title='Strategic R&D Pipeline Advisor')
     fig_quad.update_traces(textposition='top center')
     return fig_quad
-# --- NEW ADVANCED AI/ML & OPERATIONS VISUALIZATION & DATA GENERATORS ---
 
-def create_automation_dashboard(key):
-    """Generates charts for the Test Automation Dashboard."""
-    # Data for Pie Chart
+
+def create_automation_dashboard(key: str) -> Tuple[go.Figure, go.Figure]:
+    """
+    Generates charts for the Test Automation Dashboard.
+
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
+
+    Returns:
+        Tuple[go.Figure, go.Figure]: A tuple containing the pie chart and the dual-axis bar/line chart.
+    """
     automation_data = pd.DataFrame({'Category': ['Automated', 'Manual'], 'Count': [2850, 1300]})
     fig_pie = px.pie(automation_data, values='Count', names='Category', title='Test Case Distribution',
-                     color_discrete_map={'Automated':'cornflowerblue', 'Manual':'lightgrey'})
+                     color_discrete_map={'Automated': 'cornflowerblue', 'Manual': 'lightgrey'})
     
-    # Data for Dual-Axis Chart
     months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
     exec_time = [120, 110, 105, 90, 80, 75]
     coverage = [45, 50, 55, 60, 62, 65]
@@ -249,17 +363,26 @@ def create_automation_dashboard(key):
 
     return fig_pie, fig_dual
 
-def create_instrument_utilization_dashboard(key):
-    """Generates heatmap and forecast for instrument utilization."""
+
+def create_instrument_utilization_dashboard(key: str) -> Tuple[go.Figure, go.Figure]:
+    """
+    Generates a heatmap and AI forecast for instrument utilization.
+
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
+
+    Returns:
+        Tuple[go.Figure, go.Figure]: A tuple containing the heatmap and the forecast chart.
+    """
     np.random.seed(50)
     # Heatmap Data
     days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     hours = [f'{h}:00' for h in range(24)]
     util_data = np.random.randint(0, 100, size=(7, 24))
-    util_data[1:5, 8:17] = np.random.randint(70, 100, size=(4, 9)) # Simulate high usage during work hours
-    fig_heatmap = px.imshow(util_data, x=hours, y=days, aspect="auto", 
-                             color_continuous_scale='RdYlGn_r',
-                             title='Instrument Utilization Heatmap (Platform X)')
+    util_data[1:5, 8:17] = np.random.randint(70, 100, size=(4, 9))  # Simulate high usage during work hours
+    fig_heatmap = px.imshow(util_data, x=hours, y=days, aspect="auto",
+                            color_continuous_scale='RdYlGn_r',
+                            title='Instrument Utilization Heatmap (Platform X)')
     
     # AI/ML Forecast Data & Model
     months = np.arange(1, 13).reshape(-1, 1)
@@ -277,8 +400,17 @@ def create_instrument_utilization_dashboard(key):
 
     return fig_heatmap, fig_forecast
 
-def create_portfolio_health_dashboard(key):
-    """Generates the RAG status table for the project portfolio."""
+
+def create_portfolio_health_dashboard(key: str) -> pd.io.formats.style.Styler:
+    """
+    Generates the RAG status styled DataFrame for the project portfolio.
+
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
+
+    Returns:
+        pd.io.formats.style.Styler: A styled DataFrame showing portfolio health.
+    """
     data = {
         'Project': ["ImmunoPro-A", "MolecularDX-2", "CardioScreen-X", "NextGen Platform SW"],
         'Phase': ["System V&V", "Clinical Study", "Feasibility", "Architecture"],
@@ -289,22 +421,33 @@ def create_portfolio_health_dashboard(key):
     }
     df = pd.DataFrame(data)
 
-    def style_rag(val):
+    def style_rag(val: str) -> str:
         color = 'white'
-        if val == 'Green': color = 'lightgreen'
-        elif val == 'Amber': color = 'lightyellow'
-        elif val == 'Red': color = '#ffcccb'
+        if val == 'Green':
+            color = 'lightgreen'
+        elif val == 'Amber':
+            color = 'lightyellow'
+        elif val == 'Red':
+            color = '#ffcccb'
         return f'background-color: {color}'
 
     styled_df = df.style.map(style_rag, subset=['Schedule Status', 'Budget Status', 'Technical Risk', 'Resource Strain'])
     return styled_df
+def create_resource_allocation_matrix(key: str) -> Tuple[go.Figure, pd.DataFrame]:
+    """
+    Generates an enhanced, actionable resource allocation dashboard.
+    This function was refactored to return the figure instead of rendering it directly.
 
-def create_resource_allocation_matrix(key):
-    """Generates an enhanced, actionable resource allocation dashboard."""
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
+
+    Returns:
+        Tuple[go.Figure, pd.DataFrame]: A tuple containing the allocation bar chart and the DataFrame of over-allocated members.
+    """
     team_data = {
         'Team Member': ['Alice', 'Bob', 'Charlie', 'Diana', 'Ethan', 'Fiona'],
         'Primary Skill': ['qPCR', 'Statistics (Python)', 'ELISA', 'ISO 14971', 'Statistics (Python)', 'qPCR (Junior)'],
-        'ImmunoPro-A': [50, 50, 0, 0, 0, 0],
+        'ImmunoPro-A': [50, 50, 0, 0, 0, 100],
         'MolecularDX-2': [10, 25, 60, 5, 0, 0],
         'CardioScreen-X': [40, 0, 40, 60, 50, 0],
         'Sustaining': [0, 25, 10, 35, 50, 0]
@@ -317,24 +460,26 @@ def create_resource_allocation_matrix(key):
                  x='Total Allocation', 
                  y='Team Member',
                  color='Status',
-                 text=df['Primary Skill'],
+                 text='Primary Skill',
                  orientation='h',
                  title='V&V Team Capacity & Strategic Alignment',
                  color_discrete_map={'Over-allocated': 'red', 'At Capacity': 'orange', 'Available': 'green'})
     
     fig.add_vline(x=100, line_width=2, line_dash="dash", line_color="black", annotation_text="100% Capacity")
     fig.update_layout(xaxis_title="Total Allocation (%)", yaxis_title="Team Member", legend_title="Status")
-    fig.update_traces(textposition='inside', textfont_size=12)
+    fig.update_traces(textposition='inside', textfont=dict(size=12, color='white'))
     
-    st.plotly_chart(fig, use_container_width=True)
+    over_allocated_df = df[df['Total Allocation'] > 100][['Team Member', 'Total Allocation']]
+    return fig, over_allocated_df
 
-    # Note: This function now directly renders the plot, so we adjust the calling page.
-    # We return the dataframe to check for over-allocation alerts.
-    over_allocated = df[df['Total Allocation'] > 100]
-    return over_allocated
 
-def create_lessons_learned_search(key):
-    """Simulates an NLP-powered search engine for the knowledge base."""
+def create_lessons_learned_search(key: str) -> None:
+    """
+    Simulates and directly renders an NLP-powered search engine for the knowledge base.
+
+    Args:
+        key (str): A unique key prefix for Streamlit widgets.
+    """
     # Mock Knowledge Base
     knowledge_base = {
         "DOC-001 (Immuno- Assay Stability)": "Initial stability run failed at 3 months due to improper blocking agent concentration. Root cause was determined to be a supplier change in BSA. Corrective action involved re-validating the new supplier and adjusting the protocol. See CAPA-2022-012.",
@@ -353,24 +498,32 @@ def create_lessons_learned_search(key):
         tfidf = TfidfVectorizer(stop_words='english')
         tfidf_matrix = tfidf.fit_transform(corpus)
         
-        # Calculate similarity between the query (first vector) and all documents
         cosine_sim = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:])
-        
-        # Get ranked results
-        sim_scores = list(enumerate(cosine_sim[0]))
-        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+        sim_scores = sorted(list(enumerate(cosine_sim[0])), key=lambda x: x[1], reverse=True)
         
         st.write("#### Search Results:")
-        for i, score in sim_scores[:3]: # Show top 3 results
-            if score > 0.05: # Only show relevant results
+        results_found = False
+        for i, score in sim_scores[:3]:
+            if score > 0.05:
+                results_found = True
                 with st.container(border=True):
                     st.markdown(f"**Document:** `{doc_titles[i]}`")
                     st.markdown(f"**Relevance Score:** {score:.2f}")
                     st.info(docs[i])
+        if not results_found:
+            st.warning("No relevant documents found.")
 
-#------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def run_requirement_risk_nlp_model(key):
-    """Uses NLP to create a risk quadrant for requirements."""
+
+def run_requirement_risk_nlp_model(key: str) -> go.Figure:
+    """
+    Uses NLP to create a risk quadrant for requirements.
+
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
+
+    Returns:
+        go.Figure: A scatter plot visualizing requirement risk.
+    """
     reqs = [
         "The system shall process samples in under 5 minutes.", 
         "The assay must have a clinical sensitivity of 95% for Target A.", 
@@ -380,8 +533,8 @@ def run_requirement_risk_nlp_model(key):
         "The system shall be robust against common user errors.", 
         "Analytical sensitivity (LoD) shall be <= 25 copies/mL.",
     ]
-    labels = [0, 0, 1, 1, 0, 1, 0] # Ambiguity Label
-    criticality = [7, 10, 5, 6, 9, 8, 10] # SME-assigned criticality score
+    labels = [0, 0, 1, 1, 0, 1, 0]  # Ambiguity Label (1=ambiguous)
+    criticality = [7, 10, 5, 6, 9, 8, 10]  # SME-assigned criticality score
     df = pd.DataFrame({'Requirement': reqs, 'Risk_Label': labels, 'Criticality': criticality})
 
     tfidf = TfidfVectorizer(stop_words='english')
@@ -395,11 +548,7 @@ def run_requirement_risk_nlp_model(key):
                      title='Requirement Prioritization Matrix',
                      labels={'Ambiguity Score': 'Predicted Ambiguity / V&V Risk', 'Criticality': 'Business & Patient Safety Criticality'})
     
-    # --- FIX START ---
-    # Corrected 'textfont_size' to the proper nested 'textfont=dict(size=...)' structure.
     fig.update_traces(textposition='top center', textfont=dict(size=12))
-    # --- FIX END ---
-
     fig.add_vline(x=0.5, line_width=1, line_dash="dash", line_color="black")
     fig.add_hline(y=7.5, line_width=1, line_dash="dash", line_color="black")
     
@@ -410,63 +559,81 @@ def run_requirement_risk_nlp_model(key):
 
     return fig
 
-def run_cqa_forecasting_model(key):
+
+def run_cqa_forecasting_model(key: str) -> go.Figure:
     """
     Uses a time-series forecasting model (ARIMA) to predict future CQA values.
+
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
+
+    Returns:
+        go.Figure: A time-series chart with historical data and the ARIMA forecast.
     """
     np.random.seed(42)
-    # Generate stable time-series data with a slight upward trend
     dates = pd.date_range(start="2023-01-01", periods=100)
     data = 10 + np.random.randn(100).cumsum() * 0.05 + np.linspace(0, 1.5, 100)
     ts = pd.Series(data, index=dates)
     
-    # AI/ML Model: ARIMA (AutoRegressive Integrated Moving Average)
-    model = ARIMA(ts, order=(5,1,0)).fit()
+    model = ARIMA(ts, order=(5, 1, 0)).fit()
     forecast = model.get_forecast(steps=30)
     forecast_df = forecast.summary_frame()
     
-    # Visualization
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=ts.index, y=ts, mode='lines', name='Historical Data'))
     fig.add_trace(go.Scatter(x=forecast_df.index, y=forecast_df['mean'], mode='lines', name='Forecast', line=dict(color='red')))
-    fig.add_trace(go.Scatter(x=forecast_df.index, y=forecast_df['mean_ci_lower'], fill='tonexty', mode='lines', line_color='rgba(255,0,0,0.1)', name='95% Confidence Interval'))
-    fig.add_trace(go.Scatter(x=forecast_df.index, y=forecast_df['mean_ci_upper'], fill='tonexty', mode='lines', line_color='rgba(255,0,0,0.1)', name='95% Confidence Interval'))
+    fig.add_trace(go.Scatter(x=forecast_df.index, y=forecast_df['mean_ci_lower'], fill='tonexty', mode='lines', line_color='rgba(255,0,0,0.2)', name='95% Confidence Interval'))
+    fig.add_trace(go.Scatter(x=forecast_df.index, y=forecast_df['mean_ci_upper'], fill='tonexty', mode='lines', line_color='rgba(255,0,0,0.2)', name='95% Confidence Interval', showlegend=False))
     fig.add_hline(y=12.5, line_dash="dash", line_color="orange", annotation_text="Upper Spec Limit")
     fig.update_layout(title='AI-Powered Forecast of Critical Quality Attribute (CQA)', yaxis_title='CQA Value')
     return fig
 
-def run_defect_root_cause_model(key):
+
+def run_defect_root_cause_model(key: str) -> go.Figure:
     """
     Uses NLP to automatically classify defect reports into root cause categories.
+
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
+
+    Returns:
+        go.Figure: A pie chart showing the distribution of predicted root causes.
     """
     defects = [
-        "Pointer exception in data processing module when sample ID is null.", # Code
-        "The system requirement for sample throughput is physically impossible to meet.", # Requirement
-        "UI hangs when the user clicks 'Start' before the reagent is loaded.", # Code
-        "The plastic housing for the sensor cracked after 100 cycles.", # Hardware
-        "Requirement URS-015 is in direct conflict with URS-021.", # Requirement
-        "Incorrect driver version for the pump controller was deployed.", # Integration
-        "The third-party API for LIS is returning a 500 error intermittently.", # Integration
-        "Off-by-one error in the loop that calculates final concentration.", # Code
+        "Pointer exception in data processing module when sample ID is null.",
+        "The system requirement for sample throughput is physically impossible to meet.",
+        "UI hangs when the user clicks 'Start' before the reagent is loaded.",
+        "The plastic housing for the sensor cracked after 100 cycles.",
+        "Requirement URS-015 is in direct conflict with URS-021.",
+        "Incorrect driver version for the pump controller was deployed.",
+        "The third-party API for LIS is returning a 500 error intermittently.",
+        "Off-by-one error in the loop that calculates final concentration.",
     ]
     labels = ["Coding Error", "Requirement Issue", "Coding Error", "Hardware Issue", "Requirement Issue", "Integration Issue", "Integration Issue", "Coding Error"]
     df = pd.DataFrame({'Defect_Description': defects, 'Root_Cause': labels})
 
     tfidf = TfidfVectorizer(stop_words='english')
-    X_train, X_test, y_train, y_test = train_test_split(df['Defect_Description'], df['Root_Cause'], test_size=0.3, random_state=42)
+    X_train, _, y_train, _ = train_test_split(df['Defect_Description'], df['Root_Cause'], test_size=0.3, random_state=42)
     X_train_vec = tfidf.fit_transform(X_train)
-    
     model = RandomForestClassifier(random_state=42).fit(X_train_vec, y_train)
     
-    # For visualization, we'll just show the classified distribution
     df['Predicted_Cause'] = model.predict(tfidf.transform(df['Defect_Description']))
     cause_counts = df['Predicted_Cause'].value_counts().reset_index()
     
     fig = px.pie(cause_counts, values='count', names='Predicted_Cause', title='AI-Predicted Defect Root Cause Distribution')
     return fig
 
-def run_sentiment_analysis_model(key):
-    """Applies sentiment analysis and creates advanced visualizations."""
+
+def run_sentiment_analysis_model(key: str) -> go.Figure:
+    """
+    Applies sentiment analysis and creates advanced visualizations. Renders one chart directly.
+
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
+
+    Returns:
+        go.Figure: A time-series chart showing the trend of negative sentiment.
+    """
     complaint_data = {
         'Date': pd.to_datetime(['2023-01-10', '2023-01-15', '2023-02-05', '2023-02-20', '2023-03-12', '2023-03-25']),
         'Type': ['Reagent Leak', 'Software Glitch', 'Instrument Error', 'Reagent Leak', 'Software Glitch', 'Instrument Error'],
@@ -480,21 +647,21 @@ def run_sentiment_analysis_model(key):
         ]
     }
     df = pd.DataFrame(complaint_data)
-    df = pd.concat([df]*5, ignore_index=True) # Amplify data for better viz
+    df = pd.concat([df] * 5, ignore_index=True)  # Amplify data for better viz
 
     analyzer = SentimentIntensityAnalyzer()
     df['compound'] = df['Text'].apply(lambda x: analyzer.polarity_scores(x)['compound'])
     df['Sentiment'] = df['compound'].apply(lambda c: 'Positive' if c >= 0.05 else ('Negative' if c <= -0.05 else 'Neutral'))
 
-    # Treemap Visualization
+    # Treemap Visualization (Rendered directly)
     fig_tree = px.treemap(df, path=[px.Constant("All Complaints"), 'Type', 'Sentiment'],
                           title='Hierarchical View of Complaint Sentiment by Category',
                           color='compound', color_continuous_scale='RdYlGn',
                           color_continuous_midpoint=0)
-    fig_tree.update_layout(margin = dict(t=50, l=25, r=25, b=25))
+    fig_tree.update_layout(margin=dict(t=50, l=25, r=25, b=25))
     st.plotly_chart(fig_tree, use_container_width=True)
 
-    # Time-Series Visualization
+    # Time-Series Visualization (Returned)
     df['Month'] = df['Date'].dt.to_period('M').dt.to_timestamp()
     monthly_sentiment = df.groupby('Month')['Sentiment'].value_counts(normalize=True).unstack().fillna(0)
     monthly_sentiment['Negative_Pct'] = monthly_sentiment.get('Negative', 0) * 100
@@ -503,53 +670,53 @@ def run_sentiment_analysis_model(key):
                      title='Trend of Negative Sentiment in Complaints Over Time')
     fig_ts.update_layout(yaxis_title='Percentage of Complaints with Negative Sentiment (%)')
     
-    return fig_ts # Return the time-series plot to be rendered
-# --- NEW AI/ML VISUALIZATION & DATA GENERATORS ---
+    return fig_ts
 
 
-def plot_multivariate_anomaly_detection(key):
+def plot_multivariate_anomaly_detection(key: str) -> go.Figure:
     """
-    Generates data and a 3D plot for multivariate anomaly detection using Isolation Forest.
-    This simulates detecting subtle process deviations that univariate charts would miss.
+    Generates a 3D plot for multivariate anomaly detection using Isolation Forest.
+
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
+
+    Returns:
+        go.Figure: A 3D scatter plot showing in-control vs. anomalous data points.
     """
     np.random.seed(101)
-    # Generate normal 'in-control' data for three process parameters
-    in_control_data = np.random.multivariate_normal(
-        mean=[10, 20, 5], 
-        cov=[[1, 0.5, 0.3], [0.5, 1, 0.4], [0.3, 0.4, 1]], 
-        size=300
-    )
-    # Inject subtle anomalies that are outliers in combination, but not necessarily individually
+    in_control_data = np.random.multivariate_normal(mean=[10, 20, 5], cov=[[1, 0.5, 0.3], [0.5, 1, 0.4], [0.3, 0.4, 1]], size=300)
     anomalies = np.array([[11, 19, 7], [9, 21, 3]])
     data = np.vstack([in_control_data, anomalies])
     df = pd.DataFrame(data, columns=['Temp (°C)', 'Pressure (psi)', 'Flow Rate (mL/min)'])
     
-    # AI/ML Model: Isolation Forest
     model = IsolationForest(contamination=0.01, random_state=42)
     df['Anomaly'] = model.fit_predict(df)
     df['Status'] = df['Anomaly'].apply(lambda x: 'Anomaly' if x == -1 else 'In Control')
     
-    # Visualization
     fig = px.scatter_3d(
         df, x='Temp (°C)', y='Pressure (psi)', z='Flow Rate (mL/min)',
-        color='Status',
-        color_discrete_map={'In Control': 'blue', 'Anomaly': 'red'},
-        symbol='Status',
-        size_max=10,
-        title='AI-Powered Multivariate Process Monitoring'
+        color='Status', color_discrete_map={'In Control': 'blue', 'Anomaly': 'red'},
+        symbol='Status', size_max=10, title='AI-Powered Multivariate Process Monitoring'
     )
     fig.update_traces(marker=dict(size=4))
     return fig
 
-def run_predictive_maintenance_model(key):
-    """Simulates instrument sensor data and uses SHAP for an explainable AI model."""
-    st.markdown("This Random Forest model is trained on historical sensor data to predict the likelihood of an instrument failing. The SHAP plot below explains *why* the model makes its predictions.")
-    
+
+def run_predictive_maintenance_model(key: str) -> plt.Figure:
+    """
+    Simulates instrument data and uses SHAP for an explainable AI failure prediction model.
+    This function was refactored to correctly capture the matplotlib figure from SHAP.
+
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
+
+    Returns:
+        plt.Figure: The SHAP summary plot as a matplotlib Figure object.
+    """
     np.random.seed(42)
-    # [Existing data generation code remains the same]
     data = []
-    for i in range(10):
-        will_fail = i >= 7
+    for i in range(10): # Simulate 10 instruments
+        will_fail = i >= 7 # Last 3 instruments are prone to failure
         for day in range(100):
             laser_drift = (day / 100) * 0.5 if will_fail else 0
             pressure_spike = (day / 100)**2 * 3 if will_fail else 0
@@ -558,89 +725,94 @@ def run_predictive_maintenance_model(key):
             temp_fluctuation = np.random.normal(37, 0.2 + (day/1000 if will_fail else 0))
             failure = 1 if will_fail and day > 95 else 0
             data.append([i, day, laser_intensity, pump_pressure, temp_fluctuation, failure])
-    df = pd.DataFrame(data, columns=['Instrument_ID', 'Day', 'Laser_Intensity', 'Pump_Pressure', 'Temp_Fluctuation', 'Failure'])
     
+    df = pd.DataFrame(data, columns=['Instrument_ID', 'Day', 'Laser_Intensity', 'Pump_Pressure', 'Temp_Fluctuation', 'Failure'])
     features = ['Laser_Intensity', 'Pump_Pressure', 'Temp_Fluctuation']
     X = df[features]
     y = df['Failure']
-    
     model = RandomForestClassifier(n_estimators=100, random_state=42).fit(X, y)
     
+    st.subheader("Explainable AI (XAI): Why the Model Predicts Failure")
     explainer = shap.TreeExplainer(model)
     shap_values = explainer.shap_values(X)
     
-    st.subheader("Explainable AI (XAI): Why the Model Predicts Failure")
-    
-    # --- FIX START ---
-    # 1. Let shap.summary_plot create its own figure on the global state.
-    # 2. Capture this global figure object using plt.gcf().
-    # 3. Clear the global figure state with plt.clf() to prevent it from affecting other plots.
-    # 4. Return the captured figure object to the calling function.
-    
+    # --- ROBUST SHAP PLOT CAPTURE ---
     shap.summary_plot(shap_values, X, plot_type="dot", show=False)
-    fig = plt.gcf() # Get current figure
+    fig = plt.gcf()  # Get current figure from global state
     plt.title("SHAP Summary Plot: Key Predictors of Instrument Failure")
     plt.tight_layout()
-    plt.clf() # Clear the figure from the global state
-    
-    # --- FIX END ---
+    plt.clf()  # Clear the figure from global state to prevent interference
     
     return fig
 
-def run_nlp_topic_modeling(key):
-    """
-    Applies NLP Topic Modeling (LDA) to simulated free-text complaint data.
-    """
-    # Simulate free-text complaint data
-    complaint_docs = [
-        "The software froze during a run and I had to restart the instrument.",
-        "Error code 503 appeared on screen, the manual is not clear on this.",
-        "The reagent cartridge was leaking from the bottom seal upon opening the box.",
-        "Results seem consistently higher than the previous lot, we suspect a calibration issue.",
-        "The machine is making a loud grinding noise during the initial spin cycle.",
-        "I cannot get the system to calibrate properly after the last software update.",
-        "The touch screen is unresponsive in the top left corner.",
-        "Another case of a leaky reagent pack, this is the third time this month.",
-        "The instrument UI is very slow to respond after starting a new batch.",
-        "Calibration failed multiple times before finally passing.",
-        "The seal on the reagent pack was broken, causing a spill inside the machine."
-    ] * 5 # Multiply to get more data
 
-    # AI/ML Model: Latent Dirichlet Allocation (LDA) for Topic Modeling
-    vectorizer = CountVectorizer(stop_words='english')
+def run_nlp_topic_modeling(key: str) -> None:
+    """
+    Applies NLP Topic Modeling (LDA) to simulated complaint data and renders a table.
+
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
+    """
+    complaint_docs = [
+        "The software froze during a run and I had to restart the instrument.", "Error code 503 appeared on screen, the manual is not clear on this.",
+        "The reagent cartridge was leaking from the bottom seal upon opening the box.", "Results seem consistently higher than the previous lot, we suspect a calibration issue.",
+        "The machine is making a loud grinding noise during the initial spin cycle.", "I cannot get the system to calibrate properly after the last software update.",
+        "The touch screen is unresponsive in the top left corner.", "Another case of a leaky reagent pack, this is the third time this month.",
+        "The instrument UI is very slow to respond after starting a new batch.", "Calibration failed multiple times before finally passing.",
+        "The seal on the reagent pack was broken, causing a spill inside the machine."
+    ] * 5
+
+    vectorizer = CountVectorizer(stop_words='english', max_features=1000)
     X = vectorizer.fit_transform(complaint_docs)
     
     lda = LatentDirichletAllocation(n_components=3, random_state=42)
     lda.fit(X)
     
-    # Display topics and their keywords
     feature_names = vectorizer.get_feature_names_out()
     topics = {}
     for topic_idx, topic in enumerate(lda.components_):
-        top_words_idx = topic.argsort()[:-6:-1]
-        top_words = [feature_names[i] for i in top_words_idx]
+        top_words = [feature_names[i] for i in topic.argsort()[:-6:-1]]
         topics[f"Topic {topic_idx+1}"] = ", ".join(top_words)
 
     st.write("#### Automatically Discovered Complaint Themes:")
     st.table(pd.DataFrame.from_dict(topics, orient='index', columns=["Top Keywords"]))
-    return None # No chart needed, table is the output
-# ================================================================================================================
-def create_rtm_data_editor(key):
-    df = pd.DataFrame([
+
+
+def create_rtm_data_editor(key: str) -> None:
+    """
+    Renders an editable DataFrame for the Requirements Traceability Matrix and flags gaps.
+
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
+    """
+    df_data = [
         {"ID": "URS-001", "Requirement": "Assay must detect Target X with >95% clinical sensitivity.", "Risk": "High", "Linked Test Case": "AVP-SENS-01", "Status": "PASS"},
         {"ID": "DI-002", "Requirement": "Analytical sensitivity (LoD) shall be <= 50 copies/mL.", "Risk": "High", "Linked Test Case": "AVP-LOD-01", "Status": "PASS"},
         {"ID": "SRS-012", "Requirement": "Results screen must display patient ID.", "Risk": "Medium", "Linked Test Case": "SVP-UI-04", "Status": "PASS"},
         {"ID": "DI-003", "Requirement": "Assay must be stable for 12 months at 2-8°C.", "Risk": "High", "Linked Test Case": "AVP-STAB-01", "Status": "IN PROGRESS"},
         {"ID": "URS-003", "Requirement": "Assay must have no cross-reactivity with Influenza B.", "Risk": "Medium", "Linked Test Case": "", "Status": "GAP"},
-    ])
+    ]
+    df = pd.DataFrame(df_data)
     st.dataframe(df, use_container_width=True, hide_index=True)
     gaps = df[df["Status"] == "GAP"]
     if not gaps.empty:
         st.error(f"**Critical Finding:** {len(gaps)} traceability gap(s) identified. This is a major audit finding and blocks design release.")
-    return None
 
-def plot_defect_burnup(key):
-    days = np.arange(1, 46); scope = np.ones(45) * 50; scope[25:] = 60
+
+def plot_defect_burnup(key: str) -> go.Figure:
+    """
+    Generates a defect burnup chart.
+
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
+
+    Returns:
+        go.Figure: A burnup chart.
+    """
+    days = np.arange(1, 46)
+    scope = np.ones(45) * 50
+    scope[25:] = 60  # Scope creep
+    np.random.seed(1)
     closed = np.linspace(0, 45, 45) + np.random.rand(45) * 2
     opened = np.linspace(5, 58, 45) + np.random.rand(45) * 3
     fig = go.Figure()
@@ -650,11 +822,23 @@ def plot_defect_burnup(key):
     fig.update_layout(title='Defect Open vs. Close Trend (Burnup Chart)', xaxis_title='Project Day', yaxis_title='Number of Defects')
     return fig
 
-def plot_cpk_analysis(key):
-    np.random.seed(42); data = np.random.normal(loc=10.2, scale=0.25, size=200)
+
+def plot_cpk_analysis(key: str) -> go.Figure:
+    """
+    Generates an interactive process capability (CpK) analysis plot.
+
+    Args:
+        key (str): A unique key prefix for Streamlit widgets.
+
+    Returns:
+        go.Figure: A histogram with interactive specification limits.
+    """
+    np.random.seed(42)
+    data = np.random.normal(loc=10.2, scale=0.25, size=200)
     usl = st.slider("Upper Specification Limit (USL)", 9.0, 12.0, 11.0, key=f"usl_{key}")
     lsl = st.slider("Lower Specification Limit (LSL)", 8.0, 11.0, 9.0, key=f"lsl_{key}")
-    mean = np.mean(data); std_dev = np.std(data, ddof=1)
+    mean = np.mean(data)
+    std_dev = np.std(data, ddof=1)
     cpk = min((usl - mean) / (3 * std_dev), (mean - lsl) / (3 * std_dev))
     fig = px.histogram(data, nbins=30, title=f"Process Capability (CpK) Analysis | Calculated CpK = {cpk:.2f}")
     fig.add_vline(x=lsl, line_dash="dash", line_color="red", annotation_text="LSL")
@@ -662,38 +846,90 @@ def plot_cpk_analysis(key):
     fig.add_vline(x=mean, line_dash="dot", line_color="blue", annotation_text="Process Mean")
     return fig
 
-def plot_msa_analysis(key):
-    parts = np.repeat(np.arange(1, 11), 6); operators = np.tile(np.repeat(['Alice', 'Bob', 'Charlie'], 2), 10)
-    true_values = np.repeat(np.linspace(5, 15, 10), 6); operator_bias = np.tile(np.repeat([0, 0.2, -0.15], 2), 10)
+
+def plot_msa_analysis(key: str) -> go.Figure:
+    """
+    Generates a Measurement System Analysis (Gage R&R) box plot.
+
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
+
+    Returns:
+        go.Figure: A box plot for Gage R&R analysis.
+    """
+    parts = np.repeat(np.arange(1, 11), 6)
+    operators = np.tile(np.repeat(['Alice', 'Bob', 'Charlie'], 2), 10)
+    true_values = np.repeat(np.linspace(5, 15, 10), 6)
+    operator_bias = np.tile(np.repeat([0, 0.2, -0.15], 2), 10)
+    np.random.seed(1)
     measurements = true_values + operator_bias + np.random.normal(0, 0.3, 60)
     df = pd.DataFrame({'Part': parts, 'Operator': operators, 'Measurement': measurements})
     fig = px.box(df, x='Part', y='Measurement', color='Operator', title='Measurement System Analysis (MSA) - Gage R&R')
     return fig
 
-def plot_doe_rsm(key):
-    temp = np.linspace(20, 40, 20); ph = np.linspace(6.5, 8.5, 20)
+
+def plot_doe_rsm(key: str) -> go.Figure:
+    """
+    Generates a Design of Experiments (DOE) Response Surface Methodology (RSM) plot.
+
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
+
+    Returns:
+        go.Figure: A 3D surface plot.
+    """
+    temp = np.linspace(20, 40, 20)
+    ph = np.linspace(6.5, 8.5, 20)
     temp_grid, ph_grid = np.meshgrid(temp, ph)
-    signal = -(temp_grid - 32)**2 - 2*(ph_grid - 7.5)**2 + 1000 + np.random.rand(20, 20)*20
+    signal = -(temp_grid - 32)**2 - 2 * (ph_grid - 7.5)**2 + 1000 + np.random.rand(20, 20) * 20
     fig = go.Figure(data=[go.Surface(z=signal, x=temp, y=ph, colorscale='viridis')])
-    fig.update_layout(title='Design of Experiments (DOE) Response Surface', scene=dict(xaxis_title='Temperature (°C)', yaxis_title='pH', zaxis_title='Assay Signal'))
+    fig.update_layout(title='Design of Experiments (DOE) Response Surface',
+                      scene=dict(xaxis_title='Temperature (°C)', yaxis_title='pH', zaxis_title='Assay Signal'))
     return fig
 
-def plot_levey_jennings_westgard(key):
-    days = np.arange(1, 31); mean = 100; sd = 4; data = np.random.normal(mean, sd, 30)
-    data[10] = mean + 3.5 * sd; data[20:22] = mean + 2.2 * sd
-    fig = go.Figure(); fig.add_trace(go.Scatter(x=days, y=data, mode='lines+markers', name='Control Value'))
+
+def plot_levey_jennings_westgard(key: str) -> go.Figure:
+    """
+    Generates a Levey-Jennings chart with Westgard rule violations.
+
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
+
+    Returns:
+        go.Figure: A Levey-Jennings control chart.
+    """
+    np.random.seed(1)
+    days = np.arange(1, 31)
+    mean, sd = 100, 4
+    data = np.random.normal(mean, sd, 30)
+    data[10] = mean + 3.5 * sd  # 1_3s violation
+    data[20:22] = mean + 2.2 * sd  # 2_2s violation
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=days, y=data, mode='lines+markers', name='Control Value'))
     for i, color in zip([1, 2, 3], ['green', 'orange', 'red']):
-        fig.add_hline(y=mean + i*sd, line_dash="dot", line_color=color, annotation_text=f"+{i}SD")
-        fig.add_hline(y=mean - i*sd, line_dash="dot", line_color=color, annotation_text=f"-{i}SD")
+        fig.add_hline(y=mean + i * sd, line_dash="dot", line_color=color, annotation_text=f"+{i}SD")
+        fig.add_hline(y=mean - i * sd, line_dash="dot", line_color=color, annotation_text=f"-{i}SD")
     fig.add_annotation(x=10, y=data[10], text="1_3s Violation", showarrow=True, arrowhead=1)
     fig.add_annotation(x=21, y=data[21], text="2_2s Violation", showarrow=True, arrowhead=1)
     fig.update_layout(title='Levey-Jennings Chart with Westgard Rules', xaxis_title='Day', yaxis_title='Control Value')
     return fig
 
-def run_assay_regression(key):
-    # FIX: Increased sample size from 7 to 8 to satisfy the statsmodels omni_normtest requirement (>=8 samples).
+
+def run_assay_regression(key: str) -> go.Figure:
+    """
+    Performs a linear regression analysis and displays the scatter plot and statsmodels summary.
+    This function was fixed to ensure a sufficient sample size for statsmodels tests.
+
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
+
+    Returns:
+        go.Figure: A scatter plot with an OLS trendline.
+    """
+    np.random.seed(1)
+    # n=8 is the minimum sample size for statsmodels omni_normtest
     conc = np.array([0, 10, 25, 50, 100, 200, 300, 400])
-    signal = 50 + 2.5 * conc + np.random.normal(0, 20, 8) # Match sample size
+    signal = 50 + 2.5 * conc + np.random.normal(0, 20, 8)
     
     df = pd.DataFrame({'Concentration': conc, 'Signal': signal})
     fig = px.scatter(df, x='Concentration', y='Signal', trendline='ols', title="Assay Performance Regression (Linearity)")
@@ -702,106 +938,316 @@ def run_assay_regression(key):
     model = sm.OLS(df['Signal'], X).fit()
     
     st.code(f"Regression Results (statsmodels summary):\n{model.summary()}")
-    
     return fig
 
-def plot_risk_matrix(key):
-    severity = [9, 10, 6, 8, 7, 5]; probability = [3, 2, 4, 3, 5, 1]
+
+def plot_risk_matrix(key: str) -> go.Figure:
+    """
+    Generates a product risk matrix plot.
+
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
+
+    Returns:
+        go.Figure: A bubble chart representing a risk matrix.
+    """
+    severity = [9, 10, 6, 8, 7, 5]
+    probability = [3, 2, 4, 3, 5, 1]
     risk_level = [s * p for s, p in zip(severity, probability)]
     text = ["False Positive", "False Negative", "Software Crash", "Contamination", "Reagent Exp.", "UI Lag"]
-    fig = go.Figure(data=go.Scatter(x=probability, y=severity, mode='markers+text', text=text, textposition="top center", marker=dict(size=risk_level, sizemin=10, color=risk_level, colorscale="Reds", showscale=True, colorbar_title="Risk Score")))
-    fig.update_layout(title='Risk Matrix (Severity vs. Probability)', xaxis_title='Probability of Occurrence', yaxis_title='Severity of Harm', xaxis=dict(range=[0, 6]), yaxis=dict(range=[0, 11]))
+    fig = go.Figure(data=go.Scatter(
+        x=probability, y=severity, mode='markers+text', text=text,
+        textposition="top center",
+        marker=dict(size=risk_level, sizemin=10, color=risk_level, colorscale="Reds", showscale=True, colorbar_title="Risk Score")
+    ))
+    fig.update_layout(
+        title='Risk Matrix (Severity vs. Probability)',
+        xaxis_title='Probability of Occurrence', yaxis_title='Severity of Harm',
+        xaxis=dict(range=[0, 6]), yaxis=dict(range=[0, 11])
+    )
     return fig
 
-def run_control_charts(key):
-    data = [np.random.normal(10, 0.5, 5) for _ in range(20)]; data[15:] = [np.random.normal(10.8, 0.5, 5) for _ in range(5)]
-    df = pd.DataFrame(data, columns=[f'm{i}' for i in range(1,6)]); df['mean'] = df.mean(axis=1); df['range'] = df.max(axis=1) - df.min(axis=1)
-    x_bar_cl = df['mean'].mean(); x_bar_a2 = 0.577; x_bar_ucl = x_bar_cl + x_bar_a2 * df['range'].mean(); x_bar_lcl = x_bar_cl - x_bar_a2 * df['range'].mean()
-    fig = go.Figure(); fig.add_trace(go.Scatter(x=df.index, y=df['mean'], name='Subgroup Mean', mode='lines+markers')); fig.add_hline(y=x_bar_cl, line_dash="dash", line_color="green", annotation_text="CL")
-    fig.add_hline(y=x_bar_ucl, line_dash="dot", line_color="red", annotation_text="UCL"); fig.add_hline(y=x_bar_lcl, line_dash="dot", line_color="red", annotation_text="LCL")
-    fig.update_layout(title="I-Chart (Shewhart Chart) for Process Monitoring"); return fig
 
-def get_software_risk_data():
-    return pd.DataFrame([{"Software Item": "Patient Result Algorithm", "IEC 62304 Class": "Class C"}, {"Software Item": "Database Middleware", "IEC 62304 Class": "Class B"}, {"Software Item": "UI Color Theme Module", "IEC 62304 Class": "Class A"}])
+def run_control_charts(key: str) -> go.Figure:
+    """
+    Generates a basic I-Chart (Shewhart chart).
 
-def plot_rft_gauge(key):
-    fig = go.Figure(go.Indicator(mode = "gauge+number", value = 82, title = {'text': "Right-First-Time Protocol Execution"}, gauge = {'axis': {'range': [None, 100]}, 'bar': {'color': "cornflowerblue"}})); return fig
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
 
-def run_anova_ttest_enhanced(key):
+    Returns:
+        go.Figure: An I-Chart for process monitoring.
+    """
+    np.random.seed(1)
+    data = [np.random.normal(10, 0.5, 5) for _ in range(20)]
+    data[15:] = [np.random.normal(10.8, 0.5, 5) for _ in range(5)]
+    df = pd.DataFrame(data, columns=[f'm{i}' for i in range(1, 6)])
+    df['mean'] = df.mean(axis=1)
+    df['range'] = df.max(axis=1) - df.min(axis=1)
+    x_bar_cl = df['mean'].mean()
+    x_bar_a2 = 0.577  # Constant for n=5 subgroups
+    x_bar_ucl = x_bar_cl + x_bar_a2 * df['range'].mean()
+    x_bar_lcl = x_bar_cl - x_bar_a2 * df['range'].mean()
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=df.index, y=df['mean'], name='Subgroup Mean', mode='lines+markers'))
+    fig.add_hline(y=x_bar_cl, line_dash="dash", line_color="green", annotation_text="CL")
+    fig.add_hline(y=x_bar_ucl, line_dash="dot", line_color="red", annotation_text="UCL")
+    fig.add_hline(y=x_bar_lcl, line_dash="dot", line_color="red", annotation_text="LCL")
+    fig.update_layout(title="I-Chart (Shewhart Chart) for Process Monitoring")
+    return fig
+
+
+def get_software_risk_data(key: str = "") -> pd.DataFrame:
+    """
+    Returns a DataFrame of software items and their IEC 62304 classification.
+    
+    Args:
+        key (str, optional): Unused. Defaults to "".
+        
+    Returns:
+        pd.DataFrame: A DataFrame of software risk data.
+    """
+    return pd.DataFrame([
+        {"Software Item": "Patient Result Algorithm", "IEC 62304 Class": "Class C"},
+        {"Software Item": "Database Middleware", "IEC 62304 Class": "Class B"},
+        {"Software Item": "UI Color Theme Module", "IEC 62304 Class": "Class A"}
+    ])
+
+
+def plot_rft_gauge(key: str) -> go.Figure:
+    """
+    Generates a gauge for Right-First-Time protocol execution rate.
+
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
+
+    Returns:
+        go.Figure: A gauge indicator.
+    """
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=82,
+        title={'text': "Right-First-Time Protocol Execution"},
+        gauge={'axis': {'range': [None, 100]}, 'bar': {'color': "cornflowerblue"}}
+    ))
+    return fig
+
+
+def run_anova_ttest_enhanced(key: str) -> None:
+    """
+    Renders an interactive module for comparing two groups using a t-test.
+
+    Args:
+        key (str): A unique key prefix for Streamlit widgets.
+    """
     st.info("Used to determine if there is a statistically significant difference between groups (e.g., reagent lots, instruments, or operators). This is fundamental for method transfer and comparability studies.")
     st.warning("**Regulatory Context:** FDA's guidance on Comparability Protocols; ISO 13485:2016, Section 7.5.6")
-    col1, col2 = st.columns([1,2]);
+    col1, col2 = st.columns([1, 2])
     with col1:
-        n_samples = st.slider("Samples per Group", 10, 100, 30, key=f"anova_n_{key}"); mean_shift = st.slider("Simulated Mean Shift in Lot B", 0.0, 5.0, 0.5, 0.1, key=f"anova_shift_{key}"); std_dev = st.slider("Group Standard Deviation", 0.5, 5.0, 2.0, 0.1, key=f"anova_std_{key}")
-    group_a = np.random.normal(10, std_dev, n_samples); group_b = np.random.normal(10 + mean_shift, std_dev, n_samples)
+        n_samples = st.slider("Samples per Group", 10, 100, 30, key=f"anova_n_{key}")
+        mean_shift = st.slider("Simulated Mean Shift in Lot B", 0.0, 5.0, 0.5, 0.1, key=f"anova_shift_{key}")
+        std_dev = st.slider("Group Standard Deviation", 0.5, 5.0, 2.0, 0.1, key=f"anova_std_{key}")
+    
+    np.random.seed(1)
+    group_a = np.random.normal(10, std_dev, n_samples)
+    group_b = np.random.normal(10 + mean_shift, std_dev, n_samples)
     df = pd.melt(pd.DataFrame({'Lot A': group_a, 'Lot B': group_b}), var_name='Group', value_name='Measurement')
+    
     with col2:
-        fig = px.box(df, x='Group', y='Measurement', title="Performance Comparison with Box & Violin Plots", points='all'); fig.add_trace(go.Violin(x=df['Group'], y=df['Measurement'], box_visible=False, line_color='rgba(0,0,0,0)', fillcolor='rgba(0,0,0,0)', points=False, name='Distribution')); st.plotly_chart(fig, use_container_width=True)
-    t_stat, p_value = stats.ttest_ind(group_a, group_b); st.subheader("Statistical Interpretation")
-    if p_value < 0.05: st.error(f"**Actionable Insight:** The difference is statistically significant (p-value = {p_value:.4f}). Action: An investigation is required. Lot B cannot be considered comparable.")
-    else: st.success(f"**Actionable Insight:** No statistically significant difference was detected (p-value = {p_value:.4f}). The lots are comparable.")
-    return None
+        fig = px.box(df, x='Group', y='Measurement', title="Performance Comparison with Box & Violin Plots", points='all')
+        fig.add_trace(go.Violin(x=df['Group'], y=df['Measurement'], box_visible=False, line_color='rgba(0,0,0,0)', fillcolor='rgba(0,0,0,0)', points=False, name='Distribution'))
+        st.plotly_chart(fig, use_container_width=True)
+    
+    t_stat, p_value = stats.ttest_ind(group_a, group_b)
+    st.subheader("Statistical Interpretation")
+    if p_value < 0.05:
+        st.error(f"**Actionable Insight:** The difference is statistically significant (p-value = {p_value:.4f}). Action: An investigation is required. Lot B cannot be considered comparable.")
+    else:
+        st.success(f"**Actionable Insight:** No statistically significant difference was detected (p-value = {p_value:.4f}). The lots are comparable.")
 
-def run_regression_analysis_stat_enhanced(key):
-    st.info("Linear regression is critical for verifying linearity and assessing correlation. The statsmodels output provides the detailed metrics required for a regulatory submission."); st.warning("**Regulatory Context:** CLSI EP06; FDA Guidance on Bioanalytical Method Validation")
-    col1, col2 = st.columns([1,2]);
+
+def run_regression_analysis_stat_enhanced(key: str) -> None:
+    """
+    Renders an interactive module for linear regression analysis.
+
+    Args:
+        key (str): A unique key prefix for Streamlit widgets.
+    """
+    st.info("Linear regression is critical for verifying linearity and assessing correlation. The statsmodels output provides the detailed metrics required for a regulatory submission.")
+    st.warning("**Regulatory Context:** CLSI EP06; FDA Guidance on Bioanalytical Method Validation")
+    col1, col2 = st.columns([1, 2])
     with col1:
-        noise = st.slider("Measurement Noise (Std Dev)", 0, 50, 15, key=f"regr_noise_{key}"); bias = st.slider("Systematic Bias", -20, 20, 5, key=f"regr_bias_{key}")
-    conc = np.linspace(0, 400, 15); signal = 50 + 2.5 * conc + bias + np.random.normal(0, noise, 15); df = pd.DataFrame({'Concentration': conc, 'Signal': signal})
+        noise = st.slider("Measurement Noise (Std Dev)", 0, 50, 15, key=f"regr_noise_{key}")
+        bias = st.slider("Systematic Bias", -20, 20, 5, key=f"regr_bias_{key}")
+    
+    np.random.seed(1)
+    conc = np.linspace(0, 400, 15)
+    signal = 50 + 2.5 * conc + bias + np.random.normal(0, noise, 15)
+    df = pd.DataFrame({'Concentration': conc, 'Signal': signal})
+    
     with col2:
-        fig = px.scatter(df, x='Concentration', y='Signal', trendline='ols', title="Assay Performance Regression (Linearity)"); st.plotly_chart(fig, use_container_width=True)
-    X = sm.add_constant(df['Concentration']); model = sm.OLS(df['Signal'], X).fit(); st.subheader("Statistical Interpretation (Statsmodels OLS Summary)"); st.code(f"{model.summary()}"); st.success(f"**Actionable Insight:** The R-squared value of {model.rsquared:.3f} confirms excellent linearity. The p-value for the Concentration coefficient is < 0.001, proving a significant positive relationship.")
-    return None
+        fig = px.scatter(df, x='Concentration', y='Signal', trendline='ols', title="Assay Performance Regression (Linearity)")
+        st.plotly_chart(fig, use_container_width=True)
+    
+    X = sm.add_constant(df['Concentration'])
+    model = sm.OLS(df['Signal'], X).fit()
+    st.subheader("Statistical Interpretation (Statsmodels OLS Summary)")
+    st.code(f"{model.summary()}")
+    st.success(f"**Actionable Insight:** The R-squared value of {model.rsquared:.3f} confirms excellent linearity. The p-value for the Concentration coefficient is < 0.001, proving a significant positive relationship.")
 
-def run_descriptive_stats_stat_enhanced(key):
-    st.info("The foundational analysis for any analytical validation study (e.g., LoD, Precision)."); st.warning("**Regulatory Context:** CLSI EP17 (Detection Capability); CLSI EP05-A3 (Precision)")
-    data = np.random.normal(50, 2, 150); df = pd.DataFrame(data, columns=["value"]); fig = px.histogram(df, x="value", marginal="box", nbins=20, title="Descriptive Statistics for Limit of Detection (LoD) Study")
-    mean, std, cv = np.mean(data), np.std(data, ddof=1), (np.std(data, ddof=1) / np.mean(data)) * 100
-    ci_95 = stats.t.interval(0.95, len(data)-1, loc=mean, scale=stats.sem(data)); st.plotly_chart(fig, use_container_width=True); st.subheader("Summary Statistics")
-    col1, col2, col3, col4 = st.columns(4); col1.metric("Mean", f"{mean:.2f}"); col2.metric("Std Dev", f"{std:.2f}"); col3.metric("%CV", f"{cv:.2f}%"); col4.metric("95% CI for Mean", f"{ci_95[0]:.2f} - {ci_95[1]:.2f}")
+
+def run_descriptive_stats_stat_enhanced(key: str) -> None:
+    """
+    Renders a module for descriptive statistics analysis.
+
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
+    """
+    st.info("The foundational analysis for any analytical validation study (e.g., LoD, Precision).")
+    st.warning("**Regulatory Context:** CLSI EP17 (Detection Capability); CLSI EP05-A3 (Precision)")
+    np.random.seed(1)
+    data = np.random.normal(50, 2, 150)
+    df = pd.DataFrame(data, columns=["value"])
+    fig = px.histogram(df, x="value", marginal="box", nbins=20, title="Descriptive Statistics for Limit of Detection (LoD) Study")
+    st.plotly_chart(fig, use_container_width=True)
+    
+    mean, std = np.mean(data), np.std(data, ddof=1)
+    cv = (std / mean) * 100
+    ci_95 = stats.t.interval(0.95, len(data) - 1, loc=mean, scale=stats.sem(data))
+    st.subheader("Summary Statistics")
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Mean", f"{mean:.2f}")
+    col2.metric("Std Dev", f"{std:.2f}")
+    col3.metric("%CV", f"{cv:.2f}%")
+    col4.metric("95% CI for Mean", f"{ci_95[0]:.2f} - {ci_95[1]:.2f}")
     st.success("**Actionable Insight:** The low %CV and tight confidence interval provide high confidence that the LoD is reliably at 50 copies/mL, supporting the product claim for the 510(k) submission.")
-    return None
 
-def run_control_charts_stat_enhanced(key):
-    st.info("X-bar & R-charts are used to monitor the mean (X-bar) and variability (R-chart) of a process when data is collected in rational subgroups (e.g., 5 measurements per batch)."); st.warning("**Regulatory Context:** FDA 21 CFR 820.250 (Statistical Techniques); ISO TR 10017")
-    data = [np.random.normal(10, 0.5, 5) for _ in range(20)]; process_shift = st.checkbox("Simulate a Process Shift", key=f"spc_shift_{key}")
-    if process_shift: data[15:] = [np.random.normal(10.8, 0.5, 5) for _ in range(5)]
-    df = pd.DataFrame(data, columns=[f'm{i}' for i in range(1,6)]); df['mean'] = df.mean(axis=1); df['range'] = df.max(axis=1) - df.min(axis=1)
-    x_bar_cl = df['mean'].mean(); x_bar_a2 = 0.577; x_bar_ucl = x_bar_cl + x_bar_a2 * df['range'].mean(); x_bar_lcl = x_bar_cl - x_bar_a2 * df['range'].mean()
-    r_cl = df['range'].mean(); r_d4 = 2.114; r_ucl = r_d4 * r_cl
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1, subplot_titles=("X-bar Chart (Process Mean)", "R-Chart (Process Variability)")); fig.add_trace(go.Scatter(x=df.index, y=df['mean'], name='Subgroup Mean', mode='lines+markers'), row=1, col=1); fig.add_hline(y=x_bar_cl, line_dash="dash", line_color="green", annotation_text="CL", row=1, col=1); fig.add_hline(y=x_bar_ucl, line_dash="dot", line_color="red", annotation_text="UCL", row=1, col=1); fig.add_hline(y=x_bar_lcl, line_dash="dot", line_color="red", annotation_text="LCL", row=1, col=1)
-    fig.add_trace(go.Scatter(x=df.index, y=df['range'], name='Subgroup Range', mode='lines+markers', line=dict(color='orange')), row=2, col=1); fig.add_hline(y=r_cl, line_dash="dash", line_color="green", annotation_text="CL", row=2, col=1); fig.add_hline(y=r_ucl, line_dash="dot", line_color="red", annotation_text="UCL", row=2, col=1)
-    fig.update_layout(height=600, title_text="X-bar and R Control Charts"); st.plotly_chart(fig, use_container_width=True)
-    if process_shift: st.warning("**Actionable Insight:** A clear upward shift is detected in the X-bar chart starting at subgroup 15, while the R-chart remains stable. This indicates a special cause has shifted the process mean without affecting its variability. This requires an immediate investigation.")
-    else: st.success("**Actionable Insight:** The process is in a state of statistical control. Both the mean and variability are stable and predictable, providing a solid baseline for validation.")
-    return None
 
-def run_kaplan_meier_stat_enhanced(key):
-    st.info("Survival analysis is used to estimate the shelf-life of a product by modeling time-to-failure data, especially when some samples have not failed by the end of the study (censored data)."); st.warning("**Regulatory Context:** ICH Q1E (Evaluation of Stability Data); FDA Guidance: Q1A(R2)")
-    time_to_failure = np.random.weibull(2, 50) * 24; observed = np.random.binomial(1, 0.8, 50); df = pd.DataFrame({'Months': time_to_failure, 'Status': ['Failed' if o==1 else 'Censored' for o in observed]})
-    fig = px.ecdf(df, x="Months", color="Status", ecdfmode="survival", title="Kaplan-Meier Survival Plot for Shelf-Life Validation"); fig.add_hline(y=0.5, line_dash="dash", line_color="red", annotation_text="Median Survival"); st.plotly_chart(fig, use_container_width=True); st.subheader("Study Conclusion")
+def run_control_charts_stat_enhanced(key: str) -> None:
+    """
+    Renders an interactive X-bar and R control chart module.
+
+    Args:
+        key (str): A unique key prefix for Streamlit widgets.
+    """
+    st.info("X-bar & R-charts are used to monitor the mean (X-bar) and variability (R-chart) of a process when data is collected in rational subgroups (e.g., 5 measurements per batch).")
+    st.warning("**Regulatory Context:** FDA 21 CFR 820.250 (Statistical Techniques); ISO TR 10017")
+    np.random.seed(1)
+    data = [np.random.normal(10, 0.5, 5) for _ in range(20)]
+    process_shift = st.checkbox("Simulate a Process Shift", key=f"spc_shift_{key}")
+    if process_shift:
+        data[15:] = [np.random.normal(10.8, 0.5, 5) for _ in range(5)]
+    
+    df = pd.DataFrame(data, columns=[f'm{i}' for i in range(1, 6)])
+    df['mean'] = df.mean(axis=1)
+    df['range'] = df.max(axis=1) - df.min(axis=1)
+    
+    # X-bar Chart Constants (n=5)
+    x_bar_cl = df['mean'].mean()
+    x_bar_a2 = 0.577
+    x_bar_ucl = x_bar_cl + x_bar_a2 * df['range'].mean()
+    x_bar_lcl = x_bar_cl - x_bar_a2 * df['range'].mean()
+    
+    # R Chart Constants (n=5)
+    r_cl = df['range'].mean()
+    r_d4 = 2.114
+    r_ucl = r_d4 * r_cl
+    
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1, subplot_titles=("X-bar Chart (Process Mean)", "R-Chart (Process Variability)"))
+    fig.add_trace(go.Scatter(x=df.index, y=df['mean'], name='Subgroup Mean', mode='lines+markers'), row=1, col=1)
+    fig.add_hline(y=x_bar_cl, line_dash="dash", line_color="green", annotation_text="CL", row=1, col=1)
+    fig.add_hline(y=x_bar_ucl, line_dash="dot", line_color="red", annotation_text="UCL", row=1, col=1)
+    fig.add_hline(y=x_bar_lcl, line_dash="dot", line_color="red", annotation_text="LCL", row=1, col=1)
+    
+    fig.add_trace(go.Scatter(x=df.index, y=df['range'], name='Subgroup Range', mode='lines+markers', line=dict(color='orange')), row=2, col=1)
+    fig.add_hline(y=r_cl, line_dash="dash", line_color="green", annotation_text="CL", row=2, col=1)
+    fig.add_hline(y=r_ucl, line_dash="dot", line_color="red", annotation_text="UCL", row=2, col=1)
+    
+    fig.update_layout(height=600, title_text="X-bar and R Control Charts")
+    st.plotly_chart(fig, use_container_width=True)
+    
+    if process_shift:
+        st.warning("**Actionable Insight:** A clear upward shift is detected in the X-bar chart starting at subgroup 15, while the R-chart remains stable. This indicates a special cause has shifted the process mean without affecting its variability. This requires an immediate investigation.")
+    else:
+        st.success("**Actionable Insight:** The process is in a state of statistical control. Both the mean and variability are stable and predictable, providing a solid baseline for validation.")
+
+
+def run_kaplan_meier_stat_enhanced(key: str) -> None:
+    """
+    Renders a Kaplan-Meier survival plot for shelf-life analysis.
+
+    Args:
+        key (str): A unique key for Streamlit widgets (unused).
+    """
+    st.info("Survival analysis is used to estimate the shelf-life of a product by modeling time-to-failure data, especially when some samples have not failed by the end of the study (censored data).")
+    st.warning("**Regulatory Context:** ICH Q1E (Evaluation of Stability Data); FDA Guidance: Q1A(R2)")
+    np.random.seed(1)
+    time_to_failure = np.random.weibull(2, 50) * 24
+    observed = np.random.binomial(1, 0.8, 50)
+    df = pd.DataFrame({'Months': time_to_failure, 'Status': ['Failed' if o == 1 else 'Censored' for o in observed]})
+    
+    fig = px.ecdf(df, x="Months", color="Status", ecdfmode="survival", title="Kaplan-Meier Survival Plot for Shelf-Life Validation")
+    fig.add_hline(y=0.5, line_dash="dash", line_color="red", annotation_text="Median Survival")
+    st.plotly_chart(fig, use_container_width=True)
+    st.subheader("Study Conclusion")
     st.success("**Actionable Insight:** The survival curve demonstrates the probability of a unit remaining stable over time. The point where the curve crosses the 50% line provides the estimated median shelf-life. 'Censored' data points are critical for an accurate model and must be included in the analysis.")
-    return None
 
-def run_monte_carlo_stat_enhanced(key):
-    st.info("Monte Carlo simulation runs thousands of 'what-if' scenarios on a project plan with uncertain task durations to provide a probabilistic forecast."); st.warning("**Regulatory Context:** Aligned with risk-based planning principles in ISO 13485 and Project Management Body of Knowledge (PMBOK).")
+
+def run_monte_carlo_stat_enhanced(key: str) -> None:
+    """
+    Renders an interactive Monte Carlo simulation for project timeline risk analysis.
+
+    Args:
+        key (str): A unique key prefix for Streamlit widgets.
+    """
+    st.info("Monte Carlo simulation runs thousands of 'what-if' scenarios on a project plan with uncertain task durations to provide a probabilistic forecast.")
+    st.warning("**Regulatory Context:** Aligned with risk-based planning principles in ISO 13485 and Project Management Body of Knowledge (PMBOK).")
     n_sims = st.slider("Number of Simulations", 1000, 10000, 5000, key=f"mc_sims_{key}")
-    task1, task2, task3 = np.random.triangular(8,10,15,n_sims), np.random.triangular(15,20,30,n_sims), np.random.triangular(5,8,12,n_sims); total_times = task1 + task2 + task3
-    p50 = np.percentile(total_times, 50); p90 = np.percentile(total_times, 90)
-    fig = px.histogram(total_times, nbins=50, title="Monte Carlo Simulation of V&V Plan Duration"); fig.add_vline(x=p50, line_dash="dash", line_color="green", annotation_text=f"P50 (Median) = {p50:.1f} days"); fig.add_vline(x=p90, line_dash="dash", line_color="red", annotation_text=f"P90 (High Confidence) = {p90:.1f} days")
-    st.plotly_chart(fig, use_container_width=True); st.subheader("Risk-Adjusted Planning")
+    
+    np.random.seed(1)
+    task1 = np.random.triangular(8, 10, 15, n_sims)
+    task2 = np.random.triangular(15, 20, 30, n_sims)
+    task3 = np.random.triangular(5, 8, 12, n_sims)
+    total_times = task1 + task2 + task3
+    
+    p50 = np.percentile(total_times, 50)
+    p90 = np.percentile(total_times, 90)
+    
+    fig = px.histogram(total_times, nbins=50, title="Monte Carlo Simulation of V&V Plan Duration")
+    fig.add_vline(x=p50, line_dash="dash", line_color="green", annotation_text=f"P50 (Median) = {p50:.1f} days")
+    fig.add_vline(x=p90, line_dash="dash", line_color="red", annotation_text=f"P90 (High Confidence) = {p90:.1f} days")
+    st.plotly_chart(fig, use_container_width=True)
+    st.subheader("Risk-Adjusted Planning")
     st.error(f"**Actionable Insight:** While the median completion time is {p50:.1f} days, there is a 10% chance the project will take **{p90:.1f} days or longer**. The P90 estimate must be communicated to the PMO as the commitment date to account for risk.")
-    return None
 
-def create_v_model_figure(key=None):
-    fig = go.Figure(); fig.add_trace(go.Scatter(x=[1, 2, 3, 4], y=[4, 3, 2, 1], mode='lines+markers+text', text=["User Needs", "System Req.", "Architecture", "Module Design"], textposition="top right", line=dict(color='royalblue', width=2), marker=dict(size=10)))
+
+def create_v_model_figure(key: str = None) -> go.Figure:
+    """
+    Generates a plot of the V-Model for software/system development.
+
+    Args:
+        key (str, optional): Unused. Defaults to None.
+
+    Returns:
+        go.Figure: A plot visualizing the V-Model.
+    """
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=[1, 2, 3, 4], y=[4, 3, 2, 1], mode='lines+markers+text', text=["User Needs", "System Req.", "Architecture", "Module Design"], textposition="top right", line=dict(color='royalblue', width=2), marker=dict(size=10)))
     fig.add_trace(go.Scatter(x=[5, 6, 7, 8], y=[1, 2, 3, 4], mode='lines+markers+text', text=["Unit Test", "Integration Test", "System V&V", "UAT"], textposition="top left", line=dict(color='green', width=2), marker=dict(size=10)))
-    for i in range(4): fig.add_shape(type="line", x0=4-i, y0=1+i, x1=5+i, y1=1+i, line=dict(color="grey", width=1, dash="dot"))
-    fig.update_layout(title_text=None, showlegend=False, xaxis=dict(showticklabels=False, zeroline=False, showgrid=False), yaxis=dict(showticklabels=False, zeroline=False, showgrid=False)); return fig
+    for i in range(4):
+        fig.add_shape(type="line", x0=4 - i, y0=1 + i, x1=5 + i, y1=1 + i, line=dict(color="grey", width=1, dash="dot"))
+    fig.update_layout(title_text=None, showlegend=False, xaxis=dict(showticklabels=False, zeroline=False, showgrid=False), yaxis=dict(showticklabels=False, zeroline=False, showgrid=False))
+    return fig
+
 
 @st.cache_data
-def get_complaint_data():
-    """Generates a realistic, cached DataFrame of simulated complaint data."""
+def get_complaint_data() -> pd.DataFrame:
+    """
+    Generates and caches a realistic DataFrame of simulated post-market complaint data.
+
+    Returns:
+        pd.DataFrame: A DataFrame of simulated complaint data.
+    """
     np.random.seed(42)
     dates = pd.to_datetime(pd.date_range(start="2022-01-01", end="2023-12-31", freq="D"))
     complaint_types = ["False Positive", "Reagent Leak", "Instrument Error", "Software Glitch", "High CV", "No Result"]
@@ -818,6 +1264,7 @@ def get_complaint_data():
         "Severity": np.random.choice(["Low", "Medium", "High"], n_complaints, p=[0.6, 0.3, 0.1])
     })
     
+    # Inject a specific signal for the CAPA trigger
     n_signal = 15
     signal_df = pd.DataFrame({
         "Complaint_ID": [f"C-{i+301:04d}" for i in range(n_signal)],
@@ -831,19 +1278,33 @@ def get_complaint_data():
     final_df = pd.concat([df, signal_df]).sort_values("Date").reset_index(drop=True)
     return final_df
 
+
 # --- PAGE RENDERING FUNCTIONS ---
 
-def render_main_page():
+def render_main_page() -> None:
+    """Renders the main Executive Summary page."""
     st.title("🎯 The V&V Executive Command Center")
     st.markdown("A definitive showcase of data-driven leadership in a regulated GxP environment.")
     st.markdown("---")
-    render_director_briefing("Portfolio Objective", "This interactive application translates the core responsibilities of V&V leadership into a suite of high-density dashboards. It is designed to be an overwhelming and undeniable demonstration of the strategic, technical, and quality systems expertise required for a senior leadership role in the medical device industry.", "ISO 13485, ISO 14971, IEC 62304, 21 CFR 820, 21 CFR Part 11, CLSI Guidelines", "A well-led V&V function directly accelerates time-to-market, reduces compliance risk, lowers the cost of poor quality (COPQ), and builds a culture of data-driven excellence.")
+    render_director_briefing(
+        "Portfolio Objective", 
+        "This interactive application translates the core responsibilities of V&V leadership into a suite of high-density dashboards. It is designed to be an overwhelming and undeniable demonstration of the strategic, technical, and quality systems expertise required for a senior leadership role in the medical device industry.", 
+        "ISO 13485, ISO 14971, IEC 62304, 21 CFR 820, 21 CFR Part 11, CLSI Guidelines", 
+        "A well-led V&V function directly accelerates time-to-market, reduces compliance risk, lowers the cost of poor quality (COPQ), and builds a culture of data-driven excellence."
+    )
     st.info("Please use the navigation sidebar on the left to explore each of the core competency areas.")
 
-def render_design_controls_page():
+
+def render_design_controls_page() -> None:
+    """Renders the Design Controls, Planning & Risk Management page."""
     st.title("🏛️ 1. Design Controls, Planning & Risk Management")
     st.markdown("---")
-    render_director_briefing("The Design History File (DHF) as a Strategic Asset", "The DHF is the compilation of records that demonstrates the design was developed in accordance with the design plan and regulatory requirements. An effective V&V leader architects the DHF from day one.", "FDA 21 CFR 820.30 (Design Controls), ISO 13485:2016 (Section 7.3)", "Ensures audit readiness and provides a clear, defensible story of product development to regulatory bodies, accelerating submission review times.")
+    render_director_briefing(
+        "The Design History File (DHF) as a Strategic Asset", 
+        "The DHF is the compilation of records that demonstrates the design was developed in accordance with the design plan and regulatory requirements. An effective V&V leader architects the DHF from day one.", 
+        "FDA 21 CFR 820.30 (Design Controls), ISO 13485:2016 (Section 7.3)", 
+        "Ensures audit readiness and provides a clear, defensible story of product development to regulatory bodies, accelerating submission review times."
+    )
     
     with st.container(border=True):
         st.subheader("The V-Model: A Framework for Compliant V&V")
@@ -869,7 +1330,10 @@ def render_design_controls_page():
         "ISO 13485: 7.3.2 (Design Inputs), FDA Guidance on Design Controls", 
         key="req_risk"
     )
-def render_method_validation_page():
+
+
+def render_method_validation_page() -> None:
+    """Renders the Method Validation & Statistical Rigor page."""
     st.title("🔬 2. Method Validation & Statistical Rigor")
     st.markdown("---")
     render_director_briefing("Ensuring Data Trustworthiness", "Before a product can be validated, the methods used to measure it must be proven reliable. TMV, MSA, and CpK are the statistical pillars that provide objective evidence of this reliability.", "FDA Guidance on Analytical Procedures and Methods Validation; CLSI Guidelines (EP05, EP17, etc.); AIAG MSA Manual", "Prevents costly product failures and batch rejections caused by unreliable or incapable measurement and manufacturing processes. It is the foundation of data integrity.")
@@ -877,16 +1341,15 @@ def render_method_validation_page():
     render_metric_card("Measurement System Analysis (MSA/Gage R&R)", "Quantifies the variation in a measurement system attributable to operators and equipment. A key part of Test Method Validation (TMV).", plot_msa_analysis, "The box plot shows that Operator Charlie's measurements are consistently lower than Alice and Bob's, indicating a potential training issue or procedural deviation that requires investigation.", "AIAG MSA Reference Manual", key="msa")
     render_metric_card("Assay Performance Regression Analysis", "Linear regression is used to characterize key assay performance attributes. The full statistical output is critical for regulatory submissions.", run_assay_regression, "The statsmodels summary provides a comprehensive model of the assay's response with high statistical significance (p < 0.001) and an R-squared of 0.99+, confirming excellent linearity.", "CLSI EP06 - Evaluation of the Linearity of Quantitative Measurement Procedures", key="regression")
 
-def render_execution_monitoring_page():
+
+def render_execution_monitoring_page() -> None:
+    """Renders the Execution Monitoring & Quality Control page."""
     st.title("📈 3. Execution Monitoring & Quality Control")
     st.markdown("---")
     render_director_briefing("Statistical Process Control (SPC) for V&V", "SPC distinguishes between normal process variation ('common cause') and unexpected problems ('special cause') that require immediate investigation.", "FDA 21 CFR 820.250 (Statistical Techniques), ISO TR 10017, CLSI C24", "Provides an early warning system for process drifts, reducing the risk of large-scale, costly investigations and ensuring data integrity.")
     render_metric_card("Levey-Jennings & Westgard Rules", "The standard for monitoring daily quality control runs in a clinical lab. Westgard multi-rules provide high sensitivity for detecting systematic errors.", plot_levey_jennings_westgard, "The chart flags both a 1_3s rule violation (random error) and a 2_2s rule violation (systematic error). Action: Halt testing and launch a formal lab investigation.", "CLSI C24 - Statistical Quality Control for Quantitative Measurement Procedures", key="lj")
     render_metric_card("Individuals (I) Chart with Nelson Rules", "An I-chart (a type of Shewhart chart) is used to monitor individual data points over time. Nelson rules are powerful statistical tests to detect out-of-control conditions.", run_control_charts, "The I-chart shows a statistically significant upward shift at sample 15. This must be investigated to determine the assignable cause.", "FDA 21 CFR 820.250 (Statistical Techniques)", key="ichart")
-    render_metric_card("First-Pass Analysis", "Measures the percentage of tests completed successfully without rework. A primary indicator of process quality.", plot_rft_gauge, "A First-Pass (RFT) rate of 82% indicates that nearly 1 in 5 protocols requires rework. This provides a clear business case for process improvement initiatives.", "Lean Six Sigma Principles", key="fpa")
-# In render_execution_monitoring_page()
-# ... after the existing render_metric_card calls ...
-    
+    render_metric_card("Right-First-Time (RFT) Analysis", "Measures the percentage of protocols completed successfully without rework. A primary indicator of process quality.", plot_rft_gauge, "An RFT rate of 82% indicates that nearly 1 in 5 protocols requires rework. This provides a clear business case for process improvement initiatives.", "Lean Six Sigma Principles", key="fpa")
     render_metric_card(
         "AI-Powered Anomaly Detection",
         "This model uses an Isolation Forest algorithm to perform multivariate anomaly detection. It identifies outlier data points based on combinations of variables, finding subtle issues that traditional single-variable control charts might miss.",
@@ -903,7 +1366,10 @@ def render_execution_monitoring_page():
         "ICH Q8 (Quality by Design), FDA Guidance on Process Validation", 
         key="cqa_forecast"
     )
-def render_quality_management_page():
+
+
+def render_quality_management_page() -> None:
+    """Renders the Project & Quality Systems Management page."""
     st.title("✅ 4. Project & Quality Systems Management")
     st.markdown("---")
     render_director_briefing("Managing the V&V Ecosystem", "A V&V leader must manage project health, track quality issues, and ensure software compliance. These KPIs provide the necessary oversight to manage timelines, scope, and compliance risks.", "IEC 62304, 21 CFR Part 11, GAMP 5", "Improves project predictability, ensures software compliance (a major source of FDA 483s), and provides transparent reporting to stakeholders.")
@@ -922,7 +1388,7 @@ def render_quality_management_page():
         with st.container(border=True):
             st.markdown("**IEC 62304 Software Safety Classification**")
             risk_df = get_software_risk_data()
-            def classify_color(cls):
+            def classify_color(cls: str) -> str:
                 if cls == "Class C": return "background-color: #FF7F7F"
                 if cls == "Class B": return "background-color: #FFD700"
                 return "background-color: #90EE90"
@@ -965,7 +1431,7 @@ def render_quality_management_page():
             "Status": ["In Progress", "Planning", "Complete", "Complete"]
         }
         df_gamp = pd.DataFrame(gamp_data)
-        def gamp_color(val):
+        def gamp_color(val: str) -> str:
             color = "background-color: "
             if val == "Cat 5: Custom": return color + "#FF7F7F" # Red
             if val == "Cat 4: Configured": return color + "#FFD700" # Yellow
@@ -983,7 +1449,9 @@ def render_quality_management_page():
         st.checkbox("✅ Vulnerability Scanning Integrated into CI/CD Pipeline", value=True, disabled=True)
         st.error("**Actionable Insight:** A critical gap exists in third-party penetration testing. This is a major finding for any regulatory submission. **Action:** Immediately engage a qualified vendor to perform penetration testing before the final code freeze.")
 
-def render_stats_page():
+
+def render_stats_page() -> None:
+    """Renders the Advanced Statistical Methods Workbench page."""
     st.title("📐 5. Advanced Statistical Methods Workbench")
     st.markdown("This interactive workbench demonstrates proficiency in the specific statistical methods required for robust data analysis in a regulated V&V environment.")
     st.markdown("---")
@@ -1001,7 +1469,7 @@ def render_stats_page():
             run_kaplan_meier_stat_enhanced("km")
     with col2:
         with st.container(border=True):
-            st.subheader("Risk-to-Failure Correlation (Regression)")
+            st.subheader("Assay Performance (Linearity)")
             run_regression_analysis_stat_enhanced("regr")
         with st.container(border=True):
             st.subheader("Process Monitoring (SPC)")
@@ -1010,7 +1478,9 @@ def render_stats_page():
             st.subheader("Project Timeline Risk (Monte Carlo)")
             run_monte_carlo_stat_enhanced("mc")
 
-def render_strategic_command_page():
+
+def render_strategic_command_page() -> None:
+    """Renders the Strategic Command & Control page."""
     st.title("👑 6. Strategic Command & Control")
     st.markdown("---")
     render_director_briefing("Executive-Level V&V Leadership", "A true V&V leader operates at the intersection of technical execution, financial reality, and cross-functional strategy. This command center demonstrates the tools and mindset required to run V&V not as a cost center, but as a strategic business partner that drives value and mitigates enterprise-level risk.", "ISO 13485 Section 5 (Management Responsibility) & 6 (Resource Management)", "Aligns V&V department with corporate financial goals, improves resource allocation, de-risks regulatory pathways, and enables scalable growth through effective talent management and partner oversight." )
@@ -1120,6 +1590,7 @@ def render_strategic_command_page():
         st.info("Proactively manage talent, identify skill gaps for upcoming projects, and drive strategic team development.")
         skills = ['qPCR Method Validation', 'ELISA Development', 'GAMP 5 CSV', 'Statistical Analysis (Python)', 'ISO 14971 Risk Management', 'JMP/Minitab', 'Clinical Study Design']
         team = ['Alice', 'Bob', 'Charlie', 'Diana', 'Ethan']
+        np.random.seed(1)
         data = np.random.randint(1, 4, size=(len(team), len(skills)))
         df_skills = pd.DataFrame(data, index=team, columns=skills)
         df_skills.index.name = "Team Member"
@@ -1128,7 +1599,7 @@ def render_strategic_command_page():
         required_skills = st.multiselect("Select Required Project Skills", options=skills, default=['qPCR Method Validation', 'ISO 14971 Risk Management', 'Statistical Analysis (Python)'])
         
         st.subheader("2. Analyze Team Readiness")
-        def highlight_skills(df):
+        def highlight_skills(df: pd.DataFrame) -> pd.DataFrame:
             style = pd.DataFrame('', index=df.index, columns=df.columns)
             for skill in required_skills:
                 if skill in df.columns:
@@ -1138,12 +1609,8 @@ def render_strategic_command_page():
         st.dataframe(df_skills.style.apply(highlight_skills, axis=None).background_gradient(cmap='RdYlGn', vmin=1, vmax=3, axis=None).set_caption("Proficiency: 1 (Novice) to 3 (Expert)"), use_container_width=True)
 
         st.subheader("3. Formulate Action Plan")
-        missing_skills = [s for s in required_skills if s not in df_skills.columns]
-        if missing_skills:
-            st.error(f"**Critical Gap:** The team completely lacks the required skill(s): {', '.join(missing_skills)}.")
-        
-        team_readiness = df_skills[required_skills].sum(axis=1) if required_skills else pd.Series()
-        if not team_readiness.empty:
+        if required_skills:
+            team_readiness = df_skills[required_skills].sum(axis=1)
             best_fit = team_readiness.idxmax()
             st.success(f"**Staffing Insight:** **{best_fit}** is the strongest individual lead for this project based on the required skills. However, for ISO 14971, no one is rated as an expert (Level 3).")
             st.warning("**Development Action:** Prioritize ISO 14971 Risk Management training for at least two team members this quarter to mitigate this single-point-of-failure risk.")
@@ -1195,7 +1662,9 @@ def render_strategic_command_page():
             with st.container(border=True):
                 st.info(f"**Traceability Impact Analysis:** This change affects the following critical requirements in the RTM: {impact_text}")
 
-def render_post_market_page():
+
+def render_post_market_page() -> None:
+    """Renders the Post-Market Intelligence & CAPA Feeder page."""
     st.title("📡 7. Post-Market Intelligence & CAPA Feeder")
     render_director_briefing(
         "Closing the Quality Loop",
@@ -1248,8 +1717,6 @@ def render_post_market_page():
         region_counts.columns = ['Region', 'Count']
         fig_map = px.choropleth(region_counts, locations='Region', locationmode="USA-states", color='Count', scope="usa", title="Complaints by US State", color_continuous_scale="Reds")
         st.plotly_chart(fig_map, use_container_width=True)
-# In render_post_market_page()
-# ... after the existing content .............................................................................................................................................................................
     
     st.markdown("---")
     st.subheader("AI-Driven Predictive & Root Cause Analysis")
@@ -1258,20 +1725,21 @@ def render_post_market_page():
     with col1:
         with st.container(border=True):
             st.markdown("#### Predictive Maintenance Model")
-            st.markdown("This Random Forest model is trained on historical sensor data to predict the likelihood of an instrument failing in the near future. This enables proactive maintenance, reducing unplanned downtime and costly failed runs.")
+            st.markdown("This model is trained on historical sensor data to predict instrument failure. This enables proactive maintenance, reducing unplanned downtime and costly failed runs.")
             fig_pred = run_predictive_maintenance_model("pred_maint")
-            if fig_pred:
-                st.plotly_chart(fig_pred, use_container_width=True)
+            st.pyplot(fig_pred)
             st.success("**Actionable Insight:** The model shows that 'Pump_Pressure' is by far the most significant predictor of failure. The maintenance team should prioritize monitoring this parameter and consider it a leading indicator for service scheduling.")
 
     with col2:
         with st.container(border=True):
             st.markdown("#### NLP for Complaint Theme Discovery")
-            st.markdown("This NLP model uses Latent Dirichlet Allocation (LDA) to analyze free-text from customer complaints, automatically grouping them into distinct topics. This turns unstructured data into actionable, quantifiable themes without manual review.")
+            st.markdown("This NLP model analyzes free-text from complaints, automatically grouping them into distinct topics. This turns unstructured data into actionable, quantifiable themes without manual review.")
             run_nlp_topic_modeling("nlp_topic")
             st.success("**Actionable Insight:** The AI has automatically identified a recurring theme related to 'leaky reagent packs'. This quantitative signal elevates the issue's priority and provides a strong justification for launching a formal investigation with the packaging engineering team.")
-#===============================================================================================================================================================================
-def render_dhf_hub_page():
+
+
+def render_dhf_hub_page() -> None:
+    """Renders the Digital DHF & Workflow Hub page."""
     st.title("🗂️ 8. The Digital DHF & Workflow Hub")
     render_director_briefing(
         "Orchestrating the Design History File",
@@ -1304,21 +1772,16 @@ def render_dhf_hub_page():
                 **Version:** 1.0
                 ---
                 **1.0 Purpose:** To determine the Limit of Detection (LoD) of the ImmunoPro-A Assay, defined as the lowest concentration of analyte that can be detected with 95% probability.
-
                 **2.0 Scope:** This protocol applies to the ImmunoPro-A Assay on the QuidelOrtho-100 platform.
-
                 **3.0 Traceability to Requirements:**
                 - **DI-002:** Analytical sensitivity (LoD) shall be <= 50 copies/mL.
-
                 **4.0 Method/Procedure:**
                 - Prepare a dilution series of the analyte standard from 100 copies/mL down to 5 copies/mL.
                 - Test each dilution level with 20 replicates across 3 different reagent lots and 2 instruments.
                 - Run a negative control (0 copies/mL) with 60 replicates.
-                
                 **5.0 Acceptance Criteria:**
                 - The hit rate at the claimed LoD (50 copies/mL) must be ≥ 95%.
                 - The hit rate for the negative control must be ≤ 5%.
-
                 **6.0 Data Analysis Plan:**
                 - Data will be analyzed using Probit regression to calculate the 95% detection probability concentration.
                 - Results will be summarized in a table showing hit rates for each level.
@@ -1330,24 +1793,22 @@ def render_dhf_hub_page():
                 **Version:** 1.0
                 ---
                 **1.0 Summary:** The LoD study was executed per protocol AVP-LOD-01. The results confirm that the ImmunoPro-A Assay meets the required analytical sensitivity.
-
                 **2.0 Deviations:**
                 - **DEV-001:** One replicate at the 25 copies/mL level on Instrument #2 was invalidated due to an operator error. The replicate was repeated successfully. Impact: None.
-
                 **3.0 Results vs. Acceptance Criteria:**
                 | Concentration (copies/mL) | Replicates | Hits | Hit Rate (%) | Acceptance Criteria | Pass/Fail |
-                |---|---|---|---|---|---|
+                |:---:|:---:|:---:|:---:|:---:|:---:|
                 | 50 | 60 | 59 | 98.3% | >= 95% | **PASS** |
                 | 25 | 60 | 52 | 86.7% | N/A | N/A |
                 | 10 | 60 | 31 | 51.7% | N/A | N/A |
                 | 0 | 60 | 2 | 3.3% | <= 5% | **PASS** |
-
                 **4.0 Conclusion:** The study successfully demonstrated a hit rate of 98.3% at 50 copies/mL, satisfying the acceptance criteria. The LoD is confirmed to be ≤ 50 copies/mL. Probit analysis estimates the 95% detection concentration at 38.5 copies/mL, providing a significant performance margin.
-
                 **5.0 Traceability:** This report provides objective evidence fulfilling requirement **DI-002**.
                 """)
-#------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def render_operations_page():
+
+
+def render_operations_page() -> None:
+    """Renders the V&V Operations & Automation page."""
     st.title("⚙️ 9. V&V Operations & Automation")
     render_director_briefing(
         "Building a High-Performance V&V Engine",
@@ -1359,8 +1820,8 @@ def render_operations_page():
     st.subheader("🧪 Test Automation & Efficiency")
     with st.container(border=True):
         col1, col2 = st.columns(2)
+        fig_pie, fig_dual = create_automation_dashboard("automation")
         with col1:
-            fig_pie, fig_dual = create_automation_dashboard("automation")
             st.plotly_chart(fig_pie, use_container_width=True)
         with col2:
             st.plotly_chart(fig_dual, use_container_width=True)
@@ -1378,7 +1839,9 @@ def render_operations_page():
         st.plotly_chart(fig_forecast, use_container_width=True)
         st.error("**Actionable Insight:** The heatmap reveals our primary analytical platform is severely bottlenecked during standard work hours. The AI forecast confirms that we will exceed 90% capacity within 4 months, jeopardizing the timelines for two upcoming projects. This data forms the basis of a CapEx request for a new instrument in the next budget cycle.")
 
-def render_qms_cockpit_page():
+
+def render_qms_cockpit_page() -> None:
+    """Renders the Integrated QMS Cockpit page."""
     st.title("✅ 10. The Integrated QMS Cockpit")
     render_director_briefing(
         "Ensuring an 'Always Audit Ready' State",
@@ -1400,8 +1863,9 @@ def render_qms_cockpit_page():
         create_qms_kanban("qms")
         st.info("**Actionable Insight:** The Kanban board shows a potential bottleneck forming in the 'Investigation' phase. This indicates a need to either allocate more resources to initial investigations or to analyze the incoming quality records for recurring themes that could be addressed systemically.")
 
-#-----------------------------------------------------------------------------------------------------
-def render_business_metrics_page():
+
+def render_business_metrics_page() -> None:
+    """Renders the V&V Business & Quality Metrics Hub page."""
     st.title("💰 11. V&V Business & Quality Metrics Hub")
     render_director_briefing(
         "Driving V&V as a Business Unit",
@@ -1413,8 +1877,8 @@ def render_business_metrics_page():
     st.subheader("Departmental Operational Expense (OpEx) Management")
     with st.container(border=True):
         col1, col2 = st.columns(2)
+        fig_gauge, fig_bar = create_opex_dashboard("opex")
         with col1:
-            fig_gauge, fig_bar = create_opex_dashboard("opex")
             st.plotly_chart(fig_gauge, use_container_width=True)
         with col2:
             st.plotly_chart(fig_bar, use_container_width=True)
@@ -1426,7 +1890,8 @@ def render_business_metrics_page():
         st.error("**Actionable Insight:** The AI-powered model, trained on historical project data, clearly demonstrates that for every dollar invested in V&V during development, the company saves approximately $1.50 in post-launch COPQ. This provides a powerful, data-driven argument for fully funding V&V activities to maximize long-term profitability.")
 
 
-def render_portfolio_page():
+def render_portfolio_page() -> None:
+    """Renders the V&V Portfolio Command Center page."""
     st.title("📂 12. V&V Portfolio Command Center")
     render_director_briefing(
         "Managing the V&V Portfolio",
@@ -1442,13 +1907,16 @@ def render_portfolio_page():
 
     st.subheader("Integrated Resource Allocation Matrix")
     with st.container(border=True):
-        fig_alloc, over_allocated = create_resource_allocation_matrix("allocation")
+        # This function was refactored to return the fig and the over_allocated DataFrame
+        fig_alloc, over_allocated_df = create_resource_allocation_matrix("allocation")
         st.plotly_chart(fig_alloc, use_container_width=True)
-        if not over_allocated.empty:
-            for index, row in over_allocated.iterrows():
-                st.warning(f"**⚠️ Over-allocation Alert:** {index} is allocated at {row['Total']}%. This is unsustainable and poses a risk of burnout and project delays.")
+        if not over_allocated_df.empty:
+            for _, row in over_allocated_df.iterrows():
+                st.warning(f"**⚠️ Over-allocation Alert:** {row['Team Member']} is allocated at {row['Total Allocation']}%. This is unsustainable and poses a risk of burnout and project delays.")
 
-def render_learning_hub_page():
+
+def render_learning_hub_page() -> None:
+    """Renders the Organizational Learning & Knowledge Hub page."""
     st.title("🧠 13. Organizational Learning & Knowledge Hub")
     render_director_briefing(
         "Building a Learning Organization",
@@ -1462,8 +1930,10 @@ def render_learning_hub_page():
         st.info("This tool uses Natural Language Processing (NLP) to search the entire history of V&V reports, CAPAs, and ECOs to find relevant insights for new projects.")
         create_lessons_learned_search("lessons_learned")
 
-def render_global_strategy_page():
-    st.title("🌎 14. The Global V&V Strategy & R&D Pipeline Advisor")
+
+def render_global_strategy_page() -> None:
+    """Renders the Global V&V Strategy & R&D Pipeline Advisor page."""
+    st.title("🌎 14. Global V&V Strategy & R&D Pipeline Advisor")
     render_director_briefing(
         "Using V&V Data to Drive Corporate Strategy",
         "A visionary V&V leader uses data from past and present projects to de-risk and influence the future. This dashboard demonstrates the capability to manage global, multi-site V&V operations and provides a forward-looking AI tool that advises the R&D and Business Development teams on the risks and costs of the future product pipeline.",
@@ -1474,8 +1944,8 @@ def render_global_strategy_page():
     st.subheader("Global Method Transfer & Harmonization")
     with st.container(border=True):
         col1, col2 = st.columns(2)
+        fig_bar, df_status = create_method_transfer_dashboard("transfer")
         with col1:
-            fig_bar, df_status = create_method_transfer_dashboard("transfer")
             st.plotly_chart(fig_bar, use_container_width=True)
         with col2:
             st.markdown("##### Transfer Protocol Status")
@@ -1487,8 +1957,10 @@ def render_global_strategy_page():
         fig_quad = create_pipeline_advisor("pipeline")
         st.plotly_chart(fig_quad, use_container_width=True)
         st.error("**Actionable Insight:** Our AI model, based on historical data, predicts that Project Delta, while having the highest ROI, also carries the highest V&V cost and complexity. It recommends that executive leadership fully fund the projected V&V budget and timeline for this project, or risk significant delays. Conversely, Project Alpha is a low-risk, quick win that can be executed with minimal resource strain.")
-#-------------------------------------------------------------------------------------------------------------------------
+
+
 # --- SIDEBAR NAVIGATION AND PAGE ROUTING ---
+# Using a dictionary for clean page routing
 PAGES = {
     "Executive Summary": render_main_page,
     "1. Design Controls & Planning": render_design_controls_page,
@@ -1498,17 +1970,19 @@ PAGES = {
     "5. Advanced Statistical Methods": render_stats_page,
     "6. Strategic Command & Control": render_strategic_command_page,
     "7. Post-Market Surveillance": render_post_market_page,
-    "8. The Digital DHF Hub": render_dhf_hub_page,
+    "8. Digital DHF & Workflow Hub": render_dhf_hub_page,
     "9. V&V Operations & Automation": render_operations_page,
-    "10. The Integrated QMS Cockpit": render_qms_cockpit_page,
-    "11. V&V Business & Quality Metrics Hub": render_business_metrics_page,
-    "12. V&V Portfolio Command Center": render_portfolio_page,
-    "13. Organizational Learning Hub": render_learning_hub_page,
-    "14. The Global V&V Strategy Hub": render_global_strategy_page,
+    "10. Integrated QMS Cockpit": render_qms_cockpit_page,
+    "11. Business & Quality Metrics": render_business_metrics_page,
+    "12. Portfolio Command Center": render_portfolio_page,
+    "13. Knowledge & Learning Hub": render_learning_hub_page,
+    "14. Global Strategy & Pipeline": render_global_strategy_page,
 }
 
 st.sidebar.title("V&V Command Center")
 selection = st.sidebar.radio("Go to", list(PAGES.keys()))
 
-page_to_render = PAGES[selection]
-page_to_render()
+# Get the function to render the selected page
+page_to_render_func = PAGES[selection]
+# Call the function to render the page
+page_to_render_func()
