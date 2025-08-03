@@ -878,9 +878,8 @@ def render_e2e_validation_hub_page() -> None:
     render_manager_briefing(title="Executing a Compliant Validation Lifecycle (per ASTM E2500)", content="This hub presents the entire validation lifecycle in a single, comprehensive view, simulating the execution of a major capital project. It provides tangible evidence of owning deliverables from design and risk management through to final performance qualification.", reg_refs="FDA 21 CFR 820.75, ISO 13485:2016 (Sec 7.5.6), GAMP 5, ASTM E2500", business_impact="Ensures new manufacturing equipment is brought online on-time, on-budget, and in a fully compliant state, directly enabling production launch.", quality_pillar="Design Controls & Risk-Based Verification.", risk_mitigation="Prevents costly redesigns and validation failures by ensuring testability is built-in from the URS phase using tools like the V-Model and pFMEA.")
     
     with st.container(border=True):
-        st.info("**Purpose:** This Process Flow Diagram (PFD) illustrates our end-to-end equipment validation methodology, serving as a standardized framework for all capital projects. It defines the required deliverables, control gates, and feedback loops that ensure a compliant and efficient process.")
-        # --- CHANGE 1: Call the new PFD function ---
-        st.plotly_chart(create_pfd_validation_scheme(), use_container_width=True)
+        st.info("**Purpose:** This Process Map illustrates our end-to-end equipment validation methodology, serving as a standardized framework for all capital projects. It defines the required deliverables, control gates, and feedback loops that ensure a compliant and efficient process.")
+        st.plotly_chart(create_process_map_diagram(), use_container_width=True)
         st.success("**Actionable Insight:** This standardized scheme ensures all projects meet regulatory requirements consistently, reduces ambiguity for project teams, and accelerates equipment onboarding by defining clear deliverables and acceptance criteria upfront.")
     
     st.subheader("Live Project Artifacts", divider='blue')
@@ -889,7 +888,6 @@ def render_e2e_validation_hub_page() -> None:
         st.header("Phase 1: Design & Risk Management"); st.info("The 'left side of the V-Model' focuses on proactive planning.")
         with st.container(border=True): 
             st.subheader("Equipment Validation V-Model")
-            # --- CHANGE 2: Call the new, more detailed V-Model function ---
             st.plotly_chart(create_equipment_v_model(), use_container_width=True)
         with st.container(border=True): st.subheader("AI-Powered URS Risk Analysis"); st.plotly_chart(run_urs_risk_nlp_model("urs_risk"), use_container_width=True); st.success("**Actionable Insight:** Requirements 2, 3, and 5 flagged for rewrite due to high ambiguity.")
         with st.container(border=True): st.subheader("User Requirements Traceability (RTM)"); create_rtm_data_editor("rtm")
@@ -912,6 +910,7 @@ def render_e2e_validation_hub_page() -> None:
                 if spc_alerts:
                     st.error(f"**🚨 Automated SPC Alert Detected:** {spc_alerts[0]}")
                     st.success("**Actionable Insight:** The automated rule check has detected a process shift. This would trigger an immediate investigation with Process Engineering to identify the root cause before qualifying the equipment.")
+
 def render_specialized_validation_page() -> None:
     st.title("🧪 4. Specialized Validation Hubs")
     render_manager_briefing(title="Demonstrating Breadth of Expertise", content="Beyond standard equipment qualification, a Validation Manager must be fluent in specialized validation disciplines critical to GMP manufacturing. This hub showcases expertise in Computer System Validation (CSV), Cleaning Validation, and Process Characterization.", reg_refs="21 CFR Part 11, GAMP 5, PDA TR 29 (Cleaning Validation)", business_impact="Ensures all aspects of the manufacturing process, including supporting systems and processes, are fully compliant and controlled, preventing common sources of regulatory findings.", quality_pillar="Cross-functional Technical Leadership.", risk_mitigation="Ensures compliance in niche, high-risk areas like data integrity (CSV) and cross-contamination (Cleaning) that are frequent targets of audits.")
