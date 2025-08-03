@@ -76,10 +76,22 @@ def create_resource_allocation_matrix(key: str) -> Tuple[go.Figure, pd.DataFrame
             'A. Wong (Spec.)': [0.4, 0.4, 0.3], 'B. Zeller (Eng.)': [0.0, 0.2, 0.7]}
     df = pd.DataFrame(data, index=["Project Atlas", "Project Beacon", "Project Comet"])
     df_transposed = df.T
+
+    # --- FIX for ValueError: Colorscale breakpoints must be normalized between 0 and 1 ---
+    # We set our desired data range from 0 to 1.1 (to catch over-allocations).
+    color_range_max = 1.1
+    # Then we normalize our color stops to this range.
+    normalized_colorscale = [
+        [0.0, 'white'],                           # 0.0 in data -> 0.0 on scale
+        [0.5 / color_range_max, SUCCESS_GREEN],   # 0.5 in data -> normalized position
+        [1.0 / color_range_max, WARNING_AMBER],   # 1.0 in data -> normalized position
+        [1.0, ERROR_RED]                          # 1.1 in data -> 1.0 on scale
+    ]
     
     fig = px.imshow(df_transposed, text_auto=".0%", aspect="auto",
-                    color_continuous_scale=[(0, 'white'), (0.5, SUCCESS_GREEN), (1, WARNING_AMBER), (1.1, ERROR_RED)],
-                    range_color=[0, 1.1], labels=dict(x="Project", y="Team Member", color="Allocation"),
+                    color_continuous_scale=normalized_colorscale,
+                    range_color=[0, color_range_max], 
+                    labels=dict(x="Project", y="Team Member", color="Allocation"),
                     title="<b>Team Allocation by Project</b>")
     fig.update_traces(textfont_color='black')
     fig.update_layout(title_x=0.5, title_font_size=20, plot_bgcolor=BACKGROUND_GREY)
@@ -193,7 +205,6 @@ def plot_gantt_chart(key: str) -> go.Figure:
                       title="<b>Major Capital Project Timelines</b>",
                       color_discrete_map={'Execution': PRIMARY_COLOR, 'Planning': WARNING_AMBER})
     
-    # --- FIX for TypeError: Use add_shape and add_annotation separately ---
     today_date = pd.to_datetime('today')
     fig.add_shape(type="line",
         x0=today_date, y0=0, x1=today_date, y1=1, yref='paper',
