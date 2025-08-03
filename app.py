@@ -121,22 +121,17 @@ def create_validation_scheme_diagram() -> go.Figure:
 def create_equipment_v_model() -> go.Figure:
     """Creates a V-Model diagram specific to equipment validation."""
     fig = go.Figure()
-    # Specification Side
     fig.add_trace(go.Scatter(x=[1, 2, 3, 4], y=[4, 3, 2, 1], mode='lines+markers+text', text=["<b>User Requirements (URS)</b>", "<b>Functional Specs</b>", "<b>Design Specs (P&ID, Electrical)</b>", "<b>Build & Fabrication</b>"], textposition="bottom center", line=dict(color=PRIMARY_COLOR, width=3), marker=dict(size=15)))
-    # Verification Side
     fig.add_trace(go.Scatter(x=[5, 6, 7, 8], y=[1, 2, 3, 4], mode='lines+markers+text', text=["<b>FAT / SAT</b>", "<b>IQ (Installation)</b>", "<b>OQ (Operational)</b>", "<b>PQ (Performance)</b>"], textposition="top center", line=dict(color=SUCCESS_GREEN, width=3), marker=dict(size=15)))
-    # Traceability Lines
     links = [("URS ↔ PQ", 4), ("Functional Specs ↔ OQ", 3), ("Design Specs ↔ IQ", 2), ("Build ↔ FAT/SAT", 1)]
     for i, (text, y_pos) in enumerate(links):
         fig.add_shape(type="line", x0=4-i, y0=y_pos, x1=5+i, y1=y_pos, line=dict(color=NEUTRAL_GREY, width=1, dash="dot"))
         fig.add_annotation(x=4.5, y=y_pos + 0.1, text=text, showarrow=False, font=dict(size=10))
-    
     fig.add_annotation(x=2.5, y=4.5, text="<b>Specification / Design</b>", showarrow=False, font=dict(color=PRIMARY_COLOR, size=14))
     fig.add_annotation(x=6.5, y=4.5, text="<b>Verification / Qualification</b>", showarrow=False, font=dict(color=SUCCESS_GREEN, size=14))
     fig.update_layout(title_text="<b>Equipment Validation V-Model</b>", title_x=0.5, showlegend=False, xaxis=dict(visible=False), yaxis=dict(visible=False), plot_bgcolor='rgba(0,0,0,0)')
     return fig
 
-# ... (All other visualization functions remain here unchanged) ...
 def create_portfolio_health_dashboard(key: str) -> Styler:
     health_data = {'Project': ["Project Atlas (Bioreactor)", "Project Beacon (Assembly)", "Project Comet (Vision)"], 'Overall Status': ["Green", "Amber", "Green"], 'Schedule': ["On Track", "At Risk", "Ahead"], 'Budget': ["On Track", "Over", "On Track"], 'Lead': ["J. Doe", "S. Smith", "J. Doe"]}
     df = pd.DataFrame(health_data)
@@ -337,6 +332,26 @@ def plot_doe_optimization(key: str) -> go.Figure:
     fig.update_layout(title='<b>DOE Response Surface for Process Optimization</b>', scene=dict(xaxis_title='Temperature (°C)', yaxis_title='pH', zaxis_title='Product Yield (%)'), title_x=0.5, margin=dict(l=0, r=0, b=0, t=40))
     return fig
 
+def plot_cost_of_quality(key: str) -> go.Figure:
+    categories = ['Prevention Costs (e.g., Planning, Training)', 'Appraisal Costs (e.g., Testing, FAT/SAT)', 'Internal Failure Costs (e.g., Rework, Deviations)', 'External Failure Costs (e.g., Recall, Audit Findings)']
+    fig = go.Figure()
+    fig.add_trace(go.Bar(name='With Proactive Validation', x=[200, 300, 50, 10], y=categories, orientation='h', marker_color=SUCCESS_GREEN))
+    fig.add_trace(go.Bar(name='Without Proactive Validation', x=[50, 75, 800, 1500], y=categories, orientation='h', marker_color=ERROR_RED))
+    fig.update_layout(barmode='stack', title_text='<b>Strategic Value: The Cost of Quality (CoQ) Model</b>', title_x=0.5, xaxis_title='Annual Costs (in $ thousands)', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1), plot_bgcolor=BACKGROUND_GREY)
+    total_with = 200 + 300 + 50 + 10; total_without = 50 + 75 + 800 + 1500
+    fig.add_annotation(x=total_with, y=categories[0], text=f"<b>Total: ${total_with}k</b>", showarrow=False, xanchor='left', font_color=SUCCESS_GREEN)
+    fig.add_annotation(x=total_without, y=categories[0], text=f"<b>Total: ${total_without}k</b>", showarrow=False, xanchor='right', font_color=ERROR_RED)
+    return fig
+
+def display_team_skill_matrix(key: str) -> None:
+    skill_data = {'Team Member': ['J. Doe (Lead)', 'S. Smith (Eng. II)', 'A. Wong (Spec. I)', 'B. Zeller (Eng. I)'], 'CSV & Part 11': [5, 3, 2, 2], 'Cleaning Validation': [4, 4, 3, 1], 'Statistics (Cpk/DOE)': [5, 3, 2, 3], 'Project Management': [5, 2, 1, 1], 'Development Goal': ['Mentor team on advanced stats', 'Lead CSV for Project Beacon', 'Cross-train on Cleaning Val', 'Achieve PMP certification']}
+    df = pd.DataFrame(skill_data)
+    st.info("**Purpose:** A skills matrix is a critical tool for a manager to visualize team capabilities, identify skill gaps, and plan targeted development. *Proficiency Scale: 1 (Novice) to 5 (SME)*")
+    skill_cols = df.columns.drop(['Team Member', 'Development Goal'])
+    styled_df = df.style.background_gradient(cmap='Greens', subset=skill_cols, vmin=1, vmax=5).set_properties(**{'text-align': 'center'}, subset=skill_cols)
+    st.dataframe(styled_df, use_container_width=True, hide_index=True, height=215)
+    st.success("**Actionable Insight:** The matrix identifies a bottleneck in Project Management skills. Based on B. Zeller's development goal, I will approve the budget for PMP certification training. A. Wong will be assigned to the 'Atlas' Cleaning Validation PQ to gain hands-on experience, supported by S. Smith.")
+
 def plot_kaizen_roi_chart(key: str) -> go.Figure:
     fig = go.Figure(go.Waterfall(name="2023 Savings", orientation="v", measure=["relative", "relative", "relative", "total"], x=["Optimize CIP Cycle Time", "Implement PAT Sensor", "Reduce Line Changeover", "<b>Total Annual Savings</b>"], text=[f"+${v}k" for v in [150, 75, 220, 445]], y=[150, 75, 220, 445], connector={"line": {"color": NEUTRAL_GREY}}, increasing={"marker":{"color":SUCCESS_GREEN}}, decreasing={"marker":{"color":ERROR_RED}}, totals={"marker":{"color":PRIMARY_COLOR, "line": dict(color='white', width=2)}}))
     fig.update_layout(title="<b>Continuous Improvement (Kaizen) ROI Tracker</b>", yaxis_title="Annual Savings ($k)", title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
@@ -357,7 +372,7 @@ def run_urs_risk_nlp_model(key: str) -> go.Figure:
     fig.add_annotation(x=0.75, y=9, text="High Ambiguity, <br>High Impact:<br><b>REJECT/REWRITE!</b>", showarrow=False, bgcolor="#D32F2F", font=dict(color='white'), borderpad=4)
     fig.update_layout(title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
     return fig
-
+    
 def analyze_project_bottlenecks(df: pd.DataFrame) -> None:
     st.subheader("Automated Bottleneck Analysis", divider='blue')
     st.info("**Purpose:** This analysis automatically scans project data to identify the most critical upcoming constraint. It shifts management focus from past problems to future risks.")
