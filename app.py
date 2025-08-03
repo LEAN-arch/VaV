@@ -412,15 +412,88 @@ def run_urs_risk_nlp_model(key: str) -> go.Figure:
     fig.update_layout(title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
     return fig
     
-def analyze_project_bottlenecks(df: pd.DataFrame) -> None:
+def analyze_project_bottlenecks() -> None:
+    """
+    NEW: Provides a transparent, multi-factor analysis to identify and visualize project bottlenecks.
+    This replaces the previous "black box" alert with a full methodology and data-driven conclusion.
+    """
     st.subheader("Automated Bottleneck Analysis", divider='blue')
-    st.info("**Purpose:** This analysis automatically scans project data to identify the most critical upcoming constraint. It shifts management focus from past problems to future risks.")
-    risky_project = "Project Beacon (Assembly)"
+    st.info("""
+    **Methodology:** This analysis calculates a weighted risk score for each project across four key dimensions: **Schedule, Budget, Resource, and Technical Risk**. 
+    The project with the highest total score is flagged as the most critical bottleneck requiring immediate management attention. The radar chart below visualizes the risk profile of each project, where a larger, more skewed shape indicates higher risk.
+    """)
+
+    # 1. Raw Data Simulation
+    # Raw data for SPI, CPI, Resource Allocation %, and Open High Risks
+    data = {
+        'Project': ["Project Atlas (Bioreactor)", "Project Beacon (Assembly)", "Project Comet (Vision)"],
+        'SPI': [1.02, 0.92, 1.1],
+        'CPI': [1.01, 0.85, 1.05],
+        'Lead Allocation (%)': [90, 95, 60], # Lead for Beacon is highly utilized
+        'Open Risks (RPN>25)': [4, 9, 2] # Beacon has the most open risks
+    }
+    df = pd.DataFrame(data)
+
+    # 2. Risk Score Calculation (The transparent methodology)
+    # Convert metrics to a risk score (lower SPI/CPI is higher risk)
+    df['Schedule Risk'] = 1 / df['SPI']
+    df['Budget Risk'] = 1 / df['CPI']
+    df['Resource Risk'] = df['Lead Allocation (%)'] / 100
+    df['Technical Risk'] = df['Open Risks (RPN>25)']
+
+    # Normalize each risk factor to a 0-1 scale to compare them fairly
+    risk_categories = ['Schedule Risk', 'Budget Risk', 'Resource Risk', 'Technical Risk']
+    for col in risk_categories:
+        min_val = df[col].min()
+        max_val = df[col].max()
+        if (max_val - min_val) > 0:
+            df[f'{col} (Norm)'] = (df[col] - min_val) / (max_val - min_val)
+        else:
+            df[f'{col} (Norm)'] = 0 # Handle case where all values are the same
+            
+    # Calculate a final weighted score
+    weights = {'Schedule Risk (Norm)': 0.4, 'Resource Risk (Norm)': 0.3, 'Budget Risk (Norm)': 0.2, 'Technical Risk (Norm)': 0.1}
+    df['Total Risk Score'] = sum(df[col] * w for col, w in weights.items())
+
+    # 3. Visualization and Data Display
+    col1, col2 = st.columns([1, 1])
+    
+    with col1:
+        # The Radar Chart
+        fig = go.Figure()
+        for i, row in df.iterrows():
+            fig.add_trace(go.Scatterpolar(
+                r=row[[f'{cat} (Norm)' for cat in risk_categories]].tolist() + [row[f'{risk_categories[0]} (Norm)']], # Loop back to start
+                theta=risk_categories + [risk_categories[0]],
+                fill='toself',
+                name=row['Project']
+            ))
+        fig.update_layout(
+            polar=dict(radialaxis=dict(visible=True, range=[0, 1])),
+            showlegend=True,
+            title="<b>Project Risk Profile Comparison</b>",
+            margin=dict(l=40, r=40, t=60, b=40)
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col2:
+        # The transparent data table
+        st.markdown("###### Risk Score Calculation Data")
+        st.dataframe(df[['Project', 'Total Risk Score'] + [f'{cat} (Norm)' for cat in risk_categories]].round(2), use_container_width=True, hide_index=True)
+        
+    # 4. Dynamic, Data-Driven Insight
+    bottleneck_project = df.loc[df['Total Risk Score'].idxmax()]
+    primary_constraint = bottleneck_project[[f'{cat} (Norm)' for cat in risk_categories]].idxmax().replace(' (Norm)', '')
+
     st.error(f"""
     **⚠️ Automated Alert: Critical Bottleneck Identified**
-    - **Project at Risk:** `{risky_project}`
-    - **Primary Constraint:** **Resource Contention**. The project is currently behind schedule (SPI < 1.0) and over budget (CPI < 1.0). The **Resource Allocation Matrix** indicates the assigned Engineering Lead is approaching 100% allocation.
-    **Actionable Insight:** The convergence of schedule delays and high resource utilization on `{risky_project}` presents the most significant threat to the portfolio. **Recommendation:** Immediately convene with the project lead to identify tasks that can be delegated to a less-utilized engineer (e.g., B. Zeller) to de-risk the timeline.
+
+    - **Project at Highest Risk:** `{bottleneck_project['Project']}` (Total Score: {bottleneck_project['Total Risk Score']:.2f})
+    - **Primary Constraint:** **{primary_constraint}**. This factor is the largest contributor to the project's overall risk profile.
+    """)
+    st.success(f"""
+    **Actionable Insight:** The convergence of risk factors, particularly the **{primary_constraint}**, on `{bottleneck_project['Project']}` presents the most significant threat to the portfolio. 
+    **Recommendation:** Immediately convene with the project lead to develop a targeted recovery plan for this specific constraint. For example, if the constraint is Resource Risk, we must identify tasks that can be delegated to de-risk the timeline.
     """)
 
 # --- PAGE RENDERING FUNCTIONS ---
@@ -532,30 +605,39 @@ def render_strategic_management_page() -> None:
         st.subheader("AI-Powered Capital Project Duration Forecaster")
         run_project_duration_forecaster("duration_ai")
 
+# This is the complete and final `render_project_portfolio_page` function
+
 def render_project_portfolio_page() -> None:
     st.title("📂 2. Project & Portfolio Management")
     render_manager_briefing(title="Managing the Validation Project Portfolio", content="This command center demonstrates the ability to manage a portfolio of competing capital projects, balancing priorities, allocating finite resources, and providing clear, high-level status updates to the PMO and site leadership.", reg_refs="Project Management Body of Knowledge (PMBOK), ISO 13485: 5.6", business_impact="Provides executive-level visibility into Validation's contribution to corporate goals, enables proactive risk management, and ensures strategic alignment of the department's people.", quality_pillar="Project Governance & Oversight.", risk_mitigation="Prevents budget overruns and schedule delays through proactive monitoring of CPI/SPI metrics and resource allocation.")
-    with st.container(border=True): st.subheader("Capital Project Timelines (Gantt Chart)"); st.info("**Purpose:** The Gantt chart provides a high-level visual timeline for all major capital projects, highlighting dependencies and overall schedule health."); st.plotly_chart(plot_gantt_chart(key="gantt"), use_container_width=True)
+    
+    with st.container(border=True):
+        st.subheader("Capital Project Timelines (Gantt Chart)")
+        st.info("**Purpose:** The Gantt chart provides a high-level visual timeline for all major capital projects, highlighting dependencies and overall schedule health.")
+        st.plotly_chart(plot_gantt_chart(key="gantt"), use_container_width=True)
+
     with st.container(border=True):
         st.subheader("Capital Project Portfolio Health")
         col1, col2 = st.columns(2)
         with col1:
             st.info("**Purpose:** The RAG (Red-Amber-Green) status provides an immediate, at-a-glance summary of portfolio health for executive review and PMO meetings.")
-            st.markdown("##### RAG Status"); st.dataframe(create_portfolio_health_dashboard("portfolio"), use_container_width=True)
+            st.markdown("##### RAG Status")
+            st.dataframe(create_portfolio_health_dashboard("portfolio"), use_container_width=True)
         with col2:
             st.info("**Purpose:** Key Performance Indicators (KPIs) like SPI and CPI are industry-standard metrics (per PMBOK) to quantitatively track project performance against the established schedule and budget baselines.")
             st.markdown("##### Key Project Metrics (Project Beacon)")
             st.metric("Schedule Performance Index (SPI)", "0.92", "-8%", help="SPI < 1.0 indicates the project is behind schedule.")
             st.metric("Cost Performance Index (CPI)", "0.85", "-15%", help="CPI < 1.0 indicates the project is over budget.")
             st.success("**Actionable Insight:** Project Beacon's SPI and CPI are below 1.0, indicating it is both behind schedule and over budget. An urgent review meeting with the project lead is required to develop a recovery plan.")
+
     with st.container(border=True):
         st.info("**Purpose:** The Risk Burndown chart visually tracks the team's effectiveness at mitigating and closing high-impact project risks over time. The goal is for the 'Actual' line to be at or below the 'Target' line.")
         st.plotly_chart(plot_risk_burndown("risk_burn"), use_container_width=True)
         st.success("**Actionable Insight:** The team is effectively mitigating risks ahead of schedule, which reduces the probability of future project delays or quality issues.")
+        
     with st.container(border=True):
-        health_data = {'Project': ["Project Atlas (Bioreactor)", "Project Beacon (Assembly)", "Project Comet (Vision)"], 'SPI': [1.02, 0.92, 1.1], 'CPI': [1.01, 0.85, 1.05], 'Lead': ["J. Doe", "S. Smith", "J. Doe"]}
-        df_health = pd.DataFrame(health_data)
-        analyze_project_bottlenecks(df_health)
+        # The new, transparent analysis module is called here.
+        analyze_project_bottlenecks()
     with st.container(border=True):
         # This section links the project portfolio directly to team capabilities and development.
         c1, c2 = st.columns(2)
