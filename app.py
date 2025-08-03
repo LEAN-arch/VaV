@@ -276,7 +276,7 @@ def plot_predictive_compliance_risk() -> go.Figure:
 def create_pfd_validation_scheme() -> go.Figure:
     """
     Digitally renders the Equipment Validation Scheme as a Process Flow Diagram (PFD)
-    using domain-specific geometric shapes via SVG paths.
+    using domain-specific geometric shapes via SVG paths with contained text.
     """
     fig = go.Figure()
     
@@ -288,7 +288,7 @@ def create_pfd_validation_scheme() -> go.Figure:
         'sample_size': {'pos': [2.5, 1], 'text': '<b>Sample Size</b><br>Determined by “Binomial Power Analysis”<br>or AQL table', 'color': '#D35400', 'shape': 'data'},
         'acceptance': {'pos': [6, 5.5], 'text': '<b>Acceptance<br>Criteria</b>', 'color': PRIMARY_COLOR, 'shape': 'decision', 'h': 1.2, 'w': 1.2},
         'docs': {'pos': [8.5, 8], 'text': '<b>Documentation</b><br> • IQ, OQ, PQ Documentation<br> • MVP, DHF, DMR', 'color': PRIMARY_COLOR, 'shape': 'terminator'},
-        'onboarding': {'pos': [6.5, 3.5], 'text': '<b>Equipment Onboarding</b><br> • Defining calibration<br> • Maintenance schedule', 'color': PRIMARY_COLOR, 'shape': 'process'},
+        'onboarding': {'pos': [6.5, 3.5], 'text': '<b>Equipment<br>Onboarding</b><br> • Defining calibration<br> • Maintenance schedule', 'color': PRIMARY_COLOR, 'shape': 'process'},
         'sops': {'pos': [9.5, 3.5], 'text': '<b>Protocols & SOPs</b><br> • Personnel Training<br> • <span style="color:red">SOPs/Protocols</span>', 'color': PRIMARY_COLOR, 'shape': 'terminator'},
         'change_control': {'pos': [6, 1.5], 'text': '<b>Change Control</b><br>ECOs/DCOs', 'color': PRIMARY_COLOR, 'shape': 'process'},
     }
@@ -299,6 +299,11 @@ def create_pfd_validation_scheme() -> go.Figure:
         w, h = node.get('w', 1.5), node.get('h', 0.8)
         align = 'left' if key == 'val_activities' else 'center'
         shape_type = node.get('shape', 'process')
+        
+        # --- ENHANCEMENT: DYNAMIC FONT SIZING ---
+        font_size = 11
+        if shape_type == 'decision' or key in ['onboarding', 'change_control']:
+            font_size = 10 # Use smaller font for smaller shapes
         
         path = ""
         # Draw shape based on type
@@ -314,7 +319,7 @@ def create_pfd_validation_scheme() -> go.Figure:
             path = f"M {x_c},{y_c+h} L {x_c+w},{y_c} L {x_c},{y_c-h} L {x_c-w},{y_c} Z"
 
         fig.add_shape(type="path", path=path, line=dict(color="Black"), fillcolor=node['color'], opacity=0.9, layer="below")
-        fig.add_annotation(x=x_c, y=y_c, text=node['text'], showarrow=False, align=align, font=dict(color='white' if node['color'] not in [NEUTRAL_GREY] else 'black', size=11))
+        fig.add_annotation(x=x_c, y=y_c, text=node['text'], showarrow=False, align=align, font=dict(color='white' if node['color'] not in [NEUTRAL_GREY] else 'black', size=font_size))
 
     # Add Arrows
     def add_arrow(start_node_key, end_node_key, start_anchor, end_anchor):
@@ -332,7 +337,7 @@ def create_pfd_validation_scheme() -> go.Figure:
     fig.add_shape(type="path", path=" M 9.5,4.3 C 10.5,6 8.5,7 7,6.5", line=dict(color="black", width=3, dash='dot')); fig.add_annotation(x=7, y=6.5, ax=7.5, ay=6.8, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor="black")
     fig.add_shape(type="path", path=" M 6,2.7 C 5,3.5 5,4.5 6,5.5", line=dict(color=ERROR_RED, width=3, dash='dot')); fig.add_annotation(x=6, y=5.5, ax=5.7, ay=5, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor=ERROR_RED)
 
-    fig.update_layout(title="<b>Equipment Validation Process Flow Diagram (PFD)</b>", xaxis=dict(range=[0, 11.5], visible=False), yaxis=dict(range=[0, 10], visible=False), plot_bgcolor=BACKGROUND_GREY, margin=dict(l=20, r=20, t=40, b=20), height=750)
+    fig.update_layout(title="<b>Equipment Validation Process Flow Diagram (PFD)</b>", xaxis=dict(range=[0, 11.5], visible=False), yaxis=dict(range=[0, 10.5], visible=False), plot_bgcolor=BACKGROUND_GREY, margin=dict(l=20, r=20, t=40, b=20), height=750)
     return fig
 def create_equipment_v_model() -> go.Figure:
     """Creates a V-Model diagram specific to equipment validation."""
