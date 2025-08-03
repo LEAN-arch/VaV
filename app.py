@@ -191,7 +191,10 @@ def create_pipeline_advisor(key):
         lod_tightness = st.slider("Target LoD Tightness (vs. Predicate)", 0.1, 2.0, 1.0, 0.1, key=f"pipe_lod_{key}")
     
     # Prediction
-    new_project_data = [[new_tech, complexity, lod_tightness]]
+    new_project_data = pd.DataFrame(
+        [[new_tech, complexity, lod_tightness]],
+        columns=feature_names
+    )
     predicted_duration = model.predict(new_project_data)[0]
     
     col1, col2 = st.columns(2)
