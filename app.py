@@ -282,13 +282,11 @@ def plot_process_stability_chart(key: str) -> go.Figure:
     return fig
 
 def plot_csv_dashboard(key: str) -> None:
-    # --- FIX: Correct SyntaxError by separating statements ---
     col1, col2 = st.columns(2)
     with col1:
         st.metric("21 CFR Part 11 Compliance Status", "PASS", "✔️", help="Electronic records and signatures meet all technical and procedural requirements.")
     with col2:
         st.metric("Data Integrity Risk Score", "Low", "-5% vs Last Quarter", help="Calculated based on ALCOA+ principles.")
-    
     df = pd.DataFrame({ "GAMP 5 Category": ["Cat 4: Configured", "Cat 5: Custom"], "System": ["HMI Software", "LIMS Interface"], "Status": ["Validation Complete", "IQ/OQ In Progress"] })
     st.dataframe(style_dataframe(df), use_container_width=True)
 
@@ -429,12 +427,23 @@ def render_validation_program_health_page() -> None:
     st.title("⚕️ 5. Validation Program Health & Continuous Improvement")
     render_manager_briefing(title="Maintaining the Validated State", content="This dashboard demonstrates the ongoing oversight required to manage the site's validation program health. It showcases a data-driven approach to **Periodic Review**, the development of a risk-based **Revalidation Strategy**, and the execution of **Continuous Improvement Initiatives**.", reg_refs="FDA 21 CFR 820.75(c) (Revalidation), ISO 13485:2016 (Sec 8.4)", business_impact="Ensures long-term compliance, prevents costly process drifts, optimizes resource allocation for revalidation, and supports uninterrupted supply of medicine to patients.", quality_pillar="Lifecycle Management & Continuous Improvement.", risk_mitigation="Guards against compliance drift and ensures systems remain in a validated state throughout their operational life, preventing production holds or recalls.")
     tab1, tab2 = st.tabs(["📊 Periodic Review & Revalidation Strategy", "📈 Continuous Improvement Tracker"])
-    with tab1: st.subheader("Risk-Based Periodic Review Schedule"); review_data = {"System": ["Bioreactor C", "Purification A", "WFI System", "HVAC - Grade A", "Inspection System", "CIP Skid B"], "Risk Level": ["High", "High", "High", "Medium", "Medium", "Low"], "Last Review": ["2023-01-15", "2023-02-22", "2023-08-10", "2022-11-05", "2023-09-01", "2022-04-20"], "Next Due": ["2024-01-15", "2024-02-22", "2024-08-10", "2024-11-05", "2025-09-01", "2025-04-20"], "Status": ["Complete", "Complete", "On Schedule", "DUE", "On Schedule", "On Schedule"]}; review_df = pd.DataFrame(review_data)
-        def highlight_status(row): return ['background-color: #FFC7CE; color: black; font-weight: bold;'] * len(row) if row["Status"] == "DUE" else [''] * len(row)
-        st.dataframe(review_df.style.apply(highlight_status, axis=1), use_container_width=True, hide_index=True); st.error("**Actionable Insight:** The Periodic Review for the **HVAC - Grade A Area** is now due. A Validation Engineer will be assigned to initiate the review this week.")
-    with tab2: st.subheader("Continuous Improvement (Kaizen) Initiative Tracker"); st.info("**Context:** An effective validation program uses data to drive improvement. The **Deviation Trend** chart identifies operational problems (the 'why'), while the **ROI Tracker** provides the business case for funding solutions (the 'what for')."); col1, col2 = st.columns(2)
-        with col1: st.plotly_chart(plot_kaizen_roi_chart("kaizen_roi"), use_container_width=True)
-        with col2: st.plotly_chart(plot_deviation_trend_chart("deviation_trend"), use_container_width=True)
+    with tab1:
+        st.subheader("Risk-Based Periodic Review Schedule")
+        review_data = {"System": ["Bioreactor C", "Purification A", "WFI System", "HVAC - Grade A", "Inspection System", "CIP Skid B"], "Risk Level": ["High", "High", "High", "Medium", "Medium", "Low"], "Last Review": ["2023-01-15", "2023-02-22", "2023-08-10", "2022-11-05", "2023-09-01", "2022-04-20"], "Next Due": ["2024-01-15", "2024-02-22", "2024-08-10", "2024-11-05", "2025-09-01", "2025-04-20"], "Status": ["Complete", "Complete", "On Schedule", "DUE", "On Schedule", "On Schedule"]}
+        review_df = pd.DataFrame(review_data)
+        # --- FIX: Correct IndentationError ---
+        def highlight_status(row):
+            return ['background-color: #FFC7CE; color: black; font-weight: bold;'] * len(row) if row["Status"] == "DUE" else [''] * len(row)
+        st.dataframe(review_df.style.apply(highlight_status, axis=1), use_container_width=True, hide_index=True)
+        st.error("**Actionable Insight:** The Periodic Review for the **HVAC - Grade A Area** is now due. A Validation Engineer will be assigned to initiate the review this week.")
+    with tab2:
+        st.subheader("Continuous Improvement (Kaizen) Initiative Tracker")
+        st.info("**Context:** An effective validation program uses data to drive improvement. The **Deviation Trend** chart identifies operational problems (the 'why'), while the **ROI Tracker** provides the business case for funding solutions (the 'what for').")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.plotly_chart(plot_kaizen_roi_chart("kaizen_roi"), use_container_width=True)
+        with col2:
+            st.plotly_chart(plot_deviation_trend_chart("deviation_trend"), use_container_width=True)
         st.success("**Actionable Insight:** The rising deviation trend in the Bioreactor Suite C directly validates the focus of our Kaizen efforts (e.g., 'Implement PAT Sensor'). The ROI tracker provides a strong business case to leadership for continuing these improvement projects.")
 
 def render_documentation_hub_page() -> None:
