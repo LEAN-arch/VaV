@@ -1,10 +1,11 @@
-# app.py (Final, SME World-Class Version for Roche/Genentech - Corrected)
+# app.py (Final, SME World-Class Version for Roche/Genentech - Corrected v4)
 
 # --- IMPORTS ---
 import base64
 from typing import Tuple
 import streamlit as st
 import pandas as pd
+from pandas.io.formats.style import Styler
 import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
@@ -29,27 +30,22 @@ ERROR_RED = '#D32F2F'
 NEUTRAL_GREY = '#9E9E9E'
 BACKGROUND_GREY = '#F5F5F5'
 
-# --- EMBEDDED ASSETS (FIX for "don't use websites") ---
-# The Roche logo is now embedded as a Base64 string to make the app self-contained.
-ROCHE_LOGO_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAASwAAACWCAYAAAB22P+PAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAEleSURBVлгаAAAASUVORK5CYII=" # Truncated for display, the full string is in the code.
-ROCHE_LOGO_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAASwAAACWCAYAAAB22P+PAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAEleSURBVHhe7Z1/kFxVdfe/553Z3dnd2WUSSCBhkLAEYSEhIYEQiIeAhwIKigKiYlVBqaKCCiiIKy4uCoiKirIouMgFFgEBK2RJsIQEkhCSySQzk51kdnb3dPedeV/3mUl2NplMJpMkyft8P49pZt7UvZt7p5977vM+55zRNE0IIYSQkI1y2gUQQAghhGQIggUhhBBCRiiChSCEEELGKEiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBh-pMhBAlRCAoAAAABJRU5ErkJggg=="
+# --- EMBEDDED ASSETS ---
+ROCHE_LOGO_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAASwAAACWCAYAAAB22P+PAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAEleSURBVHhe7Z1/kFxVdfe/553Z3dnd2WUSSCBhkLAEYSEhIYEQiIeAhwIKigKiYlVBqaKCCiiIKy4uCoiKirIouMgFFgEBK2RJsIQEkhCSySQzk51kdnb3dPedeV/3mUl2NplMJpMkyft8P49pZt7UvZt7p5977vM+55zRNE0IIYSQkI1y2gUQQAghhGQIggUhhBBCRiiChSCEEELGKEiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBh-MhBAlRCAoAAAABJRU5ErkJggg=="
 
 # --- UTILITY & HELPER FUNCTIONS ---
-
-# --- FIX for TypeError: Updated function to accept all 6 arguments ---
 def render_manager_briefing(title: str, content: str, reg_refs: str, business_impact: str, quality_pillar: str, risk_mitigation: str) -> None:
     """Renders a standardized, professional briefing container."""
     with st.container(border=True):
         st.subheader(f"🤖 {title}", divider='blue')
         st.markdown(content)
+        # --- FIX for StreamlitAPIException: Correctly use icons ---
         st.info(f"**Business Impact:** {business_impact}", icon="🎯")
-        st.warning(f"**Key Standards & Regulations:** {reg_refs}", icon=" GAMP 5, a Risk-Based Approach to Compliant GxP Computerized Systems")
-        st.success(f"**Quality Culture Pillar:** {quality_pillar}")
-        st.error(f"**Strategic Risk Mitigation:** {risk_mitigation}")
+        st.warning(f"**Key Standards & Regulations:** {reg_refs}", icon="📜")
+        st.success(f"**Quality Culture Pillar:** {quality_pillar}", icon="🌟")
+        st.error(f"**Strategic Risk Mitigation:** {risk_mitigation}", icon="🛡️")
 
-# --- ENHANCED VISUALIZATION & DATA GENERATORS (Unchanged from previous correct version) ---
-# ... (all plot functions remain here, they are correct) ...
-def style_dataframe(df: pd.DataFrame):
+def style_dataframe(df: pd.DataFrame) -> Styler:
     """Applies a professional, consistent style to a DataFrame."""
     return df.style.set_properties(**{
         'background-color': '#FFFFFF',
@@ -59,13 +55,10 @@ def style_dataframe(df: pd.DataFrame):
         {'selector': 'th', 'props': [('background-color', ROCHE_BLUE), ('color', 'white'), ('font-weight', 'bold')]}
     ]).hide(axis="index")
 
-# --- NEW: Functions to fix NameErrors ---
+# --- DATA GENERATORS & VISUALIZATIONS ---
 
-def create_portfolio_health_dashboard(key: str):
-    """
-    NEW: Creates a styled RAG status dashboard for the project portfolio.
-    Fixes the NameError in render_project_portfolio_page.
-    """
+def create_portfolio_health_dashboard(key: str) -> Styler:
+    """Creates a styled RAG status dashboard for the project portfolio."""
     health_data = {
         'Project': ["Project Atlas (Bioreactor)", "Project Beacon (Assembly)", "Project Comet (Vision)"],
         'Overall Status': ["Green", "Amber", "Green"],
@@ -79,15 +72,14 @@ def create_portfolio_health_dashboard(key: str):
         color_map = {"Green": SUCCESS_GREEN, "Amber": WARNING_AMBER, "Red": ERROR_RED,
                      "On Track": SUCCESS_GREEN, "Ahead": SUCCESS_GREEN, 
                      "At Risk": WARNING_AMBER, "Over": ERROR_RED}
-        return f"background-color: {color_map.get(val, 'white')}; color: {'white' if val in color_map else 'black'};"
+        bg_color = color_map.get(val, 'white')
+        font_color = 'white' if val in color_map else 'black'
+        return f"background-color: {bg_color}; color: {font_color};"
         
     return df.style.applymap(style_status, subset=['Overall Status', 'Schedule', 'Budget']).set_properties(**{'text-align': 'center'}).hide(axis="index")
 
 def create_resource_allocation_matrix(key: str) -> Tuple[go.Figure, pd.DataFrame]:
-    """
-    NEW: Creates a resource allocation heatmap and identifies over-allocated staff.
-    Fixes the NameError in render_project_portfolio_page.
-    """
+    """Creates a resource allocation heatmap and identifies over-allocated staff."""
     data = {
         'J. Doe (Lead)': [0.5, 0.4, 0.2],
         'S. Smith (Eng.)': [0.1, 0.8, 0.0],
@@ -103,7 +95,7 @@ def create_resource_allocation_matrix(key: str) -> Tuple[go.Figure, pd.DataFrame
                     color_continuous_scale=[(0, 'white'), (0.5, SUCCESS_GREEN), (1, WARNING_AMBER), (1.1, ERROR_RED)],
                     range_color=[0, 1.1],
                     labels=dict(x="Project", y="Team Member", color="Allocation"),
-                    title="Team Allocation by Project")
+                    title="<b>Team Allocation by Project</b>")
     fig.update_traces(textfont_color='black')
     fig.update_layout(title_x=0.5, title_font_size=20)
     
@@ -114,10 +106,7 @@ def create_resource_allocation_matrix(key: str) -> Tuple[go.Figure, pd.DataFrame
     return fig, over_allocated
 
 def plot_cpk_analysis(key: str) -> go.Figure:
-    """
-    NEW: Creates a process capability (Cpk) chart for PQ.
-    Fixes the NameError in render_e2e_validation_hub_page.
-    """
+    """Creates a process capability (Cpk) chart for PQ."""
     rng = np.random.default_rng(42)
     data = rng.normal(loc=5.15, scale=0.05, size=100)
     LSL, USL, TARGET = 5.0, 5.3, 5.15
@@ -142,143 +131,90 @@ def plot_cpk_analysis(key: str) -> go.Figure:
         yaxis_title="Density",
         showlegend=False,
         title_font_size=20,
-        title_x=0.5
+        title_x=0.5,
+        plot_bgcolor=BACKGROUND_GREY
     )
     return fig
 
 def _render_professional_protocol_template() -> None:
-    """
-    NEW: Renders a simulated professional IQ/OQ protocol template.
-    Fixes the NameError in render_documentation_hub_page.
-    """
+    """Renders a simulated professional IQ/OQ protocol template."""
     st.header("IQ/OQ Protocol: VAL-TP-101")
     st.subheader("Automated Bioreactor Suite (ASSET-123)")
     st.divider()
-
-    st.subheader("1.0 Purpose")
+    st.markdown("##### 1.0 Purpose")
     st.write("The purpose of this protocol is to provide documented evidence that the Automated Bioreactor Suite (ASSET-123) is installed correctly (Installation Qualification - IQ) and operates according to its functional specifications (Operational Qualification - OQ).")
-
-    st.subheader("2.0 Scope")
+    st.markdown("##### 2.0 Scope")
     st.write("This protocol applies to ASSET-123 located in Building X, Room Y. It covers all critical components, software (HMI v2.1), instrumentation, and alarms as specified in the Design Specification (DOC-DS-001).")
-
-    st.subheader("3.0 Responsibilities")
-    st.markdown("""
-    - **Validation:** Author, execute, and report on this protocol.
-    - **Engineering:** Provide technical support during execution.
-    - **Quality Assurance:** Review and approve the protocol and final report.
-    """)
-
-    st.subheader("4.0 Test Procedures - OQ Section (Example)")
+    st.markdown("##### 4.0 Test Procedures - OQ Section (Example)")
     test_case_data = {
         'Test ID': ['OQ-TC-001', 'OQ-TC-002', 'OQ-TC-003'],
         'Test Description': ['Verify Temperature Control Loop', 'Challenge Agitator Speed Control', 'Test Critical Alarms (High Temp)'],
         'Acceptance Criteria': ['Maintain setpoint ± 0.5°C for 60 mins', 'Maintain setpoint ± 2 RPM across range', 'Alarm activates within 5s of exceeding setpoint'],
         'Result (Pass/Fail)': ['', '', '']
     }
-    st.table(test_case_data)
-
-    st.subheader("5.0 Acceptance Criteria for Protocol")
-    st.write("The protocol is considered successful if all test cases meet their pre-defined acceptance criteria. Any deviations must be documented, assessed for impact by a cross-functional team, and resolved with QA approval before the system can be considered qualified.")
-    st.divider()
+    st.dataframe(style_dataframe(pd.DataFrame(test_case_data)), use_container_width=True)
     st.warning("This is a simplified template for demonstration purposes.")
 
-
-# --- VISUALIZATION ENHANCEMENTS ---
-
 def plot_budget_variance(key: str) -> go.Figure:
-    """Enhanced Budget Variance Plot"""
     df = pd.DataFrame({'Category': ['CapEx Projects', 'OpEx (Team)', 'OpEx (Lab)', 'Contractors'], 'Budgeted': [2500, 850, 300, 400], 'Actual': [2650, 820, 310, 350]})
     df['Variance'] = df['Actual'] - df['Budgeted']
     df['Color'] = df['Variance'].apply(lambda x: ERROR_RED if x > 0 else SUCCESS_GREEN)
     df['Text'] = df['Variance'].apply(lambda x: f'${x:+,}k')
-    
     fig = go.Figure(go.Bar(
-        x=df['Variance'],
-        y=df['Category'],
-        orientation='h',
-        marker_color=df['Color'],
-        text=df['Text'],
-        textposition='auto',
-        hovertext=df.apply(lambda r: f"Budgeted: ${r['Budgeted']}k<br>Actual: ${r['Actual']}k", axis=1),
-        hoverinfo='y+hovertext'
-    ))
-    fig.update_traces(textfont=dict(color='white', size=14, family="Arial, sans-serif"))
+        x=df['Variance'], y=df['Category'], orientation='h', marker_color=df['Color'], text=df['Text'],
+        hovertext=df.apply(lambda r: f"Budgeted: ${r['Budgeted']}k<br>Actual: ${r['Actual']}k", axis=1), hoverinfo='y+hovertext'))
+    fig.update_traces(textposition='inside', textfont=dict(color='white', size=14, family="Arial, sans-serif"))
     fig.update_layout(
-        title_text='<b>Annual Budget Variance (Actual vs. Budgeted)</b>',
-        xaxis_title="Variance (in $ thousands)",
-        yaxis_title="",
-        bargap=0.4,
-        plot_bgcolor=BACKGROUND_GREY,
-        title_x=0.5,
-        font=dict(family="Arial, sans-serif", size=12)
-    )
+        title_text='<b>Annual Budget Variance (Actual vs. Budgeted)</b>', xaxis_title="Variance (in $ thousands)", yaxis_title="",
+        bargap=0.4, plot_bgcolor=BACKGROUND_GREY, title_x=0.5, font=dict(family="Arial, sans-serif", size=12))
     return fig
 
 def plot_headcount_forecast(key: str) -> go.Figure:
-    """Enhanced Headcount Forecast Plot"""
     df = pd.DataFrame({'Quarter': ['Q1', 'Q2', 'Q3', 'Q4'], 'Current FTEs': [8, 8, 8, 8], 'Forecasted Need': [8, 9, 10, 10]})
     df['Gap'] = df['Forecasted Need'] - df['Current FTEs']
-    
     fig = go.Figure()
     fig.add_trace(go.Bar(name='Current Headcount', x=df['Quarter'], y=df['Current FTEs'], marker_color=ROCHE_BLUE, text=df['Current FTEs']))
     fig.add_trace(go.Bar(name='Resource Gap', x=df['Quarter'], y=df['Gap'], base=df['Current FTEs'], marker_color=WARNING_AMBER, text=df['Gap'].apply(lambda g: f'+{g}' if g > 0 else '')))
-    
     fig.update_traces(textposition='inside', textfont_size=14)
-    fig.update_layout(
-        barmode='stack',
-        title='<b>Resource Gap Analysis: Headcount vs. Forecasted Need</b>',
-        yaxis_title="Full-Time Equivalents (FTEs)",
-        xaxis_title="Fiscal Quarter",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        title_x=0.5,
-        plot_bgcolor=BACKGROUND_GREY
-    )
+    fig.update_layout(barmode='stack', title='<b>Resource Gap Analysis: Headcount vs. Forecasted Need</b>',
+                      yaxis_title="Full-Time Equivalents (FTEs)", xaxis_title="Fiscal Quarter",
+                      legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1), title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
     return fig
 
 def display_departmental_okrs(key: str) -> None:
-    """Enhanced OKRs Display using a styled DataFrame"""
     df = pd.DataFrame({
         "Objective": ["Improve Validation Efficiency", "Enhance Team Capabilities", "Strengthen Compliance Posture"],
         "Key Result": ["Reduce Avg. Doc Cycle Time by 15%", "Certify 2 Engineers in GAMP 5", "Achieve Zero Major Findings in Next Audit"],
         "Status": ["On Track", "Complete", "On Track"]
     })
-    
     def style_status(val: str) -> str:
         color = SUCCESS_GREEN if val in ["On Track", "Complete"] else WARNING_AMBER
         return f"background-color: {color}; color: white; text-align: center; font-weight: bold;"
-
     styled_df = df.style.applymap(style_status, subset=['Status']).set_properties(**{'text-align': 'left'}).hide(axis="index")
     st.dataframe(styled_df, use_container_width=True)
 
-
 def run_project_duration_forecaster(key: str) -> None:
-    """Polished AI Forecaster UI"""
     rng = np.random.default_rng(42)
     historical_data = pd.DataFrame({'New_Automation_Modules': rng.integers(1, 10, 20), 'Process_Complexity_Score': rng.integers(1, 11, 20), 'URS_Count': rng.integers(20, 100, 20), 'Validation_Duration_Weeks': rng.uniform(8, 52, 20)})
     feature_names = ['New_Automation_Modules', 'Process_Complexity_Score', 'URS_Count']; X = historical_data[feature_names]; y = historical_data['Validation_Duration_Weeks']
     model = RandomForestRegressor(n_estimators=100, random_state=42).fit(X, y)
-    
     st.markdown("##### Adjust Project Parameters to Forecast Timeline:")
     col1, col2, col3 = st.columns(3)
     with col1: new_modules = st.slider("# of New Automation Modules", 1, 10, 4, key=f"pipe_modules_{key}")
     with col2: complexity = st.slider("Process Complexity (1-10)", 1, 10, 6, key=f"pipe_comp_{key}")
     with col3: urs_count = st.slider("# of URS", 20, 100, 50, key=f"pipe_urs_{key}")
-    
     new_project_data = pd.DataFrame([[new_modules, complexity, urs_count]], columns=feature_names)
     predicted_duration = model.predict(new_project_data)[0]
     st.metric("AI-Predicted Validation Duration (Weeks)", f"{predicted_duration:.1f}", help="Based on a Random Forest model trained on 20 historical projects. Includes IQ, OQ, and PQ phases.")
 
-
 def plot_gantt_chart(key: str) -> go.Figure:
-    """Enhanced Gantt Chart"""
     df = pd.DataFrame([
         dict(Task="Project Atlas (Bioreactor)", Start='2023-01-01', Finish='2023-12-31', Phase='Execution', Completion=0.8),
         dict(Task="Project Beacon (Assembly)", Start='2023-06-01', Finish='2024-06-30', Phase='Execution', Completion=0.4),
         dict(Task="Project Comet (Vision)", Start='2023-09-01', Finish='2024-03-31', Phase='Planning', Completion=0.9),
     ])
     fig = px.timeline(df, x_start="Start", x_end="Finish", y="Task", color="Phase",
-                      title="<b>Major Capital Project Timelines</b>",
-                      text="Task",
+                      title="<b>Major Capital Project Timelines</b>", text="Task",
                       color_discrete_map={'Execution': ROCHE_BLUE, 'Planning': WARNING_AMBER})
     fig.update_traces(textposition='inside', insidetextanchor='middle')
     fig.update_layout(title_x=0.5, yaxis_title=None, plot_bgcolor=BACKGROUND_GREY)
@@ -286,7 +222,6 @@ def plot_gantt_chart(key: str) -> go.Figure:
     return fig
 
 def plot_risk_burndown(key: str) -> go.Figure:
-    """Enhanced Risk Burndown Chart"""
     df = pd.DataFrame({'Month': ['Jan', 'Feb', 'Mar', 'Apr'], 'Open Risks (RPN > 25)': [12, 10, 7, 4], 'Target Burndown': [12, 9, 6, 3]})
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=df['Month'], y=df['Open Risks (RPN > 25)'], name='Actual Open Risks', fill='tozeroy', line=dict(color=ROCHE_BLUE, width=3), mode='lines+markers+text', text=df['Open Risks (RPN > 25)'], textposition='top center'))
@@ -295,14 +230,9 @@ def plot_risk_burndown(key: str) -> go.Figure:
     return fig
 
 def display_vendor_scorecard(key: str) -> None:
-    """Enhanced Vendor Scorecard with styling"""
     df = pd.DataFrame({
-        "Vendor": ["Vendor A (Automation)", "Vendor B (Components)"],
-        "On-Time Delivery (%)": [95, 88],
-        "FAT First-Pass Yield (%)": [92, 98],
-        "Doc Package GDP Error Rate (%)": [2, 8],
-        "Overall Score": [91, 85]
-    })
+        "Vendor": ["Vendor A (Automation)", "Vendor B (Components)"], "On-Time Delivery (%)": [95, 88],
+        "FAT First-Pass Yield (%)": [92, 98], "Doc Package GDP Error Rate (%)": [2, 8], "Overall Score": [91, 85]})
     styled_df = df.style.background_gradient(cmap='RdYlGn', subset=['On-Time Delivery (%)', 'FAT First-Pass Yield (%)', 'Overall Score'], vmin=70, vmax=100) \
                        .background_gradient(cmap='RdYlGn_r', subset=['Doc Package GDP Error Rate (%)'], vmin=0, vmax=10) \
                        .format('{:.0f}', subset=['On-Time Delivery (%)', 'FAT First-Pass Yield (%)', 'Doc Package GDP Error Rate (%)', 'Overall Score']) \
@@ -310,80 +240,43 @@ def display_vendor_scorecard(key: str) -> None:
     st.dataframe(styled_df, use_container_width=True)
 
 def create_rtm_data_editor(key: str) -> None:
-    """Enhanced RTM using interactive data_editor and styling"""
     df_data = [{"ID": "URS-001", "User Requirement": "System must achieve a batch titer of >= 5 g/L.", "Risk": "High", "Test Case": "PQ-TP-001", "Status": "PASS"},
                {"ID": "URS-012", "User Requirement": "System must have an E-Stop.", "Risk": "High", "Test Case": "OQ-TP-015", "Status": "PASS"},
                {"ID": "URS-031", "User Requirement": "HMI must be 21 CFR Part 11 compliant.", "Risk": "High", "Test Case": "CSV-TP-001", "Status": "GAP"}]
     df = pd.DataFrame(df_data)
-    
     coverage = len(df[df["Test Case"] != ""]) / len(df) * 100
     st.metric("Traceability Coverage", f"{coverage:.1f}%", help="Percentage of requirements linked to a test case.")
-    
     st.info("This is an interactive editor. Change 'Status' from 'GAP' to 'PASS' to see the alert disappear.")
-    
-    edited_df = st.data_editor(
-        df,
-        use_container_width=True,
-        hide_index=True,
-        column_config={
-            "Status": st.column_config.SelectboxColumn(
-                "Status",
-                options=["PASS", "FAIL", "GAP", "In Progress"],
-                required=True,
-            )
-        }
-    )
-    
+    edited_df = st.data_editor(df, use_container_width=True, hide_index=True,
+        column_config={"Status": st.column_config.SelectboxColumn("Status", options=["PASS", "FAIL", "GAP", "In Progress"], required=True,)})
     if any(edited_df["Status"] == "GAP"):
         st.error("Critical traceability gap identified! This blocks validation release until a test case is linked and passed.", icon="🚨")
 
 def create_v_model_figure(key: str = None) -> go.Figure:
-    """Enhanced V-Model Diagram"""
     fig = go.Figure()
-    # Specification Side
     fig.add_trace(go.Scatter(x=[1, 2, 3, 4], y=[4, 3, 2, 1], mode='lines+markers+text', text=["<b>URS</b>", "<b>Functional Spec</b>", "<b>Design Spec</b>", "<b>Code/Config</b>"], textposition="bottom center", line=dict(color=ROCHE_BLUE, width=3), marker=dict(size=15)))
-    # Verification Side
     fig.add_trace(go.Scatter(x=[5, 6, 7, 8], y=[1, 2, 3, 4], mode='lines+markers+text', text=["<b>Unit/FAT</b>", "<b>SAT</b>", "<b>IQ/OQ</b>", "<b>PQ</b>"], textposition="top center", line=dict(color=SUCCESS_GREEN, width=3), marker=dict(size=15)))
-    # Traceability Lines
     for i in range(4):
         fig.add_shape(type="line", x0=4-i, y0=1+i, x1=5+i, y1=1+i, line=dict(color=NEUTRAL_GREY, width=1, dash="dot"))
-    
     fig.add_annotation(x=2.5, y=4.5, text="<b>Specification / Design</b>", showarrow=False, font=dict(color=ROCHE_BLUE, size=14))
     fig.add_annotation(x=6.5, y=4.5, text="<b>Verification / Qualification</b>", showarrow=False, font=dict(color=SUCCESS_GREEN, size=14))
-    
     fig.update_layout(title_text="<b>The Validation V-Model (per GAMP 5)</b>", title_x=0.5, showlegend=False, xaxis=dict(visible=False), yaxis=dict(visible=False), plot_bgcolor='rgba(0,0,0,0)')
     return fig
 
 def plot_risk_matrix(key: str) -> None:
-    """Enhanced Risk Matrix Plot"""
-    severity = [10, 9, 6, 8, 7, 5]
-    probability = [2, 3, 4, 3, 5, 1]
+    severity = [10, 9, 6, 8, 7, 5]; probability = [2, 3, 4, 3, 5, 1]
     risk_level = [s * p for s, p in zip(severity, probability)]
     text = ["Contamination", "Incorrect Titer", "Software Crash", "Incorrect Buffer Add", "Sensor Failure", "HMI Lag"]
-    
-    fig = go.Figure(data=go.Scatter(
-        x=probability,
-        y=severity,
-        mode='markers+text',
-        text=text,
-        textposition="top center",
-        marker=dict(size=[r*1.5 for r in risk_level], sizemin=10, color=risk_level, colorscale="YlOrRd", showscale=True, colorbar_title="RPN")
-    ))
-    
-    # Add risk zones
+    fig = go.Figure(data=go.Scatter(x=probability, y=severity, mode='markers+text', text=text, textposition="top center",
+        marker=dict(size=[r*1.5 for r in risk_level], sizemin=10, color=risk_level, colorscale="YlOrRd", showscale=True, colorbar_title="RPN")))
     fig.add_shape(type="rect", x0=0, y0=0, x1=2.5, y1=5.5, fillcolor=SUCCESS_GREEN, opacity=0.2, layer="below", line_width=0)
     fig.add_shape(type="rect", x0=2.5, y0=5.5, x1=6, y1=11, fillcolor=ERROR_RED, opacity=0.2, layer="below", line_width=0)
     fig.add_annotation(x=1.25, y=2.75, text="Acceptable", showarrow=False, font_size=12, textangle=-45)
     fig.add_annotation(x=4.25, y=8.25, text="Unacceptable<br>(Mitigation Required)", showarrow=False, font_size=12, textangle=-45)
-    
     fig.update_layout(
-        title='<b>Process Risk Matrix (pFMEA)</b>',
-        xaxis_title='Probability of Occurrence',
-        yaxis_title='Severity of Effect',
-        xaxis=dict(range=[0, 6], tickmode='linear', tick0=1, dtick=1),
-        yaxis=dict(range=[0, 11], tickmode='linear', tick0=1, dtick=1),
-        plot_bgcolor=BACKGROUND_GREY, title_x=0.5
-    )
+        title='<b>Process Risk Matrix (pFMEA)</b>', xaxis_title='Probability of Occurrence', yaxis_title='Severity of Effect',
+        xaxis=dict(range=[0, 6], tickmode='linear', tick0=1, dtick=1), yaxis=dict(range=[0, 11], tickmode='linear', tick0=1, dtick=1),
+        plot_bgcolor=BACKGROUND_GREY, title_x=0.5)
     col1, col2 = st.columns([2,1])
     with col1:
         st.plotly_chart(fig, use_container_width=True)
@@ -422,14 +315,12 @@ def plot_csv_dashboard(key: str) -> None:
         st.metric("21 CFR Part 11 Compliance Status", "PASS", "✔️", help="Electronic records and signatures meet all technical and procedural requirements.")
     with col2:
         st.metric("Data Integrity Risk Score", "Low", "-5% vs Last Quarter", help="Calculated based on ALCOA+ principles.")
-    
     df = pd.DataFrame({ "GAMP 5 Category": ["Cat 4: Configured", "Cat 5: Custom"], "System": ["HMI Software", "LIMS Interface"], "Status": ["Validation Complete", "IQ/OQ In Progress"] })
     st.dataframe(style_dataframe(df), use_container_width=True)
 
 def plot_cleaning_validation_results(key: str) -> go.Figure:
     df = pd.DataFrame({'Sample Location': ['Swab 1 (Reactor Wall)', 'Swab 2 (Agitator Blade)', 'Swab 3 (Fill Nozzle)', 'Final Rinse'], 'TOC Result (ppb)': [150, 180, 165, 25], 'Acceptance Limit (ppb)': [500, 500, 500, 50]})
     df['Status'] = df.apply(lambda row: SUCCESS_GREEN if row['TOC Result (ppb)'] < row['Acceptance Limit (ppb)'] else ERROR_RED, axis=1)
-    
     fig = px.bar(df, x='Sample Location', y='TOC Result (ppb)', title='<b>Cleaning Validation Results (Total Organic Carbon)</b>', text='TOC Result (ppb)')
     fig.update_traces(marker_color=df['Status'])
     fig.add_trace(go.Scatter(x=df['Sample Location'], y=df['Acceptance Limit (ppb)'], name='Acceptance Limit', mode='lines+markers', line=dict(color=ERROR_RED, dash='dash', width=3)))
@@ -438,17 +329,12 @@ def plot_cleaning_validation_results(key: str) -> go.Figure:
 
 def plot_shipping_validation_temp(key: str) -> go.Figure:
     rng = np.random.default_rng(30); time = pd.to_datetime(pd.date_range("2023-01-01", periods=48, freq="H")); temp = rng.normal(4, 0.5, 48)
-    # Add an excursion for visual impact
     temp[24] = 8.5 
-    
     fig = px.line(x=time, y=temp, title='<b>Shipping Lane PQ: Temperature Profile</b>', markers=True)
     fig.add_hrect(y0=2, y1=8, line_width=0, fillcolor=SUCCESS_GREEN, opacity=0.2, annotation_text="In Spec (2-8°C)", annotation_position="top left")
-    
-    # Highlight excursion
     excursion_time = time[temp > 8]
     if not excursion_time.empty:
         fig.add_annotation(x=excursion_time[0], y=temp[24], text="Excursion!", showarrow=True, arrowhead=1, ax=0, ay=-40, bordercolor="#c7c7c7", borderwidth=2, borderpad=4, bgcolor=ERROR_RED, opacity=0.8, font=dict(color="white"))
-
     fig.update_layout(yaxis_title="Temperature (°C)", title_x=0.5, plot_bgcolor=BACKGROUND_GREY); return fig
 
 def plot_doe_optimization(key: str) -> go.Figure:
@@ -460,16 +346,11 @@ def plot_doe_optimization(key: str) -> go.Figure:
 
 def plot_kaizen_roi_chart(key: str) -> go.Figure:
     fig = go.Figure(go.Waterfall(
-        name="2023 Savings", orientation="v",
-        measure=["relative", "relative", "relative", "total"],
+        name="2023 Savings", orientation="v", measure=["relative", "relative", "relative", "total"],
         x=["Optimize CIP Cycle Time", "Implement PAT Sensor", "Reduce Line Changeover", "<b>Total Annual Savings</b>"],
-        text=[f"+${v}k" for v in [150, 75, 220, 445]],
-        y=[150, 75, 220, 445],
-        connector={"line": {"color": NEUTRAL_GREY}},
-        increasing={"marker":{"color":SUCCESS_GREEN}},
-        decreasing={"marker":{"color":ERROR_RED}},
-        totals={"marker":{"color":ROCHE_BLUE, "line": dict(color='white', width=2)}}
-    ))
+        text=[f"+${v}k" for v in [150, 75, 220, 445]], y=[150, 75, 220, 445], connector={"line": {"color": NEUTRAL_GREY}},
+        increasing={"marker":{"color":SUCCESS_GREEN}}, decreasing={"marker":{"color":ERROR_RED}},
+        totals={"marker":{"color":ROCHE_BLUE, "line": dict(color='white', width=2)}}))
     fig.update_layout(title="<b>Continuous Improvement (Kaizen) ROI Tracker</b>", yaxis_title="Annual Savings ($k)", title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
     return fig
 
@@ -481,19 +362,13 @@ def plot_deviation_trend_chart(key: str) -> go.Figure:
 
 def run_urs_risk_nlp_model(key: str) -> go.Figure:
     reqs = ["System shall have 99.5% uptime.", "Arm must move quickly.", "UI should be easy.", "System shall process 200 units/hour.", "System must be robust.", "Pump shall dispense 5.0 mL +/- 0.05 mL."]
-    labels = [0, 1, 1, 0, 1, 0] # 1 = Ambiguous, 0 = Clear
-    criticality = [9, 6, 4, 10, 7, 10]
+    labels = [0, 1, 1, 0, 1, 0]; criticality = [9, 6, 4, 10, 7, 10]
     df = pd.DataFrame({'Requirement': reqs, 'Risk_Label': labels, 'Criticality': criticality})
-    
     tfidf = TfidfVectorizer(stop_words='english'); X = tfidf.fit_transform(df['Requirement']); y = df['Risk_Label']
     model = LogisticRegression(random_state=42).fit(X, y); df['Ambiguity Score'] = model.predict_proba(X)[:, 1]
-    
-    fig = px.scatter(df, x='Ambiguity Score', y='Criticality', text=df.index,
-                     title='<b>URS Ambiguity Risk Model</b>',
+    fig = px.scatter(df, x='Ambiguity Score', y='Criticality', text=df.index, title='<b>URS Ambiguity Risk Model</b>',
                      labels={'Ambiguity Score': 'Predicted Ambiguity Score (0=Clear, 1=Ambiguous)', 'Criticality': 'Process Impact'},
-                     hover_data=['Requirement'], size=[15]*len(df),
-                     color='Ambiguity Score', color_continuous_scale='YlOrRd')
-    
+                     hover_data=['Requirement'], size=[15]*len(df), color='Ambiguity Score', color_continuous_scale='YlOrRd')
     fig.update_traces(textposition='top center'); 
     fig.add_vline(x=0.5, line_dash="dash", annotation_text="Action Threshold")
     fig.add_hline(y=7.5, line_dash="dash", annotation_text="High Criticality")
@@ -502,8 +377,7 @@ def run_urs_risk_nlp_model(key: str) -> go.Figure:
     fig.update_layout(title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
     return fig
 
-# --- PAGE RENDERING FUNCTIONS (Hyper-Focused, 6-Pillar Structure) ---
-# --- FIX for TypeError: All calls to render_manager_briefing are now updated with 6 arguments ---
+# --- PAGE RENDERING FUNCTIONS ---
 
 def render_main_page() -> None:
     st.title("🤖 Automated Equipment Validation Portfolio"); st.subheader("A Live Demonstration of Validation Leadership for Roche/Genentech"); st.divider()
@@ -513,13 +387,11 @@ def render_main_page() -> None:
     """)
     st.subheader("🔷 Core Competency: Risk-Based Validation (GAMP 5 & ASTM E2500)"); 
     st.markdown("My leadership philosophy is grounded in the principles of **GAMP 5 and ASTM E2500**: build quality and testability into the design, verify systems rigorously, and ensure the process reliably delivers quality product. This portfolio is the tangible evidence of that approach.")
-    
     st.subheader("Key Program Health KPIs", divider='blue'); 
     col1, col2, col3 = st.columns(3)
     col1.metric("Validation Program Compliance", "98%", delta="1%", help="Percentage of systems in a validated state and on their periodic review schedule.")
     col2.metric("Quality First Time Rate", "91%", delta="-2%", help="Percentage of validation protocols executed without deviation.")
     col3.metric("Capital Project On-Time Delivery", "95%", delta="5%", help="Validation deliverables completed on or before schedule for major capital projects.")
-    
     with st.expander("Click here for a guided tour of this portfolio's key capabilities"):
         st.info("""
         1.  **Start with Strategy (`Tab 1`):** See how I manage budgets, forecast resources, and set departmental goals (OKRs).
@@ -540,12 +412,10 @@ def render_strategic_management_page() -> None:
         quality_pillar="Resource Management & Financial Acumen.",
         risk_mitigation="Proactively identifies and mitigates resource shortfalls and budget variances before they impact project timelines."
     )
-    
     with st.container(border=True):
         st.subheader("Departmental OKRs (Objectives & Key Results)", help="Aligns team's daily work with high-level company goals.");
         display_departmental_okrs(key="okrs")
         st.success("**Actionable Insight:** The team is on track to meet its efficiency and compliance goals for the year.")
-    
     col1, col2 = st.columns(2)
     with col1:
         with st.container(border=True):
@@ -557,12 +427,10 @@ def render_strategic_management_page() -> None:
             st.subheader("Headcount & Resource Forecasting", help="Compares current team size against forecasted resource needs.")
             st.plotly_chart(plot_headcount_forecast(key="headcount"), use_container_width=True)
             st.success("**Actionable Insight:** The forecast indicates a resource gap of 2 FTEs by Q3. This data will be used to justify the hiring requisition for one Automation Engineer and one Validation Specialist.")
-    
     with st.container(border=True):
         st.subheader("AI-Powered Capital Project Duration Forecaster")
         run_project_duration_forecaster("duration_ai")
         st.success("**Actionable Insight:** The AI model provides data-driven timeline estimates to the PMO, improving the accuracy of site-wide project planning and resource allocation.")
-
 
 def render_project_portfolio_page() -> None:
     st.title("📂 2. Project & Portfolio Management")
@@ -574,11 +442,9 @@ def render_project_portfolio_page() -> None:
         quality_pillar="Project Governance & Oversight.",
         risk_mitigation="Prevents budget overruns and schedule delays through proactive monitoring of CPI/SPI metrics and resource allocation."
     )
-    
     with st.container(border=True):
         st.subheader("Capital Project Timelines (Gantt Chart)")
         st.plotly_chart(plot_gantt_chart(key="gantt"), use_container_width=True)
-    
     with st.container(border=True):
         st.subheader("Capital Project Portfolio Health")
         col1, col2 = st.columns(2)
@@ -590,7 +456,6 @@ def render_project_portfolio_page() -> None:
             st.metric("Schedule Performance Index (SPI)", "0.92", "-8%", help="SPI < 1.0 indicates the project is behind schedule.")
             st.metric("Cost Performance Index (CPI)", "0.85", "-15%", help="CPI < 1.0 indicates the project is over budget.")
             st.plotly_chart(plot_risk_burndown("risk_burn"), use_container_width=True)
-            
     col1, col2 = st.columns(2)
     with col1:
         with st.container(border=True):
@@ -628,7 +493,7 @@ def render_e2e_validation_hub_page() -> None:
             with st.container(border=True): st.subheader("User Requirements Traceability (RTM)"); create_rtm_data_editor("rtm")
             with st.container(border=True): st.subheader("Process Risk Management (pFMEA)"); plot_risk_matrix("fmea")
     elif phase == "2. FAT & SAT":
-        st.header("Phase 2: Factory & Site Acceptance Testing"); st.info("Purpose: To execute acceptance testing at the vendor's facility (FAT) and our site (SAT). The goal is to catch as many issues as possible *before* formal qualification begins.")
+        st.header("Phase 2: Factory & Site Acceptance Testing"); st.info("Purpose: To execute acceptance testing at the vendor's facility (FAT) and our site (SAT). The goal is to catch as many issues as possible *before* formal qualification begins."); 
         with st.container(border=True): st.subheader("FAT & SAT Summary Metrics"); display_fat_sat_summary("fat_sat")
     elif phase == "3. IQ & OQ":
         st.header("Phase 3: Installation & Operational Qualification"); st.info("Purpose: The IQ provides documented evidence of correct installation. The OQ challenges the equipment's functions to prove it operates as intended throughout its specified operating ranges."); st.plotly_chart(plot_oq_challenge_results("oq_plot"), use_container_width=True)
@@ -671,7 +536,6 @@ def render_validation_program_health_page() -> None:
         st.subheader("Risk-Based Periodic Review Schedule")
         review_data = {"System": ["Bioreactor C", "Purification A", "WFI System", "HVAC - Grade A", "Inspection System", "CIP Skid B"], "Risk Level": ["High", "High", "High", "Medium", "Medium", "Low"], "Last Review": ["2023-01-15", "2023-02-22", "2023-08-10", "2022-11-05", "2023-09-01", "2022-04-20"], "Next Due": ["2024-01-15", "2024-02-22", "2024-08-10", "2024-11-05", "2025-09-01", "2025-04-20"], "Status": ["Complete", "Complete", "On Schedule", "DUE", "On Schedule", "On Schedule"]}
         review_df = pd.DataFrame(review_data)
-        
         def highlight_status(row):
             return ['background-color: #FFC7CE; color: black; font-weight: bold;'] * len(row) if row["Status"] == "DUE" else [''] * len(row)
         st.dataframe(review_df.style.apply(highlight_status, axis=1), use_container_width=True, hide_index=True)
@@ -706,21 +570,16 @@ def render_documentation_hub_page() -> None:
             with st.expander("📋 **View Professional PQ Report Template**"):
                 _render_professional_report_template()
 
-# --- CORRECTED _render_professional_report_template FUNCTION ---
 def _render_professional_report_template() -> None:
     """Renders a world-class, professional PQ Report, mimicking an eQMS."""
     st.header("PQ Report: VAL-TR-201")
     st.subheader("Automated Bioreactor Suite (ASSET-123)")
     st.divider()
-
     meta_cols = st.columns(4)
-    meta_cols[0].metric("Document ID", "VAL-TR-201")
-    meta_cols[1].metric("Version", "1.0")
-    meta_cols[2].metric("Status", "Final")
-    meta_cols[3].metric("Approval Date", "2024-03-01")
+    meta_cols[0].metric("Document ID", "VAL-TR-201"); meta_cols[1].metric("Version", "1.0")
+    meta_cols[2].metric("Status", "Final"); meta_cols[3].metric("Approval Date", "2024-03-01")
     st.divider()
-
-    st.subheader("1.0 Summary & Conclusion")
+    st.markdown("##### 1.0 Summary & Conclusion")
     col1, col2 = st.columns([2, 1])
     with col1:
         st.write("Three successful, consecutive Performance Qualification (PQ) runs were executed on the Bioreactor System per protocol VAL-TP-201. The results confirm that the system reliably produces product meeting all pre-defined Critical Quality Attributes (CQAs) under normal manufacturing conditions.")
@@ -728,43 +587,25 @@ def _render_professional_report_template() -> None:
     with col2:
         st.metric("Overall Result", "PASS")
         st.metric("Final CpK (Product Titer)", "1.67", help="Exceeds target of >= 1.33")
-
-    st.subheader("2.0 Deviations & Impact Assessment")
+    st.markdown("##### 2.0 Deviations & Impact Assessment")
     with st.container(border=True):
         st.info("**DEV-001 (Run 2):** A pH sensor required recalibration mid-run. The event was documented in the batch record, the sensor was recalibrated per SOP, and the run successfully continued.")
         st.success("**Impact Assessment:** None. All CQA data for the batch remained within specification. The event and its resolution were reviewed and approved by QA.")
-
-    st.subheader("3.0 Results vs. Acceptance Criteria")
-    results_data = {
-        'Critical Quality Attribute (CQA)': ['Titer (g/L)', 'Viability (%)', 'Impurity A (%)'],
-        'Specification': ['>= 5.0', '>= 95%', '<= 0.5%'],
-        'Run 1 Result': [5.2, 97, 0.41],
-        'Run 2 Result': [5.1, 96, 0.44],
-        'Run 3 Result': [5.3, 98, 0.39],
-        'Pass/Fail': ['PASS', 'PASS', 'PASS']
-    }
+    st.markdown("##### 3.0 Results vs. Acceptance Criteria")
+    results_data = {'CQA': ['Titer (g/L)', 'Viability (%)', 'Impurity A (%)'], 'Specification': ['>= 5.0', '>= 95%', '<= 0.5%'],
+        'Run 1 Result': [5.2, 97, 0.41], 'Run 2 Result': [5.1, 96, 0.44], 'Run 3 Result': [5.3, 98, 0.39], 'Pass/Fail': ['PASS', 'PASS', 'PASS']}
     results_df = pd.DataFrame(results_data)
-
     def style_pass_fail(val: str) -> str:
-        """Applies color styling to the Pass/Fail column."""
-        if val == 'PASS':
-            return f"background-color: {SUCCESS_GREEN}; color: white; text-align: center; font-weight: bold;"
-        elif val == 'FAIL':
-            return f"background-color: {ERROR_RED}; color: white; text-align: center; font-weight: bold;"
-        return ""
-    
+        color = SUCCESS_GREEN if val == 'PASS' else ERROR_RED
+        return f"background-color: {color}; color: white; text-align: center; font-weight: bold;"
     styled_df = results_df.style.applymap(style_pass_fail, subset=['Pass/Fail'])
     st.dataframe(styled_df, use_container_width=True, hide_index=True)
-
-    st.subheader("4.0 Traceability")
+    st.markdown("##### 4.0 Traceability")
     st.warning("This report provides the objective evidence that fulfills user requirements **URS-001** (Titer) and **URS-040** (Purity) as documented in the Requirements Traceability Matrix (QA-DOC-105).")
-
-    st.subheader("5.0 Approvals")
+    st.markdown("##### 5.0 Approvals")
     st.markdown("---")
     sig_cols = st.columns(3)
-    sig_cols[0].success("✔️ **Validation Manager:** Approved `2024-03-01`")
-    sig_cols[1].success("✔️ **Manufacturing Head:** Approved `2024-03-01`")
-    sig_cols[2].success("✔️ **Quality Assurance Head:** Approved `2024-03-02`")
+    sig_cols[0].success("✔️ **Validation Manager:** Approved `2024-03-01`"); sig_cols[1].success("✔️ **Manufacturing Head:** Approved `2024-03-01`"); sig_cols[2].success("✔️ **Quality Assurance Head:** Approved `2024-03-02`")
 
 
 # --- SIDEBAR NAVIGATION AND PAGE ROUTING ---
@@ -778,16 +619,7 @@ PAGES = {
     "6. Documentation & Audit Defense": render_documentation_hub_page,
 }
 
-# --- FIX for image rendering ---
-st.sidebar.markdown(
-    f"""
-    <div style="display: flex; justify-content: center;">
-        <img src="data:image/png;base64,{ROCHE_LOGO_BASE64}" width="200">
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
+st.sidebar.markdown(f'<div style="display: flex; justify-content: center;"><img src="data:image/png;base64,{ROCHE_LOGO_BASE64}" width="200"></div>', unsafe_allow_html=True)
 st.sidebar.title("Validation Command Center")
 selection = st.sidebar.radio("Go to", list(PAGES.keys()))
 page_to_render_func = PAGES[selection]
