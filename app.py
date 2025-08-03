@@ -273,31 +273,61 @@ def plot_predictive_compliance_risk() -> go.Figure:
     fig.update_layout(height=250, margin=dict(l=30, r=30, t=50, b=20))
     return fig
     
-def create_validation_scheme_diagram() -> go.Figure:
-    """Digitally renders the Equipment Validation Scheme diagram using Plotly."""
+def create_pfd_validation_scheme() -> go.Figure:
+    """
+    Digitally renders the Equipment Validation Scheme as a Process Flow Diagram (PFD)
+    using domain-specific geometric shapes via SVG paths.
+    """
     fig = go.Figure()
+    
+    # Define node positions, text, colors, and now, PFD shapes
     nodes = {
-        'sys_desc': {'pos': [2, 9], 'text': '<b>System Description</b><br> • Specifications<br> • Functional/Performance Requirements', 'color': DARK_GREY},
-        'fat_sat': {'pos': [2, 7.5], 'text': '<b>FAT/SAT</b><br><i>Instrument/Manufacturer Related</i><br> • Instrument Components P&ID, electrical<br> • Instrument Performance, CV, repeatability', 'color': PRIMARY_COLOR},
-        'val_activities': {'pos': [2, 4.5], 'text': '''<b>Validation Activities</b><br><br><u>Installation Qualification (IQ)</u><br> • Meet manufacturer’s specifications<br> • Manuals, maintenance plans<br><u>Operational Qualification (OQ)</u><br> • Test accuracy, precision and repeatability<br> • Confirm instrument resolution<br><u>Performance Qualification (PQ)</u><br><i>Production scale testing (define batch numbers, procure<br>material, align w/R&D)</i><br> • Meet production throughput demand<br> • Repeatability of production batches, risk-based<br>   sampling sizes, binomial distribution or AQL table<br> • Accuracy and precision under production conditions''', 'color': NEUTRAL_GREY, 'h': 3.5, 'w': 3},
-        'sample_size': {'pos': [2, 1], 'text': '<b>Sample Size</b><br>Determined by “Binomial Power Analysis”<br>or AQL table', 'color': '#D35400'},
-        'acceptance': {'pos': [5.5, 5.5], 'text': '<b>Acceptance Criteria</b><br> • IQ Acceptance Criteria<br> • OQ Acceptance Criteria<br> • PQ Acceptance Criteria', 'color': PRIMARY_COLOR},
-        'docs': {'pos': [8, 7.5], 'text': '<b>Documentation</b><br> • IQ Documentation        • Master Validation Plan (MVP)<br> • OQ Documentation       • Design History File (DHF)<br> • PQ Documentation       • Device Master Record (DMR)', 'color': PRIMARY_COLOR, 'w': 2.5},
-        'onboarding': {'pos': [6.5, 3.5], 'text': '<b>Equipment Onboarding</b><br> • Defining calibration points/frequency<br> • Maintenance schedule', 'color': PRIMARY_COLOR, 'w': 2},
-        'sops': {'pos': [9, 3.5], 'text': '<b>Protocols & SOPs</b><br> • Personnel Training<br> • <span style="color:red">SOPs/Protocols</span>', 'color': PRIMARY_COLOR},
-        'change_control': {'pos': [5.5, 1.5], 'text': '<b>Change Control: ECOs/DCOs</b><br> • Change Request<br> • Impact Assessment<br> • Revalidation Requirement<br> • Engineering/Docs', 'color': PRIMARY_COLOR},
+        'sys_desc': {'pos': [2.5, 9], 'text': '<b>System Description</b><br> • Specifications<br> • Functional/Performance Requirements', 'color': DARK_GREY, 'shape': 'terminator'},
+        'fat_sat': {'pos': [2.5, 7.5], 'text': '<b>FAT/SAT</b><br><i>Instrument/Manufacturer Related</i><br> • Instrument Components P&ID, electrical<br> • Instrument Performance, CV, repeatability', 'color': PRIMARY_COLOR, 'shape': 'process'},
+        'val_activities': {'pos': [2.5, 4.5], 'text': '''<b>Validation Activities</b><br><br><u>Installation Qualification (IQ)</u><br> • Meet manufacturer’s specifications<br> • Manuals, maintenance plans<br><u>Operational Qualification (OQ)</u><br> • Test accuracy, precision and repeatability<br> • Confirm instrument resolution<br><u>Performance Qualification (PQ)</u><br><i>Production scale testing (define batch numbers, procure material, align w/R&D)</i>''', 'color': NEUTRAL_GREY, 'h': 3, 'w': 2.5, 'shape': 'process'},
+        'sample_size': {'pos': [2.5, 1], 'text': '<b>Sample Size</b><br>Determined by “Binomial Power Analysis”<br>or AQL table', 'color': '#D35400', 'shape': 'data'},
+        'acceptance': {'pos': [6, 5.5], 'text': '<b>Acceptance<br>Criteria</b>', 'color': PRIMARY_COLOR, 'shape': 'decision', 'h': 1.2, 'w': 1.2},
+        'docs': {'pos': [8.5, 8], 'text': '<b>Documentation</b><br> • IQ, OQ, PQ Documentation<br> • MVP, DHF, DMR', 'color': PRIMARY_COLOR, 'shape': 'terminator'},
+        'onboarding': {'pos': [6.5, 3.5], 'text': '<b>Equipment Onboarding</b><br> • Defining calibration<br> • Maintenance schedule', 'color': PRIMARY_COLOR, 'shape': 'process'},
+        'sops': {'pos': [9.5, 3.5], 'text': '<b>Protocols & SOPs</b><br> • Personnel Training<br> • <span style="color:red">SOPs/Protocols</span>', 'color': PRIMARY_COLOR, 'shape': 'terminator'},
+        'change_control': {'pos': [6, 1.5], 'text': '<b>Change Control</b><br>ECOs/DCOs', 'color': PRIMARY_COLOR, 'shape': 'process'},
     }
-    for key, node in nodes.items():
-        w, h, align = node.get('w', 1.8), node.get('h', 1), 'left' if key == 'val_activities' else 'center'
-        fig.add_shape(type="rect", x0=node['pos'][0]-w, y0=node['pos'][1]-h, x1=node['pos'][0]+w, y1=node['pos'][1]+h, line=dict(color="Black"), fillcolor=node['color'], opacity=0.8, layer="below")
-        fig.add_annotation(x=node['pos'][0], y=node['pos'][1], text=node['text'], showarrow=False, align=align, font=dict(color='white' if node['color'] in [PRIMARY_COLOR, DARK_GREY, '#D35400'] else 'black'))
 
-    def add_arrow(start_node, end_node, y_offset_start=-0.8, y_offset_end=0.8): fig.add_annotation(x=nodes[start_node]['pos'][0], y=nodes[start_node]['pos'][1] + nodes[start_node].get('h',1)*y_offset_start, ax=nodes[end_node]['pos'][0], ay=nodes[end_node]['pos'][1] + nodes[end_node].get('h',1)*y_offset_end, arrowhead=2, arrowwidth=2, arrowcolor="black")
-    add_arrow('sys_desc', 'fat_sat'); add_arrow('fat_sat', 'val_activities', y_offset_end=0.25); add_arrow('val_activities', 'sample_size', y_offset_start=-0.5)
-    fig.add_annotation(x=nodes['val_activities']['pos'][0]+nodes['val_activities'].get('w',1.8), y=nodes['val_activities']['pos'][1], ax=nodes['acceptance']['pos'][0]-nodes['acceptance'].get('w',1.8), ay=nodes['acceptance']['pos'][1], arrowhead=2, arrowwidth=2)
-    fig.add_shape(type="path", path=" M 8.5,3.5 C 9.5,5.5 7.5,6.5 5.5,5.5", line=dict(color="black", width=3)); fig.add_annotation(x=5.5, y=5.5, ax=6, ay=6, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor="black")
-    fig.add_shape(type="path", path=" M 5.5,2.5 C 4.5,3.5 4.5,4.5 5.5,5.5", line=dict(color=ERROR_RED, width=3)); fig.add_annotation(x=5.5, y=5.5, ax=5.2, ay=5, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor=ERROR_RED)
-    fig.update_layout(title="<b>Equipment Validation Blueprint</b>", xaxis=dict(range=[0, 11], visible=False), yaxis=dict(range=[0, 10], visible=False), plot_bgcolor=BACKGROUND_GREY, margin=dict(l=20, r=20, t=40, b=20), height=700)
+    # Add Shapes and Annotations for each node
+    for key, node in nodes.items():
+        x_c, y_c = node['pos']
+        w, h = node.get('w', 1.5), node.get('h', 0.8)
+        align = 'left' if key == 'val_activities' else 'center'
+        shape_type = node.get('shape', 'process')
+        
+        # Draw shape based on type
+        if shape_type in ['process', 'data']: # Rectangle
+            fig.add_shape(type="rect", x0=x_c-w, y0=y_c-h, x1=x_c+w, y1=y_c+h, line=dict(color="Black"), fillcolor=node['color'], opacity=0.9, layer="below")
+        elif shape_type == 'terminator': # Rounded Rectangle
+             fig.add_shape(type="rect", x0=x_c-w, y0=y_c-h, x1=x_c+w, y1=y_c+h, line=dict(color="Black"), fillcolor=node['color'], opacity=0.9, layer="below", corner_radius=20)
+        elif shape_type == 'decision': # Diamond
+            path = f"M {x_c},{y_c+h} L {x_c+w},{y_c} L {x_c},{y_c-h} L {x_c-w},{y_c} Z"
+            fig.add_shape(type="path", path=path, line=dict(color="Black"), fillcolor=node['color'], opacity=0.9, layer="below")
+            
+        fig.add_annotation(x=x_c, y=y_c, text=node['text'], showarrow=False, align=align, font=dict(color='white' if node['color'] not in [NEUTRAL_GREY] else 'black', size=11))
+
+    # Add Arrows
+    def add_arrow(start_node_key, end_node_key, start_anchor, end_anchor):
+        start_node, end_node = nodes[start_node_key], nodes[end_node_key]
+        x0, y0 = start_node['pos'][0] + start_anchor[0]*start_node.get('w', 1.5), start_node['pos'][1] + start_anchor[1]*start_node.get('h', 0.8)
+        x1, y1 = end_node['pos'][0] + end_anchor[0]*end_node.get('w', 1.5), end_node['pos'][1] + end_anchor[1]*end_node.get('h', 0.8)
+        fig.add_annotation(x=x1, y=y1, ax=x0, ay=y0, xref="x", yref="y", axref="x", ayref="y", showarrow=True, arrowhead=2, arrowwidth=2, arrowcolor="black")
+
+    add_arrow('sys_desc', 'fat_sat', (0, -1), (0, 1))
+    add_arrow('fat_sat', 'val_activities', (0, -1), (0, 1))
+    add_arrow('val_activities', 'sample_size', (0, -1), (0, 1))
+    add_arrow('val_activities', 'acceptance', (1, 0), (-1, 0))
+
+    # Feedback Loops
+    fig.add_shape(type="path", path=" M 9.5,4.3 C 10.5,6 8.5,7 7,6.5", line=dict(color="black", width=3, dash='dot')); fig.add_annotation(x=7, y=6.5, ax=7.5, ay=6.8, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor="black")
+    fig.add_shape(type="path", path=" M 6,2.7 C 5,3.5 5,4.5 6,5.5", line=dict(color=ERROR_RED, width=3, dash='dot')); fig.add_annotation(x=6, y=5.5, ax=5.7, ay=5, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor=ERROR_RED)
+
+    fig.update_layout(title="<b>Equipment Validation Process Flow Diagram (PFD)</b>", xaxis=dict(range=[0, 11], visible=False), yaxis=dict(range=[0, 10], visible=False), plot_bgcolor=BACKGROUND_GREY, margin=dict(l=20, r=20, t=40, b=20), height=750)
     return fig
 
 def create_equipment_v_model() -> go.Figure:
@@ -799,20 +829,26 @@ def render_project_portfolio_page() -> None:
                 for _, row in over_allocated_df.iterrows():
                     st.warning(f"**⚠️ Over-allocation Alert:** {row['Team Member']} is at {row['Total Allocation']:.0%} workload.")
                     
+# This is the complete, final version of this function to replace the old one.
+
 def render_e2e_validation_hub_page() -> None:
     st.title("🔩 Live E2E Validation Walkthrough: Project Atlas")
     render_manager_briefing(title="Executing a Compliant Validation Lifecycle (per ASTM E2500)", content="This hub presents the entire validation lifecycle in a single, comprehensive view, simulating the execution of a major capital project. It provides tangible evidence of owning deliverables from design and risk management through to final performance qualification.", reg_refs="FDA 21 CFR 820.75, ISO 13485:2016 (Sec 7.5.6), GAMP 5, ASTM E2500", business_impact="Ensures new manufacturing equipment is brought online on-time, on-budget, and in a fully compliant state, directly enabling production launch.", quality_pillar="Design Controls & Risk-Based Verification.", risk_mitigation="Prevents costly redesigns and validation failures by ensuring testability is built-in from the URS phase using tools like the V-Model and pFMEA.")
     
     with st.container(border=True):
-        st.info("**Purpose:** This blueprint illustrates our end-to-end equipment validation methodology, serving as a standardized framework for all capital projects. It defines the required deliverables, control gates, and feedback loops that ensure a compliant and efficient process.")
-        st.plotly_chart(create_validation_scheme_diagram(), use_container_width=True)
+        st.info("**Purpose:** This Process Flow Diagram (PFD) illustrates our end-to-end equipment validation methodology, serving as a standardized framework for all capital projects. It defines the required deliverables, control gates, and feedback loops that ensure a compliant and efficient process.")
+        # --- CHANGE 1: Call the new PFD function ---
+        st.plotly_chart(create_pfd_validation_scheme(), use_container_width=True)
         st.success("**Actionable Insight:** This standardized scheme ensures all projects meet regulatory requirements consistently, reduces ambiguity for project teams, and accelerates equipment onboarding by defining clear deliverables and acceptance criteria upfront.")
     
     st.subheader("Live Project Artifacts", divider='blue')
     col1, col2 = st.columns(2)
     with col1:
         st.header("Phase 1: Design & Risk Management"); st.info("The 'left side of the V-Model' focuses on proactive planning.")
-        with st.container(border=True): st.subheader("Equipment Validation V-Model"); st.plotly_chart(create_equipment_v_model(), use_container_width=True)
+        with st.container(border=True): 
+            st.subheader("Equipment Validation V-Model")
+            # --- CHANGE 2: Call the new, more detailed V-Model function ---
+            st.plotly_chart(create_equipment_v_model(), use_container_width=True)
         with st.container(border=True): st.subheader("AI-Powered URS Risk Analysis"); st.plotly_chart(run_urs_risk_nlp_model("urs_risk"), use_container_width=True); st.success("**Actionable Insight:** Requirements 2, 3, and 5 flagged for rewrite due to high ambiguity.")
         with st.container(border=True): st.subheader("User Requirements Traceability (RTM)"); create_rtm_data_editor("rtm")
         with st.container(border=True): st.subheader("Process Risk Management (pFMEA)"); plot_risk_matrix("fmea")
@@ -834,7 +870,6 @@ def render_e2e_validation_hub_page() -> None:
                 if spc_alerts:
                     st.error(f"**🚨 Automated SPC Alert Detected:** {spc_alerts[0]}")
                     st.success("**Actionable Insight:** The automated rule check has detected a process shift. This would trigger an immediate investigation with Process Engineering to identify the root cause before qualifying the equipment.")
-
 def render_specialized_validation_page() -> None:
     st.title("🧪 4. Specialized Validation Hubs")
     render_manager_briefing(title="Demonstrating Breadth of Expertise", content="Beyond standard equipment qualification, a Validation Manager must be fluent in specialized validation disciplines critical to GMP manufacturing. This hub showcases expertise in Computer System Validation (CSV), Cleaning Validation, and Process Characterization.", reg_refs="21 CFR Part 11, GAMP 5, PDA TR 29 (Cleaning Validation)", business_impact="Ensures all aspects of the manufacturing process, including supporting systems and processes, are fully compliant and controlled, preventing common sources of regulatory findings.", quality_pillar="Cross-functional Technical Leadership.", risk_mitigation="Ensures compliance in niche, high-risk areas like data integrity (CSV) and cross-contamination (Cleaning) that are frequent targets of audits.")
