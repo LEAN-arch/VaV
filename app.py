@@ -1,4 +1,4 @@
-# app.py (Final, SME World-Class Version for Roche/Genentech - Corrected v4)
+# app.py (Final, SME World-Class Version for Roche/Genentech - Corrected v5)
 
 # --- IMPORTS ---
 import base64
@@ -31,7 +31,7 @@ NEUTRAL_GREY = '#9E9E9E'
 BACKGROUND_GREY = '#F5F5F5'
 
 # --- EMBEDDED ASSETS ---
-ROCHE_LOGO_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAASwAAACWCAYAAAB22P+PAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAEleSURBVHhe7Z1/kFxVdfe/553Z3dnd2WUSSCBhkLAEYSEhIYEQiIeAhwIKigKiYlVBqaKCCiiIKy4uCoiKirIouMgFFgEBK2RJsIQEkhCSySQzk51kdnb3dPedeV/3mUl2NplMJpMkyft8P49pZt7UvZt7p5977vM+55zRNE0IIYSQkI1y2gUQQAghhGQIggUhhBBCRiiChSCEEELGKEiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBh-MhBAlRCAoAAAABJRU5ErkJggg=="
+ROCHE_LOGO_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAASwAAACWCAYAAAB22P+PAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAEleSURBVHhe7Z1/kFxVdfe/553Z3dnd2WUSSCBhkLAEYSEhIYEQiIeAhwIKigKiYlVBqaKCCiiIKy4uCoiKirIouMgFFgEBK2RJsIQEkhCSySQzk51kdnb3dPedeV/3mUl2NplMJpMkyft8P49pZt7UvZt7p5977vM+55zRNE0IIYSQkI1y2gUQQAghhGQIggUhhBBCRiiChSCEEELGKEiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBh-MhBAlRCAoAAAABJRU5ErkJggg=="
 
 # --- UTILITY & HELPER FUNCTIONS ---
 def render_manager_briefing(title: str, content: str, reg_refs: str, business_impact: str, quality_pillar: str, risk_mitigation: str) -> None:
@@ -39,7 +39,6 @@ def render_manager_briefing(title: str, content: str, reg_refs: str, business_im
     with st.container(border=True):
         st.subheader(f"🤖 {title}", divider='blue')
         st.markdown(content)
-        # --- FIX for StreamlitAPIException: Correctly use icons ---
         st.info(f"**Business Impact:** {business_impact}", icon="🎯")
         st.warning(f"**Key Standards & Regulations:** {reg_refs}", icon="📜")
         st.success(f"**Quality Culture Pillar:** {quality_pillar}", icon="🌟")
@@ -48,9 +47,7 @@ def render_manager_briefing(title: str, content: str, reg_refs: str, business_im
 def style_dataframe(df: pd.DataFrame) -> Styler:
     """Applies a professional, consistent style to a DataFrame."""
     return df.style.set_properties(**{
-        'background-color': '#FFFFFF',
-        'color': '#000000',
-        'border': f'1px solid {NEUTRAL_GREY}'
+        'background-color': '#FFFFFF', 'color': '#000000', 'border': f'1px solid {NEUTRAL_GREY}'
     }).set_table_styles([
         {'selector': 'th', 'props': [('background-color', ROCHE_BLUE), ('color', 'white'), ('font-weight', 'bold')]}
     ]).hide(axis="index")
@@ -61,10 +58,8 @@ def create_portfolio_health_dashboard(key: str) -> Styler:
     """Creates a styled RAG status dashboard for the project portfolio."""
     health_data = {
         'Project': ["Project Atlas (Bioreactor)", "Project Beacon (Assembly)", "Project Comet (Vision)"],
-        'Overall Status': ["Green", "Amber", "Green"],
-        'Schedule': ["On Track", "At Risk", "Ahead"],
-        'Budget': ["On Track", "Over", "On Track"],
-        'Lead': ["J. Doe", "S. Smith", "J. Doe"]
+        'Overall Status': ["Green", "Amber", "Green"], 'Schedule': ["On Track", "At Risk", "Ahead"],
+        'Budget': ["On Track", "Over", "On Track"], 'Lead': ["J. Doe", "S. Smith", "J. Doe"]
     }
     df = pd.DataFrame(health_data)
     
@@ -76,33 +71,26 @@ def create_portfolio_health_dashboard(key: str) -> Styler:
         font_color = 'white' if val in color_map else 'black'
         return f"background-color: {bg_color}; color: {font_color};"
         
-    return df.style.applymap(style_status, subset=['Overall Status', 'Schedule', 'Budget']).set_properties(**{'text-align': 'center'}).hide(axis="index")
+    # --- FIX for FutureWarning: Use .map() instead of .applymap() ---
+    return df.style.map(style_status, subset=['Overall Status', 'Schedule', 'Budget']).set_properties(**{'text-align': 'center'}).hide(axis="index")
 
 def create_resource_allocation_matrix(key: str) -> Tuple[go.Figure, pd.DataFrame]:
     """Creates a resource allocation heatmap and identifies over-allocated staff."""
-    data = {
-        'J. Doe (Lead)': [0.5, 0.4, 0.2],
-        'S. Smith (Eng.)': [0.1, 0.8, 0.0],
-        'A. Wong (Spec.)': [0.4, 0.4, 0.3],
-        'B. Zeller (Eng.)': [0.0, 0.2, 0.7]
-    }
+    data = {'J. Doe (Lead)': [0.5, 0.4, 0.2], 'S. Smith (Eng.)': [0.1, 0.8, 0.0],
+            'A. Wong (Spec.)': [0.4, 0.4, 0.3], 'B. Zeller (Eng.)': [0.0, 0.2, 0.7]}
     df = pd.DataFrame(data, index=["Project Atlas", "Project Beacon", "Project Comet"])
     df_transposed = df.T
     
-    fig = px.imshow(df_transposed,
-                    text_auto=".0%",
-                    aspect="auto",
+    fig = px.imshow(df_transposed, text_auto=".0%", aspect="auto",
                     color_continuous_scale=[(0, 'white'), (0.5, SUCCESS_GREEN), (1, WARNING_AMBER), (1.1, ERROR_RED)],
-                    range_color=[0, 1.1],
-                    labels=dict(x="Project", y="Team Member", color="Allocation"),
+                    range_color=[0, 1.1], labels=dict(x="Project", y="Team Member", color="Allocation"),
                     title="<b>Team Allocation by Project</b>")
     fig.update_traces(textfont_color='black')
-    fig.update_layout(title_x=0.5, title_font_size=20)
+    fig.update_layout(title_x=0.5, title_font_size=20, plot_bgcolor=BACKGROUND_GREY)
     
     allocations = df_transposed.sum(axis=1).reset_index()
     allocations.columns = ['Team Member', 'Total Allocation']
     over_allocated = allocations[allocations['Total Allocation'] > 1.0]
-    
     return fig, over_allocated
 
 def plot_cpk_analysis(key: str) -> go.Figure:
@@ -111,36 +99,25 @@ def plot_cpk_analysis(key: str) -> go.Figure:
     data = rng.normal(loc=5.15, scale=0.05, size=100)
     LSL, USL, TARGET = 5.0, 5.3, 5.15
     mu, std = np.mean(data), np.std(data, ddof=1)
-    
     cpk = min((USL - mu) / (3 * std), (mu - LSL) / (3 * std))
     
     fig = go.Figure()
     fig.add_trace(go.Histogram(x=data, nbinsx=20, name='Observed Data', histnorm='probability density', marker_color=ROCHE_BLUE, opacity=0.7))
-    
     x_fit = np.linspace(min(data), max(data), 200)
     y_fit = norm.pdf(x_fit, mu, std)
     fig.add_trace(go.Scatter(x=x_fit, y=y_fit, mode='lines', name='Fitted Normal Distribution', line=dict(color=SUCCESS_GREEN, width=2)))
-    
     fig.add_vline(x=LSL, line_dash="dash", line_color=ERROR_RED, annotation_text="LSL", annotation_position="top left")
     fig.add_vline(x=USL, line_dash="dash", line_color=ERROR_RED, annotation_text="USL", annotation_position="top right")
     fig.add_vline(x=mu, line_dash="dot", line_color=NEUTRAL_GREY, annotation_text=f"Mean={mu:.2f}", annotation_position="bottom right")
-    
     fig.update_layout(
         title_text=f'Process Capability (Cpk) Analysis - Titer (g/L)<br><b>Cpk = {cpk:.2f}</b> (Target: ≥1.33)',
-        xaxis_title="Titer (g/L)",
-        yaxis_title="Density",
-        showlegend=False,
-        title_font_size=20,
-        title_x=0.5,
-        plot_bgcolor=BACKGROUND_GREY
-    )
+        xaxis_title="Titer (g/L)", yaxis_title="Density", showlegend=False,
+        title_font_size=20, title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
     return fig
 
 def _render_professional_protocol_template() -> None:
     """Renders a simulated professional IQ/OQ protocol template."""
-    st.header("IQ/OQ Protocol: VAL-TP-101")
-    st.subheader("Automated Bioreactor Suite (ASSET-123)")
-    st.divider()
+    st.header("IQ/OQ Protocol: VAL-TP-101"); st.subheader("Automated Bioreactor Suite (ASSET-123)"); st.divider()
     st.markdown("##### 1.0 Purpose")
     st.write("The purpose of this protocol is to provide documented evidence that the Automated Bioreactor Suite (ASSET-123) is installed correctly (Installation Qualification - IQ) and operates according to its functional specifications (Operational Qualification - OQ).")
     st.markdown("##### 2.0 Scope")
@@ -160,13 +137,16 @@ def plot_budget_variance(key: str) -> go.Figure:
     df['Variance'] = df['Actual'] - df['Budgeted']
     df['Color'] = df['Variance'].apply(lambda x: ERROR_RED if x > 0 else SUCCESS_GREEN)
     df['Text'] = df['Variance'].apply(lambda x: f'${x:+,}k')
+    
+    # --- FIX for ValueError: Use hovertemplate instead of hoverinfo+hovertext ---
     fig = go.Figure(go.Bar(
         x=df['Variance'], y=df['Category'], orientation='h', marker_color=df['Color'], text=df['Text'],
-        hovertext=df.apply(lambda r: f"Budgeted: ${r['Budgeted']}k<br>Actual: ${r['Actual']}k", axis=1), hoverinfo='y+hovertext'))
+        customdata=df[['Budgeted', 'Actual']],
+        hovertemplate='<b>%{y}</b><br>Variance: %{x:+,}k<br>Budgeted: $%{customdata[0]}k<br>Actual: $%{customdata[1]}k<extra></extra>'
+    ))
     fig.update_traces(textposition='inside', textfont=dict(color='white', size=14, family="Arial, sans-serif"))
-    fig.update_layout(
-        title_text='<b>Annual Budget Variance (Actual vs. Budgeted)</b>', xaxis_title="Variance (in $ thousands)", yaxis_title="",
-        bargap=0.4, plot_bgcolor=BACKGROUND_GREY, title_x=0.5, font=dict(family="Arial, sans-serif", size=12))
+    fig.update_layout(title_text='<b>Annual Budget Variance (Actual vs. Budgeted)</b>', xaxis_title="Variance (in $ thousands)", yaxis_title="",
+                      bargap=0.4, plot_bgcolor=BACKGROUND_GREY, title_x=0.5, font=dict(family="Arial, sans-serif", size=12))
     return fig
 
 def plot_headcount_forecast(key: str) -> go.Figure:
@@ -190,7 +170,8 @@ def display_departmental_okrs(key: str) -> None:
     def style_status(val: str) -> str:
         color = SUCCESS_GREEN if val in ["On Track", "Complete"] else WARNING_AMBER
         return f"background-color: {color}; color: white; text-align: center; font-weight: bold;"
-    styled_df = df.style.applymap(style_status, subset=['Status']).set_properties(**{'text-align': 'left'}).hide(axis="index")
+    # --- FIX for FutureWarning: Use .map() instead of .applymap() ---
+    styled_df = df.style.map(style_status, subset=['Status']).set_properties(**{'text-align': 'left'}).hide(axis="index")
     st.dataframe(styled_df, use_container_width=True)
 
 def run_project_duration_forecaster(key: str) -> None:
@@ -209,16 +190,17 @@ def run_project_duration_forecaster(key: str) -> None:
 
 def plot_gantt_chart(key: str) -> go.Figure:
     df = pd.DataFrame([
-        dict(Task="Project Atlas (Bioreactor)", Start='2023-01-01', Finish='2023-12-31', Phase='Execution', Completion=0.8),
-        dict(Task="Project Beacon (Assembly)", Start='2023-06-01', Finish='2024-06-30', Phase='Execution', Completion=0.4),
-        dict(Task="Project Comet (Vision)", Start='2023-09-01', Finish='2024-03-31', Phase='Planning', Completion=0.9),
+        dict(Task="Project Atlas (Bioreactor)", Start='2023-01-01', Finish='2023-12-31', Phase='Execution'),
+        dict(Task="Project Beacon (Assembly)", Start='2023-06-01', Finish='2024-06-30', Phase='Execution'),
+        dict(Task="Project Comet (Vision)", Start='2023-09-01', Finish='2024-03-31', Phase='Planning'),
     ])
     fig = px.timeline(df, x_start="Start", x_end="Finish", y="Task", color="Phase",
-                      title="<b>Major Capital Project Timelines</b>", text="Task",
+                      title="<b>Major Capital Project Timelines</b>",
                       color_discrete_map={'Execution': ROCHE_BLUE, 'Planning': WARNING_AMBER})
-    fig.update_traces(textposition='inside', insidetextanchor='middle')
     fig.update_layout(title_x=0.5, yaxis_title=None, plot_bgcolor=BACKGROUND_GREY)
-    fig.add_vline(x=pd.to_datetime('today'), line_width=2, line_dash="dash", line_color="black", annotation_text="Today")
+    # --- FIX for TypeError: Convert timestamp to string for vline ---
+    today_str = pd.to_datetime('today').strftime('%Y-%m-%d')
+    fig.add_vline(x=today_str, line_width=2, line_dash="dash", line_color="black", annotation_text="Today")
     return fig
 
 def plot_risk_burndown(key: str) -> go.Figure:
@@ -278,8 +260,7 @@ def plot_risk_matrix(key: str) -> None:
         xaxis=dict(range=[0, 6], tickmode='linear', tick0=1, dtick=1), yaxis=dict(range=[0, 11], tickmode='linear', tick0=1, dtick=1),
         plot_bgcolor=BACKGROUND_GREY, title_x=0.5)
     col1, col2 = st.columns([2,1])
-    with col1:
-        st.plotly_chart(fig, use_container_width=True)
+    with col1: st.plotly_chart(fig, use_container_width=True)
     with col2:
         st.metric("RPN Mitigation Threshold", "25", help="Risks with a Risk Priority Number (RPN = Sev x Prob) > 25 require mandatory mitigation per SOP-QA-045.")
         st.info("This risk-based approach ensures validation efforts are focused on the highest-impact failure modes, a core principle of **ISO 14971** and **GAMP 5**.")
@@ -300,21 +281,16 @@ def plot_process_stability_chart(key: str) -> go.Figure:
     I_CL = df['Titer'].mean(); MR_CL = df['MR'].mean(); I_UCL = I_CL + 2.66 * MR_CL; I_LCL = I_CL - 2.66 * MR_CL; MR_UCL = 3.267 * MR_CL
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1, subplot_titles=("<b>Individuals (I) Chart</b>", "<b>Moving Range (MR) Chart</b>"))
     fig.add_trace(go.Scatter(x=df.index, y=df['Titer'], name='Titer (g/L)', mode='lines+markers', marker_color=ROCHE_BLUE), row=1, col=1)
-    fig.add_hline(y=I_CL, line_dash="dash", line_color=SUCCESS_GREEN, row=1, col=1, annotation_text="CL")
-    fig.add_hline(y=I_UCL, line_dash="dot", line_color=ERROR_RED, row=1, col=1, annotation_text="UCL")
-    fig.add_hline(y=I_LCL, line_dash="dot", line_color=ERROR_RED, row=1, col=1, annotation_text="LCL")
+    fig.add_hline(y=I_CL, line_dash="dash", line_color=SUCCESS_GREEN, row=1, col=1, annotation_text="CL"); fig.add_hline(y=I_UCL, line_dash="dot", line_color=ERROR_RED, row=1, col=1, annotation_text="UCL"); fig.add_hline(y=I_LCL, line_dash="dot", line_color=ERROR_RED, row=1, col=1, annotation_text="LCL")
     fig.add_trace(go.Scatter(x=df.index, y=df['MR'], name='Moving Range', mode='lines+markers', marker_color=WARNING_AMBER), row=2, col=1)
-    fig.add_hline(y=MR_CL, line_dash="dash", line_color=SUCCESS_GREEN, row=2, col=1, annotation_text="CL")
-    fig.add_hline(y=MR_UCL, line_dash="dot", line_color=ERROR_RED, row=2, col=1, annotation_text="UCL")
+    fig.add_hline(y=MR_CL, line_dash="dash", line_color=SUCCESS_GREEN, row=2, col=1, annotation_text="CL"); fig.add_hline(y=MR_UCL, line_dash="dot", line_color=ERROR_RED, row=2, col=1, annotation_text="UCL")
     fig.update_layout(height=500, showlegend=False, title_text="<b>Process Stability (I-MR Chart) for PQ Run 1 Titer</b>", title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
     return fig
 
 def plot_csv_dashboard(key: str) -> None:
     col1, col2 = st.columns(2)
-    with col1:
-        st.metric("21 CFR Part 11 Compliance Status", "PASS", "✔️", help="Electronic records and signatures meet all technical and procedural requirements.")
-    with col2:
-        st.metric("Data Integrity Risk Score", "Low", "-5% vs Last Quarter", help="Calculated based on ALCOA+ principles.")
+    with col1: st.metric("21 CFR Part 11 Compliance Status", "PASS", "✔️", help="Electronic records and signatures meet all technical and procedural requirements.")
+    with col2: st.metric("Data Integrity Risk Score", "Low", "-5% vs Last Quarter", help="Calculated based on ALCOA+ principles.")
     df = pd.DataFrame({ "GAMP 5 Category": ["Cat 4: Configured", "Cat 5: Custom"], "System": ["HMI Software", "LIMS Interface"], "Status": ["Validation Complete", "IQ/OQ In Progress"] })
     st.dataframe(style_dataframe(df), use_container_width=True)
 
@@ -328,7 +304,8 @@ def plot_cleaning_validation_results(key: str) -> go.Figure:
     return fig
 
 def plot_shipping_validation_temp(key: str) -> go.Figure:
-    rng = np.random.default_rng(30); time = pd.to_datetime(pd.date_range("2023-01-01", periods=48, freq="H")); temp = rng.normal(4, 0.5, 48)
+    # --- FIX for FutureWarning: Use 'h' instead of 'H' for frequency ---
+    rng = np.random.default_rng(30); time = pd.to_datetime(pd.date_range("2023-01-01", periods=48, freq="h")); temp = rng.normal(4, 0.5, 48)
     temp[24] = 8.5 
     fig = px.line(x=time, y=temp, title='<b>Shipping Lane PQ: Temperature Profile</b>', markers=True)
     fig.add_hrect(y0=2, y1=8, line_width=0, fillcolor=SUCCESS_GREEN, opacity=0.2, annotation_text="In Spec (2-8°C)", annotation_position="top left")
@@ -370,8 +347,7 @@ def run_urs_risk_nlp_model(key: str) -> go.Figure:
                      labels={'Ambiguity Score': 'Predicted Ambiguity Score (0=Clear, 1=Ambiguous)', 'Criticality': 'Process Impact'},
                      hover_data=['Requirement'], size=[15]*len(df), color='Ambiguity Score', color_continuous_scale='YlOrRd')
     fig.update_traces(textposition='top center'); 
-    fig.add_vline(x=0.5, line_dash="dash", annotation_text="Action Threshold")
-    fig.add_hline(y=7.5, line_dash="dash", annotation_text="High Criticality")
+    fig.add_vline(x=0.5, line_dash="dash", annotation_text="Action Threshold"); fig.add_hline(y=7.5, line_dash="dash", annotation_text="High Criticality")
     fig.add_annotation(x=0.75, y=5, text="High Ambiguity, <br>Low Impact:<br><b>Clarify</b>", showarrow=False, bgcolor="#FFC107", borderpad=4)
     fig.add_annotation(x=0.75, y=9, text="High Ambiguity, <br>High Impact:<br><b>REJECT/REWRITE!</b>", showarrow=False, bgcolor="#D32F2F", font=dict(color='white'), borderpad=4)
     fig.update_layout(title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
@@ -405,13 +381,9 @@ def render_main_page() -> None:
 def render_strategic_management_page() -> None:
     st.title("📈 1. Strategic Management & Business Acumen")
     render_manager_briefing(
-        title="Leading Validation as a Business Unit",
-        content="An effective manager must translate technical excellence into business value. This dashboard demonstrates my ability to manage budgets, plan for future headcount needs based on the project pipeline, and align departmental goals with the strategic objectives of the site.",
-        reg_refs="ISO 13485:2016 (Sec 5 & 6), 21 CFR 820.20",
-        business_impact="Ensures the validation department is a strategic, financially responsible partner that enables the company's growth and compliance goals.",
-        quality_pillar="Resource Management & Financial Acumen.",
-        risk_mitigation="Proactively identifies and mitigates resource shortfalls and budget variances before they impact project timelines."
-    )
+        title="Leading Validation as a Business Unit", content="An effective manager must translate technical excellence into business value. This dashboard demonstrates my ability to manage budgets, plan for future headcount needs based on the project pipeline, and align departmental goals with the strategic objectives of the site.",
+        reg_refs="ISO 13485:2016 (Sec 5 & 6), 21 CFR 820.20", business_impact="Ensures the validation department is a strategic, financially responsible partner that enables the company's growth and compliance goals.",
+        quality_pillar="Resource Management & Financial Acumen.", risk_mitigation="Proactively identifies and mitigates resource shortfalls and budget variances before they impact project timelines.")
     with st.container(border=True):
         st.subheader("Departmental OKRs (Objectives & Key Results)", help="Aligns team's daily work with high-level company goals.");
         display_departmental_okrs(key="okrs")
@@ -428,29 +400,22 @@ def render_strategic_management_page() -> None:
             st.plotly_chart(plot_headcount_forecast(key="headcount"), use_container_width=True)
             st.success("**Actionable Insight:** The forecast indicates a resource gap of 2 FTEs by Q3. This data will be used to justify the hiring requisition for one Automation Engineer and one Validation Specialist.")
     with st.container(border=True):
-        st.subheader("AI-Powered Capital Project Duration Forecaster")
-        run_project_duration_forecaster("duration_ai")
+        st.subheader("AI-Powered Capital Project Duration Forecaster"); run_project_duration_forecaster("duration_ai")
         st.success("**Actionable Insight:** The AI model provides data-driven timeline estimates to the PMO, improving the accuracy of site-wide project planning and resource allocation.")
 
 def render_project_portfolio_page() -> None:
     st.title("📂 2. Project & Portfolio Management")
     render_manager_briefing(
-        title="Managing the Validation Project Portfolio",
-        content="This command center demonstrates the ability to manage a portfolio of competing capital projects, balancing priorities, allocating finite resources, and providing clear, high-level status updates to the PMO and site leadership.",
-        reg_refs="Project Management Body of Knowledge (PMBOK), ISO 13485: 5.6",
-        business_impact="Provides executive-level visibility into Validation's contribution to corporate goals, enables proactive risk management, and ensures strategic alignment of the department's people.",
-        quality_pillar="Project Governance & Oversight.",
-        risk_mitigation="Prevents budget overruns and schedule delays through proactive monitoring of CPI/SPI metrics and resource allocation."
-    )
+        title="Managing the Validation Project Portfolio", content="This command center demonstrates the ability to manage a portfolio of competing capital projects, balancing priorities, allocating finite resources, and providing clear, high-level status updates to the PMO and site leadership.",
+        reg_refs="Project Management Body of Knowledge (PMBOK), ISO 13485: 5.6", business_impact="Provides executive-level visibility into Validation's contribution to corporate goals, enables proactive risk management, and ensures strategic alignment of the department's people.",
+        quality_pillar="Project Governance & Oversight.", risk_mitigation="Prevents budget overruns and schedule delays through proactive monitoring of CPI/SPI metrics and resource allocation.")
     with st.container(border=True):
-        st.subheader("Capital Project Timelines (Gantt Chart)")
-        st.plotly_chart(plot_gantt_chart(key="gantt"), use_container_width=True)
+        st.subheader("Capital Project Timelines (Gantt Chart)"); st.plotly_chart(plot_gantt_chart(key="gantt"), use_container_width=True)
     with st.container(border=True):
         st.subheader("Capital Project Portfolio Health")
         col1, col2 = st.columns(2)
         with col1:
-            st.markdown("##### RAG Status")
-            st.dataframe(create_portfolio_health_dashboard("portfolio"), use_container_width=True)
+            st.markdown("##### RAG Status"); st.dataframe(create_portfolio_health_dashboard("portfolio"), use_container_width=True)
         with col2:
             st.markdown("##### Key Project Metrics (Project Beacon)")
             st.metric("Schedule Performance Index (SPI)", "0.92", "-8%", help="SPI < 1.0 indicates the project is behind schedule.")
@@ -474,13 +439,9 @@ def render_project_portfolio_page() -> None:
 def render_e2e_validation_hub_page() -> None:
     st.title("🔩 3. End-to-End Validation Hub: Project Atlas")
     render_manager_briefing(
-        title="Executing a Compliant Validation Lifecycle (per ASTM E2500)",
-        content="This hub simulates the execution of a major capital project from initial design review to final Performance Qualification (PQ). It provides tangible evidence of my ability to own validation deliverables, manage the FAT/SAT/IQ/OQ/PQ process, and ensure 'Quality First Time' by integrating validation requirements into the design phase.",
-        reg_refs="FDA 21 CFR 820.75, ISO 13485:2016 (Sec 7.5.6), GAMP 5, ASTM E2500",
-        business_impact="Ensures new manufacturing equipment is brought online on-time, on-budget, and in a fully compliant state, directly enabling production launch.",
-        quality_pillar="Design Controls & Risk-Based Verification.",
-        risk_mitigation="Prevents costly redesigns and validation failures by ensuring testability is built-in from the URS phase using tools like the V-Model and pFMEA."
-    )
+        title="Executing a Compliant Validation Lifecycle (per ASTM E2500)", content="This hub simulates the execution of a major capital project from initial design review to final Performance Qualification (PQ). It provides tangible evidence of my ability to own validation deliverables, manage the FAT/SAT/IQ/OQ/PQ process, and ensure 'Quality First Time' by integrating validation requirements into the design phase.",
+        reg_refs="FDA 21 CFR 820.75, ISO 13485:2016 (Sec 7.5.6), GAMP 5, ASTM E2500", business_impact="Ensures new manufacturing equipment is brought online on-time, on-budget, and in a fully compliant state, directly enabling production launch.",
+        quality_pillar="Design Controls & Risk-Based Verification.", risk_mitigation="Prevents costly redesigns and validation failures by ensuring testability is built-in from the URS phase using tools like the V-Model and pFMEA.")
     phase = st.select_slider("Select a Validation Phase to View Key Deliverables:", options=["1. Design Review & Planning", "2. FAT & SAT", "3. IQ & OQ", "4. PQ"], value="1. Design Review & Planning")
     st.divider()
     if phase == "1. Design Review & Planning":
@@ -488,7 +449,7 @@ def render_e2e_validation_hub_page() -> None:
         col1, col2 = st.columns(2)
         with col1:
             with st.container(border=True): st.subheader("Validation V-Model"); st.plotly_chart(create_v_model_figure("vmodel"), use_container_width=True)
-            with st.container(border=True): st.subheader("AI-Powered URS Risk Analysis"); st.plotly_chart(run_urs_risk_nlp_model("urs_risk"), use_container_width=True); st.success("**Actionable Insight:** Requirements 1, 2, and 4 flagged for rewrite due to high ambiguity.")
+            with st.container(border=True): st.subheader("AI-Powered URS Risk Analysis"); st.plotly_chart(run_urs_risk_nlp_model("urs_risk"), use_container_width=True); st.success("**Actionable Insight:** Requirements 2, 3, and 5 flagged for rewrite due to high ambiguity.")
         with col2:
             with st.container(border=True): st.subheader("User Requirements Traceability (RTM)"); create_rtm_data_editor("rtm")
             with st.container(border=True): st.subheader("Process Risk Management (pFMEA)"); plot_risk_matrix("fmea")
@@ -506,13 +467,9 @@ def render_e2e_validation_hub_page() -> None:
 def render_specialized_validation_page() -> None:
     st.title("🧪 4. Specialized Validation Hubs")
     render_manager_briefing(
-        title="Demonstrating Breadth of Expertise",
-        content="Beyond standard equipment qualification, a Validation Manager must be fluent in specialized validation disciplines critical to GMP manufacturing. This hub showcases expertise in Computer System Validation (CSV), Cleaning Validation, and Process Characterization.",
-        reg_refs="21 CFR Part 11, GAMP 5, PDA TR 29 (Cleaning Validation)",
-        business_impact="Ensures all aspects of the manufacturing process, including supporting systems and processes, are fully compliant and controlled, preventing common sources of regulatory findings.",
-        quality_pillar="Cross-functional Technical Leadership.",
-        risk_mitigation="Ensures compliance in niche, high-risk areas like data integrity (CSV) and cross-contamination (Cleaning) that are frequent targets of audits."
-    )
+        title="Demonstrating Breadth of Expertise", content="Beyond standard equipment qualification, a Validation Manager must be fluent in specialized validation disciplines critical to GMP manufacturing. This hub showcases expertise in Computer System Validation (CSV), Cleaning Validation, and Process Characterization.",
+        reg_refs="21 CFR Part 11, GAMP 5, PDA TR 29 (Cleaning Validation)", business_impact="Ensures all aspects of the manufacturing process, including supporting systems and processes, are fully compliant and controlled, preventing common sources of regulatory findings.",
+        quality_pillar="Cross-functional Technical Leadership.", risk_mitigation="Ensures compliance in niche, high-risk areas like data integrity (CSV) and cross-contamination (Cleaning) that are frequent targets of audits.")
     tab1, tab2, tab3, tab4 = st.tabs(["🖥️ Computer System Validation (CSV)", "🧼 Cleaning Validation", "🔬 Process Characterization (DOE)", "📦 Shipping Validation"])
     with tab1: st.subheader("GAMP 5 CSV for Automated Systems"); st.info("Purpose: This dashboard tracks the validation status of all GxP computerized systems associated with a project, following the GAMP 5 risk-based approach."); plot_csv_dashboard("csv")
     with tab2: st.subheader("Cleaning Validation for Multi-Product Facility"); st.info("Purpose: This plot shows the results from a cleaning validation study, confirming that residual product levels are below the pre-defined acceptance limits to prevent cross-contamination."); st.plotly_chart(plot_cleaning_validation_results("cleaning"), use_container_width=True)
@@ -522,13 +479,9 @@ def render_specialized_validation_page() -> None:
 def render_validation_program_health_page() -> None:
     st.title("⚕️ 5. Validation Program Health & Continuous Improvement")
     render_manager_briefing(
-        title="Maintaining the Validated State",
-        content="This dashboard demonstrates the ongoing oversight required to manage the site's validation program health. It showcases a data-driven approach to **Periodic Review**, the development of a risk-based **Revalidation Strategy**, and the execution of **Continuous Improvement Initiatives**.",
-        reg_refs="FDA 21 CFR 820.75(c) (Revalidation), ISO 13485:2016 (Sec 8.4)",
-        business_impact="Ensures long-term compliance, prevents costly process drifts, optimizes resource allocation for revalidation, and supports uninterrupted supply of medicine to patients.",
-        quality_pillar="Lifecycle Management & Continuous Improvement.",
-        risk_mitigation="Guards against compliance drift and ensures systems remain in a validated state throughout their operational life, preventing production holds or recalls."
-    )
+        title="Maintaining the Validated State", content="This dashboard demonstrates the ongoing oversight required to manage the site's validation program health. It showcases a data-driven approach to **Periodic Review**, the development of a risk-based **Revalidation Strategy**, and the execution of **Continuous Improvement Initiatives**.",
+        reg_refs="FDA 21 CFR 820.75(c) (Revalidation), ISO 13485:2016 (Sec 8.4)", business_impact="Ensures long-term compliance, prevents costly process drifts, optimizes resource allocation for revalidation, and supports uninterrupted supply of medicine to patients.",
+        quality_pillar="Lifecycle Management & Continuous Improvement.", risk_mitigation="Guards against compliance drift and ensures systems remain in a validated state throughout their operational life, preventing production holds or recalls.")
     st.subheader("Quarterly Validation Program Review")
     col1, col2, col3 = st.columns(3); col1.metric("Systems Due for Periodic Review", "1", delta="1"); col2.metric("Revalidations from Change Control", "3"); col3.metric("CAPA Effectiveness Rate", "95%")
     tab1, tab2 = st.tabs(["📊 Periodic Review & Revalidation Strategy", "📈 Continuous Improvement Tracker"])
@@ -550,13 +503,9 @@ def render_validation_program_health_page() -> None:
 def render_documentation_hub_page() -> None:
     st.title("🗂️ 6. Validation Documentation & Audit Defense Hub")
     render_manager_briefing(
-        title="Orchestrating Compliant Validation Documentation",
-        content="This hub demonstrates the ability to generate and manage the compliant, auditable documentation that forms the core of a successful validation package. The templates and simulations below prove my expertise in creating documents that meet the stringent requirements of **21 CFR Part 820** and **ISO 13485**.",
-        reg_refs="21 CFR 820.40 (Document Controls), GAMP 5 Good Documentation Practice, 21 CFR Part 11",
-        business_impact="Ensures audit-proof documentation, accelerates review cycles by providing clear templates, and fosters seamless collaboration between Engineering, Manufacturing, Quality, and Regulatory.",
-        quality_pillar="Good Documentation Practice (GDP) & Audit Readiness.",
-        risk_mitigation="Minimizes review cycles and audit findings by ensuring documentation is attributable, legible, contemporaneous, original, and accurate (ALCOA+)."
-    )
+        title="Orchestrating Compliant Validation Documentation", content="This hub demonstrates the ability to generate and manage the compliant, auditable documentation that forms the core of a successful validation package. The templates and simulations below prove my expertise in creating documents that meet the stringent requirements of **21 CFR Part 820** and **ISO 13485**.",
+        reg_refs="21 CFR 820.40 (Document Controls), GAMP 5 Good Documentation Practice, 21 CFR Part 11", business_impact="Ensures audit-proof documentation, accelerates review cycles by providing clear templates, and fosters seamless collaboration between Engineering, Manufacturing, Quality, and Regulatory.",
+        quality_pillar="Good Documentation Practice (GDP) & Audit Readiness.", risk_mitigation="Minimizes review cycles and audit findings by ensuring documentation is attributable, legible, contemporaneous, original, and accurate (ALCOA+).")
     col1, col2 = st.columns([1, 2])
     with col1:
         with st.container(border=True):
@@ -565,16 +514,11 @@ def render_documentation_hub_page() -> None:
     with col2:
         with st.container(border=True):
             st.subheader("Interactive Document Viewer"); st.info("The following are professionally rendered digital artifacts that simulate documents within a validated eQMS.")
-            with st.expander("📄 **View Professional IQ/OQ Protocol Template**"):
-                _render_professional_protocol_template()
-            with st.expander("📋 **View Professional PQ Report Template**"):
-                _render_professional_report_template()
+            with st.expander("📄 **View Professional IQ/OQ Protocol Template**"): _render_professional_protocol_template()
+            with st.expander("📋 **View Professional PQ Report Template**"): _render_professional_report_template()
 
 def _render_professional_report_template() -> None:
-    """Renders a world-class, professional PQ Report, mimicking an eQMS."""
-    st.header("PQ Report: VAL-TR-201")
-    st.subheader("Automated Bioreactor Suite (ASSET-123)")
-    st.divider()
+    st.header("PQ Report: VAL-TR-201"); st.subheader("Automated Bioreactor Suite (ASSET-123)"); st.divider()
     meta_cols = st.columns(4)
     meta_cols[0].metric("Document ID", "VAL-TR-201"); meta_cols[1].metric("Version", "1.0")
     meta_cols[2].metric("Status", "Final"); meta_cols[3].metric("Approval Date", "2024-03-01")
@@ -584,9 +528,7 @@ def _render_professional_report_template() -> None:
     with col1:
         st.write("Three successful, consecutive Performance Qualification (PQ) runs were executed on the Bioreactor System per protocol VAL-TP-201. The results confirm that the system reliably produces product meeting all pre-defined Critical Quality Attributes (CQAs) under normal manufacturing conditions.")
         st.success("**Conclusion:** The Automated Bioreactor System (ASSET-123) has met all PQ acceptance criteria and is **qualified for use in commercial GMP manufacturing.**")
-    with col2:
-        st.metric("Overall Result", "PASS")
-        st.metric("Final CpK (Product Titer)", "1.67", help="Exceeds target of >= 1.33")
+    with col2: st.metric("Overall Result", "PASS"); st.metric("Final CpK (Product Titer)", "1.67", help="Exceeds target of >= 1.33")
     st.markdown("##### 2.0 Deviations & Impact Assessment")
     with st.container(border=True):
         st.info("**DEV-001 (Run 2):** A pH sensor required recalibration mid-run. The event was documented in the batch record, the sensor was recalibrated per SOP, and the run successfully continued.")
@@ -598,7 +540,8 @@ def _render_professional_report_template() -> None:
     def style_pass_fail(val: str) -> str:
         color = SUCCESS_GREEN if val == 'PASS' else ERROR_RED
         return f"background-color: {color}; color: white; text-align: center; font-weight: bold;"
-    styled_df = results_df.style.applymap(style_pass_fail, subset=['Pass/Fail'])
+    # --- FIX for FutureWarning: Use .map() instead of .applymap() ---
+    styled_df = results_df.style.map(style_pass_fail, subset=['Pass/Fail'])
     st.dataframe(styled_df, use_container_width=True, hide_index=True)
     st.markdown("##### 4.0 Traceability")
     st.warning("This report provides the objective evidence that fulfills user requirements **URS-001** (Titer) and **URS-040** (Purity) as documented in the Requirements Traceability Matrix (QA-DOC-105).")
@@ -606,7 +549,6 @@ def _render_professional_report_template() -> None:
     st.markdown("---")
     sig_cols = st.columns(3)
     sig_cols[0].success("✔️ **Validation Manager:** Approved `2024-03-01`"); sig_cols[1].success("✔️ **Manufacturing Head:** Approved `2024-03-01`"); sig_cols[2].success("✔️ **Quality Assurance Head:** Approved `2024-03-02`")
-
 
 # --- SIDEBAR NAVIGATION AND PAGE ROUTING ---
 PAGES = {
@@ -619,7 +561,7 @@ PAGES = {
     "6. Documentation & Audit Defense": render_documentation_hub_page,
 }
 
-st.sidebar.markdown(f'<div style="display: flex; justify-content: center;"><img src="data:image/png;base64,{ROCHE_LOGO_BASE64}" width="200"></div>', unsafe_allow_html=True)
+st.sidebar.markdown(f'<div style="display: flex; justify-content: center; padding-bottom: 20px;"><img src="data:image/png;base64,{ROCHE_LOGO_BASE64}" width="200"></div>', unsafe_allow_html=True)
 st.sidebar.title("Validation Command Center")
 selection = st.sidebar.radio("Go to", list(PAGES.keys()))
 page_to_render_func = PAGES[selection]
