@@ -498,7 +498,7 @@ def analyze_project_bottlenecks() -> None:
 
 # --- PAGE RENDERING FUNCTIONS ---
 def render_main_page() -> None:
-    st.title("🤖 Automated Equipment Validation Portfolio"); st.subheader("A Live Demonstration of Modern Validation Leadership"); st.divider()
+    st.title("🤖 Automated Equipment Validation Portfolio"); st.subheader("A Live Demonstration of Modern Validation Management Leadership"); st.divider()
     st.markdown("Welcome. This interactive environment provides **undeniable proof of expertise in the end-to-end validation of automated manufacturing equipment** in a strictly regulated GMP environment. It simulates how an effective leader manages a validation function, with a relentless focus on aligning technical execution, **Quality Systems (per 21 CFR 820 & ISO 13485)**, and strategic capital projects.")
     
     st.subheader("Key Program Health KPIs", divider='blue');
