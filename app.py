@@ -273,52 +273,72 @@ def render_documentation_hub_page() -> None:
             with st.expander("📋 **View Professional PQ Report Template**"):
                 _render_professional_report_template()
 
-def _render_professional_protocol_template() -> None:
+# --- REPLACE THE OLD HELPER FUNCTION WITH THIS CORRECTED VERSION ---
+
+def _render_professional_report_template() -> None:
     """
-    Renders a world-class, professional IQ/OQ Protocol, mimicking an eQMS.
-    This version fixes a critical IndentationError.
+    Renders a world-class, professional PQ Report, mimicking an eQMS.
+    This version fixes a critical SyntaxError and enhances professional formatting.
     """
-    st.header("IQ/OQ Protocol: VAL-TP-101")
+    st.header("PQ Report: VAL-TR-201")
     st.subheader("Automated Bioreactor Suite (ASSET-123)")
     st.divider()
 
     meta_cols = st.columns(4)
-    meta_cols[0].metric("Document ID", "VAL-TP-101")
+    meta_cols[0].metric("Document ID", "VAL-TR-201")
     meta_cols[1].metric("Version", "1.0")
-    meta_cols[2].metric("Status", "Approved")
-    meta_cols[3].metric("Effective Date", "2024-01-15")
+    meta_cols[2].metric("Status", "Final")
+    meta_cols[3].metric("Approval Date", "2024-03-01")
     st.divider()
 
-    st.subheader("1.0 Purpose")
-    st.write("To provide documented evidence that the Automated Bioreactor Suite (ASSET-123) and its ancillary components are installed correctly (Installation Qualification) and operate according to their functional specifications (Operational Qualification).")
-    
-    st.subheader("2.0 Scope")
-    st.write("This protocol applies to the Bioreactor System located in Manufacturing Suite C, including the vessel, control skid, HMI, and associated critical utilities (WFI, CSG).")
-    
+    st.subheader("1.0 Summary & Conclusion")
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        st.write("Three successful, consecutive Performance Qualification (PQ) runs were executed on the Bioreactor System per protocol VAL-TP-201. The results confirm that the system reliably produces product meeting all pre-defined Critical Quality Attributes (CQAs) under normal manufacturing conditions.")
+        st.success("**Conclusion:** The Automated Bioreactor System (ASSET-123) has met all PQ acceptance criteria and is **qualified for use in commercial GMP manufacturing.**")
+    with col2:
+        st.metric("Overall Result", "PASS")
+        st.metric("Final CpK (Product Titer)", "1.67", help="Exceeds target of >= 1.33")
+
+    st.subheader("2.0 Deviations & Impact Assessment")
     with st.container(border=True):
-        st.subheader("3.0 Traceability & Risk Management")
-        st.markdown("This protocol provides test evidence for URS items as defined in the **Validation Master Plan (VAL-MP-001)** and the **Traceability Matrix (QA-DOC-105)**. All tests are derived from the system's **pFMEA (RISK-034)** to ensure a risk-based approach per **ISO 14971**.")
-    
-    with st.container(border=True):
-        st.subheader("4.0 Installation Qualification (IQ)")
-        st.markdown("##### 4.1 Documentation Verification\n- Verify P&ID and electrical drawings are as-built.\n- Confirm receipt of vendor documentation package, including material certifications.")
-        st.markdown("##### 4.2 Equipment Verification\n- Verify equipment model and serial numbers match the bill of materials (BOM).\n- Confirm software and firmware versions match design specifications.")
-        st.markdown("##### 4.3 Statistical Sampling Plan\nFor repeated checks (e.g., gasket verification), a sampling plan based on **ANSI/ASQ Z1.4** will be used, with an AQL of 1.0.")
-    
-    with st.container(border=True):
-        st.subheader("5.0 Operational Qualification (OQ)")
-        st.markdown("##### 5.1 Critical Function & Interlock Challenges\n- **Alarm Tests:** Challenge high/low alarms for temperature, pressure, and pH.\n- **Interlock Tests:** Verify agitator does not run when vessel pressure is high; verify E-Stop functionality.")
-        st.markdown("##### 5.2 Computer System Validation (CSV) Tests\n- Verify HMI screen transitions and data entry function correctly.\n- Confirm audit trail functionality per **21 CFR Part 11** requirements.")
-    
+        st.info("**DEV-001 (Run 2):** A pH sensor required recalibration mid-run. The event was documented in the batch record, the sensor was recalibrated per SOP, and the run successfully continued.")
+        st.success("**Impact Assessment:** None. All CQA data for the batch remained within specification. The event and its resolution were reviewed and approved by QA.")
+
+    st.subheader("3.0 Results vs. Acceptance Criteria")
+    results_data = {
+        'Critical Quality Attribute (CQA)': ['Titer (g/L)', 'Viability (%)', 'Impurity A (%)'],
+        'Specification': ['>= 5.0', '>= 95%', '<= 0.5%'],
+        'Run 1 Result': [5.2, 97, 0.41],
+        'Run 2 Result': [5.1, 96, 0.44],
+        'Run 3 Result': [5.3, 98, 0.39],
+        'Pass/Fail': ['PASS', 'PASS', 'PASS']
+    }
+    results_df = pd.DataFrame(results_data)
+
     # --- START OF THE FIX ---
-    # This container and its contents have been un-indented by one level to align
-    # correctly with the main flow of the function.
-    with st.container(border=True):
-        st.markdown("##### 🛡️ Simulate Audit Defense")
-        if st.button("Query this protocol's strategy", key="audit_proto_001"):
-            st.warning("**Auditor Query:** 'Your OQ does not test the full operating range of the agitator speed. Please provide your rationale.'")
-            st.success('**My Response:** "An excellent question. Our risk assessment (pFMEA) and process characterization data (from the DOE in the Specialized Hub) showed that operating outside the specified range of 50-150 RPM results in unacceptable sheer stress on the cells, which negatively impacts a Critical Quality Attribute. Therefore, we qualified the normal operating range and formally locked out the higher speeds in the control system. This is a risk-based approach aligned with **ASTM E2500**. The OQ verifies both the accuracy within the qualified range and that the software lock-out is effective."')
+    # The function definition is now correctly placed on its own line.
+    def style_pass_fail(val: str) -> str:
+        """Applies color styling to the Pass/Fail column."""
+        if val == 'PASS':
+            return f"background-color: {SUCCESS_GREEN}; color: white;"
+        elif val == 'FAIL':
+            return f"background-color: {ERROR_RED}; color: white;"
+        return ""
     # --- END OF THE FIX ---
+
+    styled_df = results_df.style.applymap(style_pass_fail, subset=['Pass/Fail'])
+    st.dataframe(styled_df, use_container_width=True, hide_index=True)
+
+    st.subheader("4.0 Traceability")
+    st.warning("This report provides the objective evidence that fulfills user requirements **URS-001** (Titer) and **URS-040** (Purity) as documented in the Requirements Traceability Matrix (QA-DOC-105).")
+
+    st.subheader("5.0 Approvals")
+    st.markdown("---")
+    sig_cols = st.columns(3)
+    sig_cols[0].success("✔️ **Validation Manager:** Approved `2024-03-01`")
+    sig_cols[1].success("✔️ **Manufacturing Head:** Approved `2024-03-01`")
+    sig_cols[2].success("✔️ **Quality Assurance Head:** Approved `2024-03-02`")
 def _render_professional_report_template() -> None:
     st.header("PQ Report: VAL-TR-201"); st.subheader("Automated Bioreactor Suite (ASSET-123)"); st.divider()
     meta_cols = st.columns(4); meta_cols[0].metric("Document ID", "VAL-TR-201"); meta_cols[1].metric("Version", "1.0"); meta_cols[2].metric("Status", "Final"); meta_cols[3].metric("Approval Date", "2024-03-01"); st.divider()
