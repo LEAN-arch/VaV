@@ -1,4 +1,4 @@
-# app.py (Final, SME World-Class Version - Enhanced AI & Context)
+# app.py (Final, SME World-Class Version - Fully Corrected)
 
 # --- IMPORTS ---
 import streamlit as st
@@ -12,7 +12,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from scipy.stats import norm
-import shap # <-- NEW: Import for AI Explainability
+import shap
 import matplotlib.pyplot as plt
 
 # --- PAGE CONFIGURATION ---
@@ -94,10 +94,8 @@ def create_resource_allocation_matrix(key: str) -> Tuple[go.Figure, pd.DataFrame
     over_allocated = allocations[allocations['Total Allocation'] > 1.0]
     return fig, over_allocated
 
-# --- NEW: ENHANCED AI/ML FORECASTER with SHAP EXPLAINABILITY ---
 def run_project_duration_forecaster(key: str) -> None:
     """Trains a model and explains its predictions using SHAP."""
-    # 1. Generate historical data and train a model
     rng = np.random.default_rng(42)
     X_train = pd.DataFrame({
         'New Automation Modules': rng.integers(1, 10, 20), 
@@ -108,7 +106,6 @@ def run_project_duration_forecaster(key: str) -> None:
     
     model = RandomForestRegressor(n_estimators=100, random_state=42).fit(X_train, y_train)
 
-    # 2. Get user input
     st.markdown("##### Adjust Project Parameters to Forecast Timeline:")
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -118,14 +115,12 @@ def run_project_duration_forecaster(key: str) -> None:
     with col3:
         urs_count = st.slider("# of URS", 20, 100, 50, key=f"pipe_urs_{key}")
     
-    # 3. Make Prediction
     new_project_data = pd.DataFrame([[new_modules, complexity, urs_count]], columns=X_train.columns)
     predicted_duration = model.predict(new_project_data)[0]
     
     st.metric("AI-Predicted Validation Duration (Weeks)", f"{predicted_duration:.1f}", 
               help="Based on a Random Forest model trained on 20 historical projects. Includes IQ, OQ, and PQ phases.")
 
-    # 4. Explain the Prediction with SHAP
     st.subheader("AI Prediction Analysis (Why This Forecast?)")
     st.info("""
     **Purpose:** This SHAP (SHapley Additive exPlanations) force plot provides transparent, undeniable proof of how the AI model arrived at its prediction. 
@@ -138,7 +133,6 @@ def run_project_duration_forecaster(key: str) -> None:
     explainer = shap.TreeExplainer(model)
     shap_values = explainer.shap_values(new_project_data)
     
-    # Use st.pyplot to render the matplotlib-based SHAP plot
     fig, ax = plt.subplots(figsize=(10, 2))
     shap.force_plot(explainer.expected_value, shap_values[0], new_project_data.iloc[0], matplotlib=True, show=False)
     plt.tight_layout()
@@ -148,7 +142,6 @@ def run_project_duration_forecaster(key: str) -> None:
     **Actionable Insight:** The SHAP analysis reveals that the high '# of URS' is the primary factor increasing the project's predicted duration. To shorten this timeline, we should focus on consolidating or simplifying user requirements during the planning phase.
     """)
 
-# ... (Other plot functions remain unchanged, they are correct) ...
 def plot_cpk_analysis(key: str) -> go.Figure:
     rng = np.random.default_rng(42)
     data = rng.normal(loc=5.15, scale=0.05, size=100)
@@ -289,30 +282,45 @@ def plot_process_stability_chart(key: str) -> go.Figure:
     return fig
 
 def plot_csv_dashboard(key: str) -> None:
-    col1, col2 = st.columns(2); with col1: st.metric("21 CFR Part 11 Compliance Status", "PASS", "✔️", help="Electronic records and signatures meet all technical and procedural requirements."); with col2: st.metric("Data Integrity Risk Score", "Low", "-5% vs Last Quarter", help="Calculated based on ALCOA+ principles.")
-    df = pd.DataFrame({ "GAMP 5 Category": ["Cat 4: Configured", "Cat 5: Custom"], "System": ["HMI Software", "LIMS Interface"], "Status": ["Validation Complete", "IQ/OQ In Progress"] }); st.dataframe(style_dataframe(df), use_container_width=True)
+    # --- FIX: Correct SyntaxError by separating statements ---
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("21 CFR Part 11 Compliance Status", "PASS", "✔️", help="Electronic records and signatures meet all technical and procedural requirements.")
+    with col2:
+        st.metric("Data Integrity Risk Score", "Low", "-5% vs Last Quarter", help="Calculated based on ALCOA+ principles.")
+    
+    df = pd.DataFrame({ "GAMP 5 Category": ["Cat 4: Configured", "Cat 5: Custom"], "System": ["HMI Software", "LIMS Interface"], "Status": ["Validation Complete", "IQ/OQ In Progress"] })
+    st.dataframe(style_dataframe(df), use_container_width=True)
 
 def plot_cleaning_validation_results(key: str) -> go.Figure:
     df = pd.DataFrame({'Sample Location': ['Swab 1 (Reactor Wall)', 'Swab 2 (Agitator Blade)', 'Swab 3 (Fill Nozzle)', 'Final Rinse'], 'TOC Result (ppb)': [150, 180, 165, 25], 'Acceptance Limit (ppb)': [500, 500, 500, 50]})
-    df['Status'] = df.apply(lambda row: SUCCESS_GREEN if row['TOC Result (ppb)'] < row['Acceptance Limit (ppb)'] else ERROR_RED, axis=1); fig = px.bar(df, x='Sample Location', y='TOC Result (ppb)', title='<b>Cleaning Validation Results (Total Organic Carbon)</b>', text='TOC Result (ppb)')
-    fig.update_traces(marker_color=df['Status']); fig.add_trace(go.Scatter(x=df['Sample Location'], y=df['Acceptance Limit (ppb)'], name='Acceptance Limit', mode='lines+markers', line=dict(color=ERROR_RED, dash='dash', width=3))); fig.update_layout(title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
+    df['Status'] = df.apply(lambda row: SUCCESS_GREEN if row['TOC Result (ppb)'] < row['Acceptance Limit (ppb)'] else ERROR_RED, axis=1)
+    fig = px.bar(df, x='Sample Location', y='TOC Result (ppb)', title='<b>Cleaning Validation Results (Total Organic Carbon)</b>', text='TOC Result (ppb)')
+    fig.update_traces(marker_color=df['Status'])
+    fig.add_trace(go.Scatter(x=df['Sample Location'], y=df['Acceptance Limit (ppb)'], name='Acceptance Limit', mode='lines+markers', line=dict(color=ERROR_RED, dash='dash', width=3)))
+    fig.update_layout(title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
     return fig
 
 def plot_shipping_validation_temp(key: str) -> go.Figure:
     rng = np.random.default_rng(30); time = pd.to_datetime(pd.date_range("2023-01-01", periods=48, freq="h")); temp = rng.normal(4, 0.5, 48); temp[24] = 8.5 
-    fig = px.line(x=time, y=temp, title='<b>Shipping Lane PQ: Temperature Profile</b>', markers=True); fig.add_hrect(y0=2, y1=8, line_width=0, fillcolor=SUCCESS_GREEN, opacity=0.2, annotation_text="In Spec (2-8°C)", annotation_position="top left")
+    fig = px.line(x=time, y=temp, title='<b>Shipping Lane PQ: Temperature Profile</b>', markers=True)
+    fig.add_hrect(y0=2, y1=8, line_width=0, fillcolor=SUCCESS_GREEN, opacity=0.2, annotation_text="In Spec (2-8°C)", annotation_position="top left")
     excursion_time = time[temp > 8]
-    if not excursion_time.empty: fig.add_annotation(x=excursion_time[0], y=temp[24], text="Excursion!", showarrow=True, arrowhead=1, ax=0, ay=-40, bordercolor="#c7c7c7", borderwidth=2, borderpad=4, bgcolor=ERROR_RED, opacity=0.8, font=dict(color="white"))
-    fig.update_layout(yaxis_title="Temperature (°C)", title_x=0.5, plot_bgcolor=BACKGROUND_GREY); return fig
+    if not excursion_time.empty:
+        fig.add_annotation(x=excursion_time[0], y=temp[24], text="Excursion!", showarrow=True, arrowhead=1, ax=0, ay=-40, bordercolor="#c7c7c7", borderwidth=2, borderpad=4, bgcolor=ERROR_RED, opacity=0.8, font=dict(color="white"))
+    fig.update_layout(yaxis_title="Temperature (°C)", title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
+    return fig
 
 def plot_doe_optimization(key: str) -> go.Figure:
     temp = np.linspace(30, 40, 10); ph = np.linspace(6.8, 7.6, 10); temp_grid, ph_grid = np.meshgrid(temp, ph); signal = 100 - (temp_grid - 37)**2 - 20*(ph_grid - 7.2)**2 + np.random.rand(10, 10)*2
-    fig = go.Figure(data=[go.Surface(z=signal, x=temp, y=ph, colorscale='viridis', colorbar_title='Yield')]); fig.update_layout(title='<b>DOE Response Surface for Process Optimization</b>', scene=dict(xaxis_title='Temperature (°C)', yaxis_title='pH', zaxis_title='Product Yield (%)'), title_x=0.5, margin=dict(l=0, r=0, b=0, t=40))
+    fig = go.Figure(data=[go.Surface(z=signal, x=temp, y=ph, colorscale='viridis', colorbar_title='Yield')])
+    fig.update_layout(title='<b>DOE Response Surface for Process Optimization</b>', scene=dict(xaxis_title='Temperature (°C)', yaxis_title='pH', zaxis_title='Product Yield (%)'), title_x=0.5, margin=dict(l=0, r=0, b=0, t=40))
     return fig
 
 def plot_kaizen_roi_chart(key: str) -> go.Figure:
     fig = go.Figure(go.Waterfall(name="2023 Savings", orientation="v", measure=["relative", "relative", "relative", "total"], x=["Optimize CIP Cycle Time", "Implement PAT Sensor", "Reduce Line Changeover", "<b>Total Annual Savings</b>"], text=[f"+${v}k" for v in [150, 75, 220, 445]], y=[150, 75, 220, 445], connector={"line": {"color": NEUTRAL_GREY}}, increasing={"marker":{"color":SUCCESS_GREEN}}, decreasing={"marker":{"color":ERROR_RED}}, totals={"marker":{"color":PRIMARY_COLOR, "line": dict(color='white', width=2)}}))
-    fig.update_layout(title="<b>Continuous Improvement (Kaizen) ROI Tracker</b>", yaxis_title="Annual Savings ($k)", title_x=0.5, plot_bgcolor=BACKGROUND_GREY); return fig
+    fig.update_layout(title="<b>Continuous Improvement (Kaizen) ROI Tracker</b>", yaxis_title="Annual Savings ($k)", title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
+    return fig
 
 def plot_deviation_trend_chart(key: str) -> go.Figure:
     dates = pd.to_datetime(pd.date_range("2023-01-01", periods=6, freq="ME")); data = {'Month': dates, 'Bioreactor Suite C': [5, 6, 8, 7, 9, 11], 'Purification Skid A': [4, 5, 4, 6, 5, 6], 'Packaging Line 2': [2, 1, 3, 2, 4, 3]}
@@ -327,10 +335,10 @@ def run_urs_risk_nlp_model(key: str) -> go.Figure:
     fig.update_traces(textposition='top center'); fig.add_vline(x=0.5, line_dash="dash", annotation_text="Action Threshold"); fig.add_hline(y=7.5, line_dash="dash", annotation_text="High Criticality")
     fig.add_annotation(x=0.75, y=5, text="High Ambiguity, <br>Low Impact:<br><b>Clarify</b>", showarrow=False, bgcolor="#FFC107", borderpad=4)
     fig.add_annotation(x=0.75, y=9, text="High Ambiguity, <br>High Impact:<br><b>REJECT/REWRITE!</b>", showarrow=False, bgcolor="#D32F2F", font=dict(color='white'), borderpad=4)
-    fig.update_layout(title_x=0.5, plot_bgcolor=BACKGROUND_GREY); return fig
+    fig.update_layout(title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
+    return fig
 
 # --- PAGE RENDERING FUNCTIONS ---
-
 def render_main_page() -> None:
     st.title("🤖 Automated Equipment Validation Portfolio"); st.subheader("A Live Demonstration of Modern Validation Leadership"); st.divider()
     st.markdown("Welcome. This interactive environment provides **undeniable proof of expertise in the end-to-end validation of automated manufacturing equipment** in a strictly regulated GMP environment. It simulates how an effective leader manages a validation function, with a relentless focus on aligning technical execution, **Quality Systems (per 21 CFR 820 & ISO 13485)**, and strategic capital projects.")
@@ -340,14 +348,11 @@ def render_main_page() -> None:
     c1.metric("Validation Program Compliance", "98%", delta="1%", help="Percentage of systems in a validated state and on their periodic review schedule.")
     c2.metric("Quality First Time Rate", "91%", delta="-2%", help="Percentage of validation protocols executed without deviation.")
     c3.metric("Capital Project On-Time Delivery", "95%", delta="5%", help="Validation deliverables completed on or before schedule for major capital projects.")
-    
-    # --- NEW: Six more actionable KPIs ---
     st.markdown("---")
     c4, c5, c6 = st.columns(3)
     c4.metric("CAPEX Validation Spend vs. Budget", "97%", delta="-3%", help="Total validation capital expenditure against the annual fiscal plan.", delta_color="inverse")
     c5.metric("Avg. Protocol Review Cycle Time", "8.2 Days", delta="1.5 Days", help="Average time from document submission to final QA approval.", delta_color="inverse")
     c6.metric("Open Validation-Related CAPAs", "3", delta="1", help="Number of open Corrective/Preventive Actions where Validation is the owner.", delta_color="inverse")
-
     c7, c8, c9 = st.columns(3)
     c7.metric("Systems Overdue for Periodic Review", "1", delta="1", help="Critical GxP systems that have passed their scheduled periodic review date.", delta_color="inverse")
     c8.metric("Vendor Documentation Quality", "96%", delta="4%", help="Percentage of vendor documents (e.g., FAT, drawings) accepted on first pass without GDP errors.")
