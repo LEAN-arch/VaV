@@ -391,7 +391,11 @@ def run_requirement_risk_nlp_model(key):
                      title='Requirement Prioritization Matrix',
                      labels={'Ambiguity Score': 'Predicted Ambiguity / V&V Risk', 'Criticality': 'Business & Patient Safety Criticality'})
     
-    fig.update_traces(textposition='top_center', textfont_size=12)
+    # --- FIX START ---
+    # Corrected 'textfont_size' to the proper nested 'textfont=dict(size=...)' structure.
+    fig.update_traces(textposition='top center', textfont=dict(size=12))
+    # --- FIX END ---
+
     fig.add_vline(x=0.5, line_width=1, line_dash="dash", line_color="black")
     fig.add_hline(y=7.5, line_width=1, line_dash="dash", line_color="black")
     
