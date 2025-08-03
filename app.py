@@ -92,9 +92,29 @@ def display_vendor_scorecard(key: str) -> None:
         "Overall Score": ["91/100", "90/100"]
     }))
 
+# --- REPLACE THE OLD FUNCTION WITH THIS CORRECTED VERSION ---
+
 def create_portfolio_health_dashboard(key: str) -> Styler:
-    data = {'Project': ["Atlas (Bioreactor)", "Beacon (Assembly)", "Comet (Vision)", "Sustaining"], 'Phase': ["IQ/OQ", "FAT", "Planning", "Execution"], 'Schedule': ["Green", "Amber", "Green", "Green"], 'Budget': ["Green", "Green", "Green", "Amber"], 'Technical Risk': ["Amber", "Red", "Green", "Green"], 'Resource Strain': ["Amber", "Red", "Amber", "Green"]}
-    df = pd.DataFrame(data); def style_rag(val: str) -> str: return f"background-color: {'lightgreen' if val == 'Green' else 'lightyellow' if val == 'Amber' else '#ffcccb' if val == 'Red' else 'white'}"
+    """
+    Generates the RAG status dashboard with project names relevant to
+    biotech capital projects involving automated equipment.
+    This version fixes a SyntaxError by placing the helper function definition on its own line.
+    """
+    data = {
+        'Project': ["Atlas (Bioreactor Suite C)", "Beacon (New Assembly Line)", "Comet (Vision System Upgrade)", "Sustaining Validation"],
+        'Phase': ["IQ/OQ", "FAT", "Planning", "Execution"],
+        'Schedule': ["Green", "Amber", "Green", "Green"],
+        'Budget': ["Green", "Green", "Green", "Amber"],
+        'Technical Risk': ["Amber", "Red", "Green", "Green"],
+        'Resource Strain': ["Amber", "Red", "Amber", "Green"]
+    }
+    df = pd.DataFrame(data)
+
+    # --- FIX: The function definition now starts on its own line ---
+    def style_rag(val: str) -> str:
+        color_map = {'Green': 'lightgreen', 'Amber': 'lightyellow', 'Red': '#ffcccb'}
+        return f'background-color: {color_map.get(val, "white")}'
+
     return df.style.map(style_rag, subset=['Schedule', 'Budget', 'Technical Risk', 'Resource Strain'])
 
 def create_resource_allocation_matrix(key: str) -> Tuple[go.Figure, pd.DataFrame]:
