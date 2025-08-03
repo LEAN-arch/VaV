@@ -1,4 +1,4 @@
-# app.py (Final, SME World-Class Version - Fully Corrected)
+# app.py (Final, SME World-Class Version - SHAP & Sparklines)
 
 # --- IMPORTS ---
 import streamlit as st
@@ -14,7 +14,7 @@ from sklearn.linear_model import LogisticRegression
 from scipy.stats import norm
 import shap
 import matplotlib.pyplot as plt
-from typing import Tuple # <-- FIX: Import Tuple for type hinting
+from typing import Tuple
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -49,6 +49,37 @@ def style_dataframe(df: pd.DataFrame) -> Styler:
     }).set_table_styles([
         {'selector': 'th', 'props': [('background-color', PRIMARY_COLOR), ('color', 'white'), ('font-weight', 'bold')]}
     ]).hide(axis="index")
+
+# --- NEW: Helper for KPI Sparkline charts ---
+def plot_kpi_sparkline(data: list, is_good_down: bool = False) -> go.Figure:
+    """Creates a compact sparkline chart for a KPI."""
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=list(range(len(data))),
+        y=data,
+        mode='lines',
+        line=dict(color=PRIMARY_COLOR, width=2),
+        fill='tozeroy',
+        fillcolor='rgba(4, 96, 169, 0.1)'
+    ))
+    # Add start and end point markers
+    end_color = SUCCESS_GREEN if (data[-1] < data[-2] and is_good_down) or (data[-1] > data[-2] and not is_good_down) else ERROR_RED
+    fig.add_trace(go.Scatter(
+        x=[0, len(data)-1],
+        y=[data[0], data[-1]],
+        mode='markers',
+        marker=dict(size=[6, 9], color=['grey', end_color])
+    ))
+    fig.update_layout(
+        width=150, height=50,
+        margin=dict(l=0, r=0, t=5, b=0),
+        xaxis=dict(visible=False),
+        yaxis=dict(visible=False),
+        showlegend=False,
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)'
+    )
+    return fig
 
 # --- DATA GENERATORS & VISUALIZATIONS ---
 
@@ -95,6 +126,12 @@ def create_resource_allocation_matrix(key: str) -> Tuple[go.Figure, pd.DataFrame
     over_allocated = allocations[allocations['Total Allocation'] > 1.0]
     return fig, over_allocated
 
+# --- ENHANCED AI/ML FORECASTER with SHAP EXPLAINABILITY ---
+def st_shap(plot, height=None):
+    """Renders a SHAP plot in Streamlit using the robust JS method."""
+    shap_html = f"<head>{shap.getjs()}</head><body>{plot.html()}</body>"
+    st.components.v1.html(shap_html, height=height)
+    
 def run_project_duration_forecaster(key: str) -> None:
     """Trains a model and explains its predictions using SHAP."""
     rng = np.random.default_rng(42)
@@ -123,21 +160,13 @@ def run_project_duration_forecaster(key: str) -> None:
               help="Based on a Random Forest model trained on 20 historical projects. Includes IQ, OQ, and PQ phases.")
 
     st.subheader("AI Prediction Analysis (Why This Forecast?)")
-    st.info("""
-    **Purpose:** This SHAP (SHapley Additive exPlanations) force plot provides transparent, undeniable proof of how the AI model arrived at its prediction. 
-    It's not a black box; we can see exactly which project features are driving the timeline estimate.
-    - **Base Value:** The average predicted duration across all historical projects.
-    - **Red Arrows:** Features pushing the prediction **higher** (increasing the duration).
-    - **Blue Arrows:** Features pushing the prediction **lower** (decreasing the duration).
-    """)
+    st.info("This SHAP force plot shows which project features are driving the timeline estimate. Red arrows push the prediction higher (longer duration), and blue arrows push it lower.")
     
     explainer = shap.TreeExplainer(model)
     shap_values = explainer.shap_values(new_project_data)
     
-    fig, ax = plt.subplots(figsize=(10, 2))
-    shap.force_plot(explainer.expected_value, shap_values[0], new_project_data.iloc[0], matplotlib=True, show=False)
-    plt.tight_layout()
-    st.pyplot(fig, use_container_width=True)
+    # --- FIX for SHAP PLOT: Use robust JavaScript rendering method ---
+    st_shap(shap.force_plot(explainer.expected_value, shap_values[0,:], new_project_data.iloc[0,:]), 150)
     
     st.success("""
     **Actionable Insight:** The SHAP analysis reveals that the high '# of URS' is the primary factor increasing the project's predicted duration. To shorten this timeline, we should focus on consolidating or simplifying user requirements during the planning phase.
@@ -343,19 +372,34 @@ def render_main_page() -> None:
     st.markdown("Welcome. This interactive environment provides **undeniable proof of expertise in the end-to-end validation of automated manufacturing equipment** in a strictly regulated GMP environment. It simulates how an effective leader manages a validation function, with a relentless focus on aligning technical execution, **Quality Systems (per 21 CFR 820 & ISO 13485)**, and strategic capital projects.")
     
     st.subheader("Key Program Health KPIs", divider='blue');
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Validation Program Compliance", "98%", delta="1%", help="Percentage of systems in a validated state and on their periodic review schedule.")
-    c2.metric("Quality First Time Rate", "91%", delta="-2%", help="Percentage of validation protocols executed without deviation.")
-    c3.metric("Capital Project On-Time Delivery", "95%", delta="5%", help="Validation deliverables completed on or before schedule for major capital projects.")
-    st.markdown("---")
-    c4, c5, c6 = st.columns(3)
-    c4.metric("CAPEX Validation Spend vs. Budget", "97%", delta="-3%", help="Total validation capital expenditure against the annual fiscal plan.", delta_color="inverse")
-    c5.metric("Avg. Protocol Review Cycle Time", "8.2 Days", delta="1.5 Days", help="Average time from document submission to final QA approval.", delta_color="inverse")
-    c6.metric("Open Validation-Related CAPAs", "3", delta="1", help="Number of open Corrective/Preventive Actions where Validation is the owner.", delta_color="inverse")
-    c7, c8, c9 = st.columns(3)
-    c7.metric("Systems Overdue for Periodic Review", "1", delta="1", help="Critical GxP systems that have passed their scheduled periodic review date.", delta_color="inverse")
-    c8.metric("Vendor Documentation Quality", "96%", delta="4%", help="Percentage of vendor documents (e.g., FAT, drawings) accepted on first pass without GDP errors.")
-    c9.metric("Team Utilization Rate", "88%", delta="-5%", help="Percentage of available engineering hours logged against active projects.", delta_color="inverse")
+    # --- NEW: Display KPIs with Sparklines ---
+    kpi_cols = st.columns(3)
+    with kpi_cols[0]:
+        with st.container(border=True):
+            st.metric("Validation Program Compliance", "98%", delta="1%")
+            st.plotly_chart(plot_kpi_sparkline([96, 96, 97, 97, 97, 98]), use_container_width=True)
+    with kpi_cols[1]:
+        with st.container(border=True):
+            st.metric("Quality First Time Rate", "91%", delta="-2%")
+            st.plotly_chart(plot_kpi_sparkline([92, 94, 95, 93, 93, 91]), use_container_width=True)
+    with kpi_cols[2]:
+        with st.container(border=True):
+            st.metric("Capital Project On-Time Delivery", "95%", delta="5%")
+            st.plotly_chart(plot_kpi_sparkline([85, 88, 87, 90, 90, 95]), use_container_width=True)
+
+    kpi_cols2 = st.columns(3)
+    with kpi_cols2[0]:
+        with st.container(border=True):
+            st.metric("CAPEX Validation Spend vs. Budget", "97%", delta="-3%", delta_color="inverse")
+            st.plotly_chart(plot_kpi_sparkline([95, 96, 98, 101, 100, 97], is_good_down=True), use_container_width=True)
+    with kpi_cols2[1]:
+        with st.container(border=True):
+            st.metric("Avg. Protocol Review Cycle Time", "8.2 Days", delta="1.5 Days", delta_color="inverse")
+            st.plotly_chart(plot_kpi_sparkline([11.5, 10.1, 9.5, 9.7, 9.7, 8.2], is_good_down=True), use_container_width=True)
+    with kpi_cols2[2]:
+        with st.container(border=True):
+            st.metric("Open Validation-Related CAPAs", "3", delta="1", delta_color="inverse")
+            st.plotly_chart(plot_kpi_sparkline([5, 4, 4, 2, 2, 3], is_good_down=True), use_container_width=True)
 
     with st.expander("Click here for a guided tour of this portfolio's key capabilities"):
         st.info("1.  **Start with Strategy (`Tab 1`):** See how a leader manages budgets, forecasts resources, and sets departmental goals (OKRs).\n2.  **Oversee the Portfolio (`Tab 2`):** View the Gantt chart, RAG status, and resource allocation for all validation projects.\n3.  **Deep Dive into Execution (`Tab 3`):** Walk through a live simulation of a major capital project from FAT to PQ.\n4.  **Verify Specialized Expertise (`Tab 4`):** Explore capabilities in CSV, Cleaning, and Shipping Validation.\n5.  **Confirm Lifecycle Management (`Tab 5`):** Understand the approach to maintaining the validated state.\n6.  **Inspect the Documentation (`Tab 6`):** See how compliant, auditable protocols and reports are generated.")
