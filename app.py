@@ -46,7 +46,10 @@ def render_metric_card(title, description, viz_function, insight, reg_context, k
         st.markdown(f"*{description}*")
         st.warning(f"**Regulatory Context:** {reg_context}")
         fig = viz_function(key)
-        if fig:
+        if fig is not None:
+            if isinstance(fig, plt.Figure):
+                st.pyplot(fig)
+        else:
             st.plotly_chart(fig, use_container_width=True)
         st.success(f"**Actionable Insight:** {insight}")
 
