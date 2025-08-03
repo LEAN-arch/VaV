@@ -705,8 +705,8 @@ def plot_multivariate_anomaly_detection(key: str) -> go.Figure:
 def run_predictive_maintenance_model(key: str) -> plt.Figure:
     """
     Simulates instrument sensor data and uses SHAP for an explainable AI model.
-    This corrected version passes the entire SHAP values object to the summary_plot
-    function to resolve the classifier output assertion error.
+    This version provides the definitive fix for the blank plot rendering issue by
+    removing the premature plt.clf() call.
     """
     # --- Data Generation & Model Training (No changes here) ---
     np.random.seed(42)
@@ -735,21 +735,22 @@ def run_predictive_maintenance_model(key: str) -> plt.Figure:
     
     # --- FIX: ROBUSTLY CAPTURE THE MATPLOTLIB FIGURE ---
     
-    # Pass the ENTIRE list of shap_values. The plot function will handle it correctly
-    # for classification, often creating a more informative, multi-class plot.
-    shap.summary_plot(shap_values, X, plot_type="dot", show=False)
+    # 1. Draw the plot to matplotlib's global state. `show=False` prevents it from popping up.
+    #    We pass the full list of shap_values. SHAP correctly creates a beeswarm plot
+    #    color-coded by the output class.
+    shap.summary_plot(shap_values, X, show=False)
     
-    # Capture the current figure object that SHAP just created.
-    fig = plt.gcf() 
-    
-    # Add titles or other customizations to the captured figure.
+    # 2. Add any further customizations, like a title, to the global figure.
     plt.title("SHAP Summary Plot: Feature Impact on Failure Prediction")
-    plt.tight_layout()
     
-    # Clear matplotlib's global figure state to prevent this plot from
-    # interfering with any other matplotlib plots in the app.
-    plt.clf() 
+    # 3. Get a reference to the fully-drawn global figure.
+    fig = plt.gcf()
     
+    # 4. CRITICAL FIX: DO NOT call plt.clf() here.
+    #    Calling it would erase the plot before Streamlit can render it.
+    #    We will allow Streamlit's st.pyplot() to handle the figure clearing and display.
+    
+    # 5. Return the complete figure object.
     return fig
 
 def run_nlp_topic_modeling(key: str) -> None:
