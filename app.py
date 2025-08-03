@@ -70,6 +70,132 @@ def plot_kpi_sparkline(data: list, is_good_down: bool = False) -> go.Figure:
     return fig
 
 # --- DATA GENERATORS & VISUALIZATIONS ---
+def display_revalidation_planner(key: str) -> None:
+    """
+    NEW: An interactive planner for developing a risk-based revalidation strategy.
+    This demonstrates strategic thinking beyond simple periodic reviews.
+    """
+    st.subheader("Interactive Revalidation Strategy Planner", divider='blue')
+    st.info("""
+    **Purpose:** This tool moves beyond a fixed periodic review schedule to a dynamic, risk-based revalidation strategy. By simulating the impact of potential future events (like major software patches or process drifts), we can proactively plan and budget for necessary revalidation efforts.
+    """)
+    
+    review_data = {"System": ["Bioreactor C", "Purification A", "WFI System"], 
+                   "Risk Level": ["High", "High", "High"],
+                   "Base Reval Effort (Days)": [20, 15, 10]}
+    df = pd.DataFrame(review_data)
+
+    st.markdown("##### Select a Potential Future Change Event:")
+    change_event = st.selectbox("", 
+        options=["No Significant Change", "Major Software Patch (OS Update)", "Minor Process Drift Detected (SPC Trend)", "New Raw Material Supplier"])
+
+    # Define risk multipliers for different events
+    multipliers = {
+        "No Significant Change": {'High': 0.1, 'Medium': 0.05, 'Low': 0},
+        "Major Software Patch (OS Update)": {'High': 0.8, 'Medium': 0.5, 'Low': 0.2},
+        "Minor Process Drift Detected (SPC Trend)": {'High': 0.5, 'Medium': 0.2, 'Low': 0.1},
+        "New Raw Material Supplier": {'High': 1.0, 'Medium': 0.7, 'Low': 0.3}
+    }
+    
+    selected_multiplier = multipliers[change_event]
+    
+    df['Impact Multiplier'] = df['Risk Level'].map(selected_multiplier)
+    df['Forecasted Revalidation Effort (Days)'] = df['Base Reval Effort (Days)'] * df['Impact Multiplier']
+    
+    total_effort = df['Forecasted Revalidation Effort (Days)'].sum()
+    
+    st.markdown("##### Forecasted Revalidation Workload")
+    st.dataframe(df.round(1), use_container_width=True, hide_index=True)
+    
+    st.metric("Total Forecasted Revalidation Effort for this Scenario (Person-Days)", f"{total_effort:.1f}")
+    
+    st.success(f"""
+    **Actionable Insight for '{change_event}':** This scenario forecasts **{total_effort:.1f} person-days** of revalidation work. This data can be used to proactively secure contractor budget or adjust project timelines *before* the change occurs, ensuring we remain in a state of control.
+    """)
+def run_rft_prediction_model(key: str) -> None:
+    """
+    NEW: An interactive model to predict the probability of a protocol succeeding on the first try.
+    This demonstrates a proactive, data-driven approach to ensuring quality.
+    """
+    st.subheader("Predictive Right-First-Time (RFT) Modeler", divider='blue')
+    st.info("""
+    **Purpose:** This model uses historical data to predict the likelihood that a new validation protocol will be executed without deviations (i.e., "Right First Time"). It allows us to proactively de-risk complex validation activities *before* execution begins.
+    """)
+
+    # Simulate historical data and train a simple model
+    rng = np.random.default_rng(42)
+    X_train = pd.DataFrame({
+        '# of Test Cases': rng.integers(10, 100, 20),
+        'Vendor Doc Quality (%)': rng.integers(80, 101, 20),
+        'Team Experience (Avg. Yrs)': rng.uniform(1, 5, 20)
+    })
+    y_train = (X_train['Vendor Doc Quality (%)'] > 90) & (X_train['Team Experience (Avg. Yrs)'] > 2.5) & (X_train['# of Test Cases'] < 50)
+    model = LogisticRegression().fit(X_train, y_train)
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        test_cases = st.slider("Number of Test Cases", 10, 100, 65, key=f"rft_tc_{key}")
+    with col2:
+        vendor_quality = st.slider("Vendor Doc Quality (%)", 80, 100, 85, key=f"rft_vendor_{key}")
+    with col3:
+        team_exp = st.slider("Team Experience (Avg. Yrs)", 1.0, 5.0, 1.5, step=0.5, key=f"rft_exp_{key}")
+
+    new_protocol_data = pd.DataFrame([[test_cases, vendor_quality, team_exp]], columns=X_train.columns)
+    prediction_proba = model.predict_proba(new_protocol_data)[0][1] # Probability of 'True' (Success)
+    
+    color = SUCCESS_GREEN if prediction_proba > 0.7 else WARNING_AMBER if prediction_proba > 0.4 else ERROR_RED
+    
+    st.markdown(f"""
+    <div style="background-color: {color}; color: white; padding: 10px; border-radius: 5px;">
+        <h4 style="color: white;">Predicted RFT Probability: {prediction_proba:.1%}</h4>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    if prediction_proba < 0.7:
+        st.error("""
+        **Automated Alert: High Risk of Protocol Deviation**
+        
+        **Actionable Insight:** The model predicts a high probability of failure for this protocol execution. The low team experience is the likely root cause.
+        **Recommendation:** Assign a senior engineer (e.g., S. Smith from the Skills Matrix) to mentor the junior team member executing this protocol. Conduct a dry run of the most complex test cases to mitigate risk.
+        """)
+    else:
+        st.success("**Insight:** The model predicts a high likelihood of a successful, deviation-free execution.")
+        
+def display_vendor_dashboard(key: str) -> None:
+    """
+    NEW: Displays a dynamic Vendor Risk & Opportunity Dashboard.
+    This demonstrates proactive supply chain management and strategic partnership.
+    """
+    st.subheader("Vendor Risk & Opportunity Dashboard", divider='blue')
+    st.info("""
+    **Purpose:** An effective manager proactively manages the supply chain. This dashboard moves beyond simple performance scoring to assess future risks and identify strategic partnership opportunities, ensuring project success and long-term value.
+    """)
+    
+    vendor_data = {
+        'Vendor': ['Vendor A (Automation)', 'Vendor B (Components)', 'Vendor C (Software)'],
+        'Overall Score': [91, 85, 94],
+        'Anticipated Risk': ['Low', 'Medium', 'Low'],
+        'Risk Driver': ['None', 'Sole Source for Key Part', 'None'],
+        'Strategic Opportunity': ['Partner for next-gen platform', 'Second Source Qualification', 'Integrate for data analytics']
+    }
+    df = pd.DataFrame(vendor_data)
+
+    def style_risk(val: str) -> str:
+        color = {'Low': SUCCESS_GREEN, 'Medium': WARNING_AMBER, 'High': ERROR_RED}.get(val, 'white')
+        font_color = 'white' if val in ['Low', 'Medium', 'High'] else 'black'
+        return f"background-color: {color}; color: {font_color};"
+
+    styled_df = df.style.map(style_risk, subset=['Anticipated Risk'])\
+                       .background_gradient(cmap='Greens', subset=['Overall Score'], vmin=70, vmax=100)\
+                       .set_properties(**{'text-align': 'center'})
+    
+    st.dataframe(styled_df, use_container_width=True, hide_index=True)
+    
+    st.success("""
+    **Actionable Insight:** Vendor B, despite an acceptable performance score, is flagged as a 'Medium' risk due to being a sole-source supplier. 
+    **Recommendation:** Initiate a project to qualify a second source for their key component to mitigate supply chain risk for future projects. Vendor C's high score and software expertise make them a prime candidate for a strategic data analytics partnership.
+    """)
+
 def display_team_skill_matrix(key: str) -> None:
     """
     Displays a team skill matrix to demonstrate strategic talent management.
@@ -565,6 +691,8 @@ def render_main_page() -> None:
             st.plotly_chart(plot_predictive_compliance_risk(), use_container_width=True)
             st.info("**Purpose:** This AI-driven score aggregates leading indicators to forecast the future risk of falling out of compliance.")
             st.success("**Actionable Insight:** The current score is green. However, if 'Open CAPAs' were to increase, this model predicts a move into the amber zone next quarter, allowing us to act *before* a problem occurs.")
+        with st.container(border=True):
+        run_rft_prediction_model(key="main_rft")
 
 def render_strategic_management_page() -> None:
     st.title("📈 1. Strategic Management & Business Acumen")
@@ -634,7 +762,9 @@ def render_project_portfolio_page() -> None:
         st.info("**Purpose:** The Risk Burndown chart visually tracks the team's effectiveness at mitigating and closing high-impact project risks over time. The goal is for the 'Actual' line to be at or below the 'Target' line.")
         st.plotly_chart(plot_risk_burndown("risk_burn"), use_container_width=True)
         st.success("**Actionable Insight:** The team is effectively mitigating risks ahead of schedule, which reduces the probability of future project delays or quality issues.")
-        
+    with st.container(border=True):
+        # This new module demonstrates strategic, forward-looking vendor management.
+        display_vendor_dashboard(key="vendor_dashboard")    
     with st.container(border=True):
         # The new, transparent analysis module is called here.
         analyze_project_bottlenecks()
@@ -709,6 +839,7 @@ def render_validation_program_health_page() -> None:
             return ['background-color: #FFC7CE; color: black; font-weight: bold;'] * len(row) if row["Status"] == "DUE" else [''] * len(row)
         st.dataframe(review_df.style.apply(highlight_status, axis=1), use_container_width=True, hide_index=True)
         st.error("**Actionable Insight:** The Periodic Review for the **HVAC - Grade A Area** is now due. A Validation Engineer will be assigned to initiate the review this week.")
+        display_revalidation_planner(key="reval_planner")
     with tab2:
         st.subheader("Continuous Improvement (Kaizen) Initiative Tracker")
         st.info("**Context:** An effective validation program uses data to drive improvement. The **Deviation Trend** chart identifies operational problems (the 'why'), while the **ROI Tracker** provides the business case for funding solutions (the 'what for').")
