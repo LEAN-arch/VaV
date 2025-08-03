@@ -1,4 +1,4 @@
-# app.py (Final, SME World-Class Version for Roche/Genentech - Corrected v6)
+# app.py (Final, SME World-Class Version - No Logo)
 
 # --- IMPORTS ---
 import base64
@@ -18,20 +18,17 @@ from scipy.stats import norm
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
     layout="wide",
-    page_title="Automated Equipment Validation Portfolio | Roche",
+    page_title="Automated Equipment Validation Portfolio",
     page_icon="🤖"
 )
 
 # --- AESTHETIC & THEME CONSTANTS ---
-ROCHE_BLUE = '#0460A9' # Official Roche Blue
+PRIMARY_COLOR = '#0460A9' # A professional blue, formerly Roche Blue
 SUCCESS_GREEN = '#4CAF50'
 WARNING_AMBER = '#FFC107'
 ERROR_RED = '#D32F2F'
 NEUTRAL_GREY = '#9E9E9E'
 BACKGROUND_GREY = '#F5F5F5'
-
-# --- EMBEDDED ASSETS ---
-ROCHE_LOGO_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAASwAAACWCAYAAAB22P+PAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAEleSURBVHhe7Z1/kFxVdfe/553Z3dnd2WUSSCBhkLAEYSEhIYEQiIeAhwIKigKiYlVBqaKCCiiIKy4uCoiKirIouMgFFgEBK2RJsIQEkhCSySQzk51kdnb3dPedeV/3mUl2NplMJpMkyft8P49pZt7UvZt7p5977vM+55zRNE0IIYSQkI1y2gUQQAghhGQIggUhhBBCRiiChSCEEELGKEiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhhBBCxiiChBBCyBhFSBAhh... (this is a very long string, truncated for display)
 
 # --- UTILITY & HELPER FUNCTIONS ---
 def render_manager_briefing(title: str, content: str, reg_refs: str, business_impact: str, quality_pillar: str, risk_mitigation: str) -> None:
@@ -49,7 +46,7 @@ def style_dataframe(df: pd.DataFrame) -> Styler:
     return df.style.set_properties(**{
         'background-color': '#FFFFFF', 'color': '#000000', 'border': f'1px solid {NEUTRAL_GREY}'
     }).set_table_styles([
-        {'selector': 'th', 'props': [('background-color', ROCHE_BLUE), ('color', 'white'), ('font-weight', 'bold')]}
+        {'selector': 'th', 'props': [('background-color', PRIMARY_COLOR), ('color', 'white'), ('font-weight', 'bold')]}
     ]).hide(axis="index")
 
 # --- DATA GENERATORS & VISUALIZATIONS ---
@@ -101,7 +98,7 @@ def plot_cpk_analysis(key: str) -> go.Figure:
     cpk = min((USL - mu) / (3 * std), (mu - LSL) / (3 * std))
     
     fig = go.Figure()
-    fig.add_trace(go.Histogram(x=data, nbinsx=20, name='Observed Data', histnorm='probability density', marker_color=ROCHE_BLUE, opacity=0.7))
+    fig.add_trace(go.Histogram(x=data, nbinsx=20, name='Observed Data', histnorm='probability density', marker_color=PRIMARY_COLOR, opacity=0.7))
     x_fit = np.linspace(min(data), max(data), 200)
     y_fit = norm.pdf(x_fit, mu, std)
     fig.add_trace(go.Scatter(x=x_fit, y=y_fit, mode='lines', name='Fitted Normal Distribution', line=dict(color=SUCCESS_GREEN, width=2)))
@@ -151,7 +148,7 @@ def plot_headcount_forecast(key: str) -> go.Figure:
     df = pd.DataFrame({'Quarter': ['Q1', 'Q2', 'Q3', 'Q4'], 'Current FTEs': [8, 8, 8, 8], 'Forecasted Need': [8, 9, 10, 10]})
     df['Gap'] = df['Forecasted Need'] - df['Current FTEs']
     fig = go.Figure()
-    fig.add_trace(go.Bar(name='Current Headcount', x=df['Quarter'], y=df['Current FTEs'], marker_color=ROCHE_BLUE, text=df['Current FTEs']))
+    fig.add_trace(go.Bar(name='Current Headcount', x=df['Quarter'], y=df['Current FTEs'], marker_color=PRIMARY_COLOR, text=df['Current FTEs']))
     fig.add_trace(go.Bar(name='Resource Gap', x=df['Quarter'], y=df['Gap'], base=df['Current FTEs'], marker_color=WARNING_AMBER, text=df['Gap'].apply(lambda g: f'+{g}' if g > 0 else '')))
     fig.update_traces(textposition='inside', textfont_size=14)
     fig.update_layout(barmode='stack', title='<b>Resource Gap Analysis: Headcount vs. Forecasted Need</b>',
@@ -194,15 +191,14 @@ def plot_gantt_chart(key: str) -> go.Figure:
     ])
     fig = px.timeline(df, x_start="Start", x_end="Finish", y="Task", color="Phase",
                       title="<b>Major Capital Project Timelines</b>",
-                      color_discrete_map={'Execution': ROCHE_BLUE, 'Planning': WARNING_AMBER})
+                      color_discrete_map={'Execution': PRIMARY_COLOR, 'Planning': WARNING_AMBER})
     
-    # --- FIX for TypeError: Use Timestamp object and explicitly set axis type ---
     fig.update_layout(
         title_x=0.5, yaxis_title=None, plot_bgcolor=BACKGROUND_GREY,
-        xaxis_type='date'  # Explicitly set the axis type
+        xaxis_type='date'
     )
     fig.add_vline(
-        x=pd.to_datetime('today'),  # Pass the Timestamp object directly
+        x=pd.to_datetime('today'),
         line_width=2, line_dash="dash", line_color="black", 
         annotation_text="Today"
     )
@@ -211,7 +207,7 @@ def plot_gantt_chart(key: str) -> go.Figure:
 def plot_risk_burndown(key: str) -> go.Figure:
     df = pd.DataFrame({'Month': ['Jan', 'Feb', 'Mar', 'Apr'], 'Open Risks (RPN > 25)': [12, 10, 7, 4], 'Target Burndown': [12, 9, 6, 3]})
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df['Month'], y=df['Open Risks (RPN > 25)'], name='Actual Open Risks', fill='tozeroy', line=dict(color=ROCHE_BLUE, width=3), mode='lines+markers+text', text=df['Open Risks (RPN > 25)'], textposition='top center'))
+    fig.add_trace(go.Scatter(x=df['Month'], y=df['Open Risks (RPN > 25)'], name='Actual Open Risks', fill='tozeroy', line=dict(color=PRIMARY_COLOR, width=3), mode='lines+markers+text', text=df['Open Risks (RPN > 25)'], textposition='top center'))
     fig.add_trace(go.Scatter(x=df['Month'], y=df['Target Burndown'], name='Target Burndown', line=dict(color=NEUTRAL_GREY, dash='dash')))
     fig.update_layout(title='<b>Project Atlas: High-Risk Burndown</b>', yaxis_title="Count of Open Risks", title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
     return fig
@@ -222,7 +218,7 @@ def display_vendor_scorecard(key: str) -> None:
         "FAT First-Pass Yield (%)": [92, 98], "Doc Package GDP Error Rate (%)": [2, 8], "Overall Score": [91, 85]})
     styled_df = df.style.background_gradient(cmap='RdYlGn', subset=['On-Time Delivery (%)', 'FAT First-Pass Yield (%)', 'Overall Score'], vmin=70, vmax=100) \
                        .background_gradient(cmap='RdYlGn_r', subset=['Doc Package GDP Error Rate (%)'], vmin=0, vmax=10) \
-                       .format('{:.0f}', subset=['On-Time Delivery (%)', 'FAT First-Pass Yield (%)', 'Doc Package GDP Error Rate (%)', 'Overall Score']) \
+                       .format('{:.0f}', subset=df.columns.drop('Vendor')) \
                        .hide(axis="index")
     st.dataframe(styled_df, use_container_width=True)
 
@@ -241,11 +237,11 @@ def create_rtm_data_editor(key: str) -> None:
 
 def create_v_model_figure(key: str = None) -> go.Figure:
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=[1, 2, 3, 4], y=[4, 3, 2, 1], mode='lines+markers+text', text=["<b>URS</b>", "<b>Functional Spec</b>", "<b>Design Spec</b>", "<b>Code/Config</b>"], textposition="bottom center", line=dict(color=ROCHE_BLUE, width=3), marker=dict(size=15)))
+    fig.add_trace(go.Scatter(x=[1, 2, 3, 4], y=[4, 3, 2, 1], mode='lines+markers+text', text=["<b>URS</b>", "<b>Functional Spec</b>", "<b>Design Spec</b>", "<b>Code/Config</b>"], textposition="bottom center", line=dict(color=PRIMARY_COLOR, width=3), marker=dict(size=15)))
     fig.add_trace(go.Scatter(x=[5, 6, 7, 8], y=[1, 2, 3, 4], mode='lines+markers+text', text=["<b>Unit/FAT</b>", "<b>SAT</b>", "<b>IQ/OQ</b>", "<b>PQ</b>"], textposition="top center", line=dict(color=SUCCESS_GREEN, width=3), marker=dict(size=15)))
     for i in range(4):
         fig.add_shape(type="line", x0=4-i, y0=1+i, x1=5+i, y1=1+i, line=dict(color=NEUTRAL_GREY, width=1, dash="dot"))
-    fig.add_annotation(x=2.5, y=4.5, text="<b>Specification / Design</b>", showarrow=False, font=dict(color=ROCHE_BLUE, size=14))
+    fig.add_annotation(x=2.5, y=4.5, text="<b>Specification / Design</b>", showarrow=False, font=dict(color=PRIMARY_COLOR, size=14))
     fig.add_annotation(x=6.5, y=4.5, text="<b>Verification / Qualification</b>", showarrow=False, font=dict(color=SUCCESS_GREEN, size=14))
     fig.update_layout(title_text="<b>The Validation V-Model (per GAMP 5)</b>", title_x=0.5, showlegend=False, xaxis=dict(visible=False), yaxis=dict(visible=False), plot_bgcolor='rgba(0,0,0,0)')
     return fig
@@ -277,7 +273,9 @@ def display_fat_sat_summary(key: str) -> None:
 def plot_oq_challenge_results(key: str) -> go.Figure:
     setpoints = [30, 37, 45, 37, 30]; rng = np.random.default_rng(10); actuals = [rng.normal(sp, 0.1) for sp in setpoints]
     time = pd.to_datetime(['2023-10-01 08:00', '2023-10-01 09:00', '2023-10-01 10:00', '2023-10-01 11:00', '2023-10-01 12:00'])
-    fig = go.Figure(); fig.add_trace(go.Scatter(x=time, y=setpoints, name='Setpoint (°C)', mode='lines+markers', line=dict(shape='hv', dash='dash', color=NEUTRAL_GREY, width=3))); fig.add_trace(go.Scatter(x=time, y=actuals, name='Actual (°C)', mode='lines+markers', line=dict(color=ROCHE_BLUE, width=3)))
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=time, y=setpoints, name='Setpoint (°C)', mode='lines+markers', line=dict(shape='hv', dash='dash', color=NEUTRAL_GREY, width=3)))
+    fig.add_trace(go.Scatter(x=time, y=actuals, name='Actual (°C)', mode='lines+markers', line=dict(color=PRIMARY_COLOR, width=3)))
     fig.add_hrect(y0=36.5, y1=37.5, line_width=0, fillcolor=SUCCESS_GREEN, opacity=0.1, annotation_text="Acceptance Band", annotation_position="bottom right")
     fig.update_layout(title='<b>OQ Challenge: Bioreactor Temperature Control</b>', xaxis_title='Time', yaxis_title='Temperature (°C)', title_x=0.5, plot_bgcolor=BACKGROUND_GREY); return fig
 
@@ -285,7 +283,7 @@ def plot_process_stability_chart(key: str) -> go.Figure:
     rng = np.random.default_rng(22); data = rng.normal(5.2, 0.25, 25); df = pd.DataFrame({'Titer': data}); df['MR'] = df['Titer'].diff().abs()
     I_CL = df['Titer'].mean(); MR_CL = df['MR'].mean(); I_UCL = I_CL + 2.66 * MR_CL; I_LCL = I_CL - 2.66 * MR_CL; MR_UCL = 3.267 * MR_CL
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1, subplot_titles=("<b>Individuals (I) Chart</b>", "<b>Moving Range (MR) Chart</b>"))
-    fig.add_trace(go.Scatter(x=df.index, y=df['Titer'], name='Titer (g/L)', mode='lines+markers', marker_color=ROCHE_BLUE), row=1, col=1)
+    fig.add_trace(go.Scatter(x=df.index, y=df['Titer'], name='Titer (g/L)', mode='lines+markers', marker_color=PRIMARY_COLOR), row=1, col=1)
     fig.add_hline(y=I_CL, line_dash="dash", line_color=SUCCESS_GREEN, row=1, col=1, annotation_text="CL"); fig.add_hline(y=I_UCL, line_dash="dot", line_color=ERROR_RED, row=1, col=1, annotation_text="UCL"); fig.add_hline(y=I_LCL, line_dash="dot", line_color=ERROR_RED, row=1, col=1, annotation_text="LCL")
     fig.add_trace(go.Scatter(x=df.index, y=df['MR'], name='Moving Range', mode='lines+markers', marker_color=WARNING_AMBER), row=2, col=1)
     fig.add_hline(y=MR_CL, line_dash="dash", line_color=SUCCESS_GREEN, row=2, col=1, annotation_text="CL"); fig.add_hline(y=MR_UCL, line_dash="dot", line_color=ERROR_RED, row=2, col=1, annotation_text="UCL")
@@ -331,7 +329,7 @@ def plot_kaizen_roi_chart(key: str) -> go.Figure:
         x=["Optimize CIP Cycle Time", "Implement PAT Sensor", "Reduce Line Changeover", "<b>Total Annual Savings</b>"],
         text=[f"+${v}k" for v in [150, 75, 220, 445]], y=[150, 75, 220, 445], connector={"line": {"color": NEUTRAL_GREY}},
         increasing={"marker":{"color":SUCCESS_GREEN}}, decreasing={"marker":{"color":ERROR_RED}},
-        totals={"marker":{"color":ROCHE_BLUE, "line": dict(color='white', width=2)}}))
+        totals={"marker":{"color":PRIMARY_COLOR, "line": dict(color='white', width=2)}}))
     fig.update_layout(title="<b>Continuous Improvement (Kaizen) ROI Tracker</b>", yaxis_title="Annual Savings ($k)", title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
     return fig
 
@@ -360,13 +358,13 @@ def run_urs_risk_nlp_model(key: str) -> go.Figure:
 # --- PAGE RENDERING FUNCTIONS ---
 
 def render_main_page() -> None:
-    st.title("🤖 Automated Equipment Validation Portfolio"); st.subheader("A Live Demonstration of Validation Leadership for Roche/Genentech"); st.divider()
+    st.title("🤖 Automated Equipment Validation Portfolio"); st.subheader("A Live Demonstration of Modern Validation Leadership"); st.divider()
     st.markdown("""
-    Welcome. This interactive environment provides **undeniable proof of my expertise in the end-to-end validation of automated manufacturing equipment** in a strictly regulated GMP environment. 
-    It simulates how I lead a validation function, with a relentless focus on aligning technical execution, **Quality Systems (per 21 CFR 820 & ISO 13485)**, and strategic capital projects.
+    Welcome. This interactive environment provides **undeniable proof of expertise in the end-to-end validation of automated manufacturing equipment** in a strictly regulated GMP environment. 
+    It simulates how an effective leader manages a validation function, with a relentless focus on aligning technical execution, **Quality Systems (per 21 CFR 820 & ISO 13485)**, and strategic capital projects.
     """)
     st.subheader("🔷 Core Competency: Risk-Based Validation (GAMP 5 & ASTM E2500)"); 
-    st.markdown("My leadership philosophy is grounded in the principles of **GAMP 5 and ASTM E2500**: build quality and testability into the design, verify systems rigorously, and ensure the process reliably delivers quality product. This portfolio is the tangible evidence of that approach.")
+    st.markdown("This leadership philosophy is grounded in the principles of **GAMP 5 and ASTM E2500**: build quality and testability into the design, verify systems rigorously, and ensure the process reliably delivers quality product. This portfolio is the tangible evidence of that approach.")
     st.subheader("Key Program Health KPIs", divider='blue'); 
     col1, col2, col3 = st.columns(3)
     col1.metric("Validation Program Compliance", "98%", delta="1%", help="Percentage of systems in a validated state and on their periodic review schedule.")
@@ -374,7 +372,7 @@ def render_main_page() -> None:
     col3.metric("Capital Project On-Time Delivery", "95%", delta="5%", help="Validation deliverables completed on or before schedule for major capital projects.")
     with st.expander("Click here for a guided tour of this portfolio's key capabilities"):
         st.info("""
-        1.  **Start with Strategy (`Tab 1`):** See how I manage budgets, forecast resources, and set departmental goals (OKRs).
+        1.  **Start with Strategy (`Tab 1`):** See how a leader manages budgets, forecasts resources, and sets departmental goals (OKRs).
         2.  **Oversee the Portfolio (`Tab 2`):** View the Gantt chart, RAG status, and resource allocation for all validation projects.
         3.  **Deep Dive into Execution (`Tab 3`):** Walk through a live simulation of a major capital project from FAT to PQ.
         4.  **Verify Specialized Expertise (`Tab 4`):** Explore capabilities in CSV, Cleaning, and Shipping Validation.
@@ -385,7 +383,7 @@ def render_main_page() -> None:
 def render_strategic_management_page() -> None:
     st.title("📈 1. Strategic Management & Business Acumen")
     render_manager_briefing(
-        title="Leading Validation as a Business Unit", content="An effective manager must translate technical excellence into business value. This dashboard demonstrates my ability to manage budgets, plan for future headcount needs based on the project pipeline, and align departmental goals with the strategic objectives of the site.",
+        title="Leading Validation as a Business Unit", content="An effective manager must translate technical excellence into business value. This dashboard demonstrates the ability to manage budgets, plan for future headcount needs based on the project pipeline, and align departmental goals with the strategic objectives of the site.",
         reg_refs="ISO 13485:2016 (Sec 5 & 6), 21 CFR 820.20", business_impact="Ensures the validation department is a strategic, financially responsible partner that enables the company's growth and compliance goals.",
         quality_pillar="Resource Management & Financial Acumen.", risk_mitigation="Proactively identifies and mitigates resource shortfalls and budget variances before they impact project timelines.")
     with st.container(border=True):
@@ -402,7 +400,7 @@ def render_strategic_management_page() -> None:
         with st.container(border=True):
             st.subheader("Headcount & Resource Forecasting", help="Compares current team size against forecasted resource needs.")
             st.plotly_chart(plot_headcount_forecast(key="headcount"), use_container_width=True)
-            st.success("**Actionable Insight:** The forecast indicates a resource gap of 2 FTEs by Q3. This data will be used to justify the hiring requisition for one Automation Engineer and one Validation Specialist.")
+            st.success("**Actionable Insight:** The forecast indicates a resource gap of 2 FTEs by Q3. This data justifies the hiring requisition for one Automation Engineer and one Validation Specialist.")
     with st.container(border=True):
         st.subheader("AI-Powered Capital Project Duration Forecaster"); run_project_duration_forecaster("duration_ai")
         st.success("**Actionable Insight:** The AI model provides data-driven timeline estimates to the PMO, improving the accuracy of site-wide project planning and resource allocation.")
@@ -443,13 +441,13 @@ def render_project_portfolio_page() -> None:
 def render_e2e_validation_hub_page() -> None:
     st.title("🔩 3. End-to-End Validation Hub: Project Atlas")
     render_manager_briefing(
-        title="Executing a Compliant Validation Lifecycle (per ASTM E2500)", content="This hub simulates the execution of a major capital project from initial design review to final Performance Qualification (PQ). It provides tangible evidence of my ability to own validation deliverables, manage the FAT/SAT/IQ/OQ/PQ process, and ensure 'Quality First Time' by integrating validation requirements into the design phase.",
+        title="Executing a Compliant Validation Lifecycle (per ASTM E2500)", content="This hub simulates the execution of a major capital project from initial design review to final Performance Qualification (PQ). It provides tangible evidence of owning validation deliverables, managing the FAT/SAT/IQ/OQ/PQ process, and ensuring 'Quality First Time' by integrating validation requirements into the design phase.",
         reg_refs="FDA 21 CFR 820.75, ISO 13485:2016 (Sec 7.5.6), GAMP 5, ASTM E2500", business_impact="Ensures new manufacturing equipment is brought online on-time, on-budget, and in a fully compliant state, directly enabling production launch.",
         quality_pillar="Design Controls & Risk-Based Verification.", risk_mitigation="Prevents costly redesigns and validation failures by ensuring testability is built-in from the URS phase using tools like the V-Model and pFMEA.")
     phase = st.select_slider("Select a Validation Phase to View Key Deliverables:", options=["1. Design Review & Planning", "2. FAT & SAT", "3. IQ & OQ", "4. PQ"], value="1. Design Review & Planning")
     st.divider()
     if phase == "1. Design Review & Planning":
-        st.header("Phase 1: Design Controls & Risk-Based Planning"); st.info("My role is to act as the Validation SME, ensuring the equipment is designed to be testable and compliant from day one. This proactive involvement is key to preventing costly redesigns and validation failures.")
+        st.header("Phase 1: Design Controls & Risk-Based Planning"); st.info("The Validation SME ensures the equipment is designed to be testable and compliant from day one. This proactive involvement is key to preventing costly redesigns and validation failures.")
         col1, col2 = st.columns(2)
         with col1:
             with st.container(border=True): st.subheader("Validation V-Model"); st.plotly_chart(create_v_model_figure("vmodel"), use_container_width=True)
@@ -496,7 +494,7 @@ def render_validation_program_health_page() -> None:
         def highlight_status(row):
             return ['background-color: #FFC7CE; color: black; font-weight: bold;'] * len(row) if row["Status"] == "DUE" else [''] * len(row)
         st.dataframe(review_df.style.apply(highlight_status, axis=1), use_container_width=True, hide_index=True)
-        st.error("**Actionable Insight:** The Periodic Review for the **HVAC - Grade A Area** is now due. I will assign a Validation Engineer to initiate the review this week.")
+        st.error("**Actionable Insight:** The Periodic Review for the **HVAC - Grade A Area** is now due. A Validation Engineer will be assigned to initiate the review this week.")
     with tab2:
         st.subheader("Continuous Improvement (Kaizen) Initiative Tracker")
         col1, col2 = st.columns(2)
@@ -507,7 +505,7 @@ def render_validation_program_health_page() -> None:
 def render_documentation_hub_page() -> None:
     st.title("🗂️ 6. Validation Documentation & Audit Defense Hub")
     render_manager_briefing(
-        title="Orchestrating Compliant Validation Documentation", content="This hub demonstrates the ability to generate and manage the compliant, auditable documentation that forms the core of a successful validation package. The templates and simulations below prove my expertise in creating documents that meet the stringent requirements of **21 CFR Part 820** and **ISO 13485**.",
+        title="Orchestrating Compliant Validation Documentation", content="This hub demonstrates the ability to generate and manage the compliant, auditable documentation that forms the core of a successful validation package. The templates and simulations below prove expertise in creating documents that meet the stringent requirements of **21 CFR Part 820** and **ISO 13485**.",
         reg_refs="21 CFR 820.40 (Document Controls), GAMP 5 Good Documentation Practice, 21 CFR Part 11", business_impact="Ensures audit-proof documentation, accelerates review cycles by providing clear templates, and fosters seamless collaboration between Engineering, Manufacturing, Quality, and Regulatory.",
         quality_pillar="Good Documentation Practice (GDP) & Audit Readiness.", risk_mitigation="Minimizes review cycles and audit findings by ensuring documentation is attributable, legible, contemporaneous, original, and accurate (ALCOA+).")
     col1, col2 = st.columns([1, 2])
@@ -564,8 +562,7 @@ PAGES = {
     "6. Documentation & Audit Defense": render_documentation_hub_page,
 }
 
-st.sidebar.markdown(f'<div style="display: flex; justify-content: center; padding-bottom: 20px;"><img src="data:image/png;base64,{ROCHE_LOGO_BASE64}" width="200"></div>', unsafe_allow_html=True)
-st.sidebar.title("Validation Command Center")
+st.sidebar.title("🛠️ Validation Command Center")
 selection = st.sidebar.radio("Go to", list(PAGES.keys()))
 page_to_render_func = PAGES[selection]
 page_to_render_func()
