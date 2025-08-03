@@ -1,4 +1,4 @@
-# app.py (Final, SME World-Class Version - SHAP & Sparklines)
+# app.py (Final, SME World-Class Version - KPI Glossary & All Enhancements)
 
 # --- IMPORTS ---
 import streamlit as st
@@ -50,229 +50,77 @@ def style_dataframe(df: pd.DataFrame) -> Styler:
         {'selector': 'th', 'props': [('background-color', PRIMARY_COLOR), ('color', 'white'), ('font-weight', 'bold')]}
     ]).hide(axis="index")
 
-# --- NEW: Helper for KPI Sparkline charts ---
 def plot_kpi_sparkline(data: list, is_good_down: bool = False) -> go.Figure:
     """Creates a compact sparkline chart for a KPI."""
     fig = go.Figure()
     fig.add_trace(go.Scatter(
-        x=list(range(len(data))),
-        y=data,
-        mode='lines',
-        line=dict(color=PRIMARY_COLOR, width=2),
-        fill='tozeroy',
-        fillcolor='rgba(4, 96, 169, 0.1)'
+        x=list(range(len(data))), y=data, mode='lines',
+        line=dict(color=PRIMARY_COLOR, width=3), fill='tozeroy', fillcolor='rgba(4, 96, 169, 0.1)'
     ))
-    # Add start and end point markers
     end_color = SUCCESS_GREEN if (data[-1] < data[-2] and is_good_down) or (data[-1] > data[-2] and not is_good_down) else ERROR_RED
     fig.add_trace(go.Scatter(
-        x=[0, len(data)-1],
-        y=[data[0], data[-1]],
-        mode='markers',
-        marker=dict(size=[6, 9], color=['grey', end_color])
+        x=[0, len(data)-1], y=[data[0], data[-1]], mode='markers', marker=dict(size=[6, 10], color=['grey', end_color])
     ))
     fig.update_layout(
-        width=150, height=50,
-        margin=dict(l=0, r=0, t=5, b=0),
-        xaxis=dict(visible=False),
-        yaxis=dict(visible=False),
-        showlegend=False,
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)'
+        width=150, height=50, margin=dict(l=0, r=0, t=5, b=0),
+        xaxis=dict(visible=False), yaxis=dict(visible=False), showlegend=False,
+        plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)'
     )
     return fig
 
 # --- DATA GENERATORS & VISUALIZATIONS ---
-def display_team_skill_matrix(key: str) -> None:
-    """
-    NEW: Displays a team skill matrix to demonstrate strategic talent management.
-    This directly addresses the leadership and mentorship requirements of the role.
-    """
-    skill_data = {
-        'Team Member': ['J. Doe (Lead)', 'S. Smith (Eng. II)', 'A. Wong (Spec. I)', 'B. Zeller (Eng. I)'],
-        'CSV & Part 11': [5, 3, 2, 2],
-        'Cleaning Validation': [4, 4, 3, 1],
-        'Statistics (Cpk/DOE)': [5, 3, 2, 3],
-        'Project Management': [5, 2, 1, 1],
-        'Development Goal': [
-            'Mentor team on advanced stats', 
-            'Lead CSV for Project Beacon', 
-            'Cross-train on Cleaning Val', 
-            'Achieve PMP certification'
-        ]
-    }
-    df = pd.DataFrame(skill_data)
-    
-    st.info("""
-    **Purpose:** A skills matrix is a critical tool for a manager to visualize team capabilities, identify skill gaps, and plan targeted development. 
-    It ensures that resource allocation for new projects is backed by data and that individual growth aligns with the department's strategic needs.
-    *Proficiency Scale: 1 (Novice) to 5 (SME)*
-    """)
-    
-    skill_cols = df.columns.drop(['Team Member', 'Development Goal'])
-    styled_df = df.style.background_gradient(
-        cmap='Greens', subset=skill_cols, vmin=1, vmax=5
-    ).set_properties(**{'text-align': 'center'}, subset=skill_cols)
-    
-    st.dataframe(styled_df, use_container_width=True, hide_index=True, height=215)
-    
-    st.success("""
-    **Actionable Insight:** The matrix identifies a potential bottleneck in Project Management skills among junior staff. 
-    Based on B. Zeller's development goal, I will approve the budget for PMP certification training. 
-    Furthermore, A. Wong will be assigned to the 'Atlas' Cleaning Validation PQ to gain hands-on experience, supported by S. Smith.
-    """)
 
-def plot_cost_of_quality(key: str) -> go.Figure:
-    """
-    NEW: Plots a Cost of Quality model to demonstrate strategic financial acumen.
-    This reframes the validation department from a cost center to a value-add function.
-    """
-    categories = ['Prevention Costs (e.g., Planning, Training)', 'Appraisal Costs (e.g., Testing, FAT/SAT)',
-                  'Internal Failure Costs (e.g., Rework, Deviations)', 'External Failure Costs (e.g., Recall, Audit Findings)']
-
-    fig = go.Figure()
-
-    # Scenario 1: WITH a proactive validation program
-    fig.add_trace(go.Bar(
-        name='With Proactive Validation',
-        x=[200, 300, 50, 10], # High investment, low failure
-        y=categories,
-        orientation='h',
-        marker_color=SUCCESS_GREEN
-    ))
-    
-    # Scenario 2: WITHOUT a proactive validation program
-    fig.add_trace(go.Bar(
-        name='Without Proactive Validation',
-        x=[50, 75, 800, 1500], # Low investment, catastrophic failure
-        y=categories,
-        orientation='h',
-        marker_color=ERROR_RED
-    ))
-
-    fig.update_layout(
-        barmode='stack',
-        title_text='<b>Strategic Value: The Cost of Quality (CoQ) Model</b>',
-        title_x=0.5,
-        xaxis_title='Annual Costs (in $ thousands)',
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        plot_bgcolor=BACKGROUND_GREY
-    )
-    # Add annotations for total costs
-    total_with = 200 + 300 + 50 + 10
-    total_without = 50 + 75 + 800 + 1500
-    fig.add_annotation(x=total_with, y=categories[0], text=f"<b>Total: ${total_with}k</b>", showarrow=False, xanchor='left', font_color=SUCCESS_GREEN)
-    fig.add_annotation(x=total_without, y=categories[0], text=f"<b>Total: ${total_without}k</b>", showarrow=False, xanchor='right', font_color=ERROR_RED)
-
-    return fig
-
-
-    #--------------------------------------------------------------------------------------------------------------------------------------------------------
 def create_portfolio_health_dashboard(key: str) -> Styler:
-    """Creates a styled RAG status dashboard for the project portfolio."""
-    health_data = {
-        'Project': ["Project Atlas (Bioreactor)", "Project Beacon (Assembly)", "Project Comet (Vision)"],
-        'Overall Status': ["Green", "Amber", "Green"], 'Schedule': ["On Track", "At Risk", "Ahead"],
-        'Budget': ["On Track", "Over", "On Track"], 'Lead': ["J. Doe", "S. Smith", "J. Doe"]
-    }
+    health_data = {'Project': ["Project Atlas (Bioreactor)", "Project Beacon (Assembly)", "Project Comet (Vision)"], 'Overall Status': ["Green", "Amber", "Green"], 'Schedule': ["On Track", "At Risk", "Ahead"], 'Budget': ["On Track", "Over", "On Track"], 'Lead': ["J. Doe", "S. Smith", "J. Doe"]}
     df = pd.DataFrame(health_data)
     def style_status(val: str) -> str:
-        color_map = {"Green": SUCCESS_GREEN, "Amber": WARNING_AMBER, "Red": ERROR_RED,
-                     "On Track": SUCCESS_GREEN, "Ahead": SUCCESS_GREEN, 
-                     "At Risk": WARNING_AMBER, "Over": ERROR_RED}
+        color_map = {"Green": SUCCESS_GREEN, "Amber": WARNING_AMBER, "Red": ERROR_RED, "On Track": SUCCESS_GREEN, "Ahead": SUCCESS_GREEN, "At Risk": WARNING_AMBER, "Over": ERROR_RED}
         bg_color = color_map.get(val, 'white')
         font_color = 'white' if val in color_map else 'black'
         return f"background-color: {bg_color}; color: {font_color};"
     return df.style.map(style_status, subset=['Overall Status', 'Schedule', 'Budget']).set_properties(**{'text-align': 'center'}).hide(axis="index")
 
 def create_resource_allocation_matrix(key: str) -> Tuple[go.Figure, pd.DataFrame]:
-    """Creates a resource allocation heatmap and identifies over-allocated staff."""
-    data = {'J. Doe (Lead)': [0.5, 0.4, 0.2], 'S. Smith (Eng.)': [0.1, 0.8, 0.0],
-            'A. Wong (Spec.)': [0.4, 0.4, 0.3], 'B. Zeller (Eng.)': [0.0, 0.2, 0.7]}
-    df = pd.DataFrame(data, index=["Project Atlas", "Project Beacon", "Project Comet"])
-    df_transposed = df.T
-    
-    color_range_max = 1.1
-    normalized_colorscale = [
-        [0.0, 'white'], [0.5 / color_range_max, SUCCESS_GREEN],
-        [1.0 / color_range_max, WARNING_AMBER], [1.0, ERROR_RED]
-    ]
-    
-    fig = px.imshow(df_transposed, text_auto=".0%", aspect="auto",
-                    color_continuous_scale=normalized_colorscale,
-                    range_color=[0, color_range_max], 
-                    labels=dict(x="Project", y="Team Member", color="Allocation"),
-                    title="<b>Team Allocation by Project</b>")
-    fig.update_traces(textfont_color='black')
-    fig.update_layout(title_x=0.5, title_font_size=20, plot_bgcolor=BACKGROUND_GREY)
-    
-    allocations = df_transposed.sum(axis=1).reset_index()
-    allocations.columns = ['Team Member', 'Total Allocation']
+    data = {'J. Doe (Lead)': [0.5, 0.4, 0.2], 'S. Smith (Eng.)': [0.1, 0.8, 0.0], 'A. Wong (Spec.)': [0.4, 0.4, 0.3], 'B. Zeller (Eng.)': [0.0, 0.2, 0.7]}
+    df = pd.DataFrame(data, index=["Project Atlas", "Project Beacon", "Project Comet"]); df_transposed = df.T
+    color_range_max = 1.1; normalized_colorscale = [[0.0, 'white'], [0.5 / color_range_max, SUCCESS_GREEN], [1.0 / color_range_max, WARNING_AMBER], [1.0, ERROR_RED]]
+    fig = px.imshow(df_transposed, text_auto=".0%", aspect="auto", color_continuous_scale=normalized_colorscale, range_color=[0, color_range_max], labels=dict(x="Project", y="Team Member", color="Allocation"), title="<b>Team Allocation by Project</b>")
+    fig.update_traces(textfont_color='black'); fig.update_layout(title_x=0.5, title_font_size=20, plot_bgcolor=BACKGROUND_GREY)
+    allocations = df_transposed.sum(axis=1).reset_index(); allocations.columns = ['Team Member', 'Total Allocation']
     over_allocated = allocations[allocations['Total Allocation'] > 1.0]
     return fig, over_allocated
 
-# --- ENHANCED AI/ML FORECASTER with SHAP EXPLAINABILITY ---
 def st_shap(plot, height=None):
-    """Renders a SHAP plot in Streamlit using the robust JS method."""
     shap_html = f"<head>{shap.getjs()}</head><body>{plot.html()}</body>"
     st.components.v1.html(shap_html, height=height)
     
 def run_project_duration_forecaster(key: str) -> None:
-    """Trains a model and explains its predictions using SHAP."""
     rng = np.random.default_rng(42)
-    X_train = pd.DataFrame({
-        'New Automation Modules': rng.integers(1, 10, 20), 
-        'Process Complexity Score': rng.integers(1, 11, 20), 
-        '# of URS': rng.integers(20, 100, 20)
-    })
+    X_train = pd.DataFrame({'New Automation Modules': rng.integers(1, 10, 20), 'Process Complexity Score': rng.integers(1, 11, 20), '# of URS': rng.integers(20, 100, 20)})
     y_train = pd.Series(rng.uniform(8, 52, 20), name="Validation Duration (Weeks)")
-    
     model = RandomForestRegressor(n_estimators=100, random_state=42).fit(X_train, y_train)
-
     st.markdown("##### Adjust Project Parameters to Forecast Timeline:")
     col1, col2, col3 = st.columns(3)
-    with col1:
-        new_modules = st.slider("New Automation Modules", 1, 10, 4, key=f"pipe_modules_{key}")
-    with col2:
-        complexity = st.slider("Process Complexity (1-10)", 1, 10, 6, key=f"pipe_comp_{key}")
-    with col3:
-        urs_count = st.slider("# of URS", 20, 100, 50, key=f"pipe_urs_{key}")
-    
+    with col1: new_modules = st.slider("New Automation Modules", 1, 10, 4, key=f"pipe_modules_{key}")
+    with col2: complexity = st.slider("Process Complexity (1-10)", 1, 10, 6, key=f"pipe_comp_{key}")
+    with col3: urs_count = st.slider("# of URS", 20, 100, 50, key=f"pipe_urs_{key}")
     new_project_data = pd.DataFrame([[new_modules, complexity, urs_count]], columns=X_train.columns)
     predicted_duration = model.predict(new_project_data)[0]
-    
-    st.metric("AI-Predicted Validation Duration (Weeks)", f"{predicted_duration:.1f}", 
-              help="Based on a Random Forest model trained on 20 historical projects. Includes IQ, OQ, and PQ phases.")
-
+    st.metric("AI-Predicted Validation Duration (Weeks)", f"{predicted_duration:.1f}", help="Based on a Random Forest model trained on 20 historical projects. Includes IQ, OQ, and PQ phases.")
     st.subheader("AI Prediction Analysis (Why This Forecast?)")
     st.info("This SHAP force plot shows which project features are driving the timeline estimate. Red arrows push the prediction higher (longer duration), and blue arrows push it lower.")
-    
-    explainer = shap.TreeExplainer(model)
-    shap_values = explainer.shap_values(new_project_data)
-    
-    # --- FIX for SHAP PLOT: Use robust JavaScript rendering method ---
+    explainer = shap.TreeExplainer(model); shap_values = explainer.shap_values(new_project_data)
     st_shap(shap.force_plot(explainer.expected_value, shap_values[0,:], new_project_data.iloc[0,:]), 150)
-    
-    st.success("""
-    **Actionable Insight:** The SHAP analysis reveals that the high '# of URS' is the primary factor increasing the project's predicted duration. To shorten this timeline, we should focus on consolidating or simplifying user requirements during the planning phase.
-    """)
+    st.success("**Actionable Insight:** The SHAP analysis reveals that the high '# of URS' is the primary factor increasing the project's predicted duration. To shorten this timeline, we should focus on consolidating or simplifying user requirements during the planning phase.")
 
 def plot_cpk_analysis(key: str) -> go.Figure:
-    rng = np.random.default_rng(42)
-    data = rng.normal(loc=5.15, scale=0.05, size=100)
-    LSL, USL = 5.0, 5.3
-    mu, std = np.mean(data), np.std(data, ddof=1)
-    cpk = min((USL - mu) / (3 * std), (mu - LSL) / (3 * std))
-    fig = go.Figure()
+    rng = np.random.default_rng(42); data = rng.normal(loc=5.15, scale=0.05, size=100); LSL, USL = 5.0, 5.3; mu, std = np.mean(data), np.std(data, ddof=1)
+    cpk = min((USL - mu) / (3 * std), (mu - LSL) / (3 * std)); fig = go.Figure()
     fig.add_trace(go.Histogram(x=data, nbinsx=20, name='Observed Data', histnorm='probability density', marker_color=PRIMARY_COLOR, opacity=0.7))
-    x_fit = np.linspace(min(data), max(data), 200)
-    y_fit = norm.pdf(x_fit, mu, std)
+    x_fit = np.linspace(min(data), max(data), 200); y_fit = norm.pdf(x_fit, mu, std)
     fig.add_trace(go.Scatter(x=x_fit, y=y_fit, mode='lines', name='Fitted Normal Distribution', line=dict(color=SUCCESS_GREEN, width=2)))
-    fig.add_vline(x=LSL, line_dash="dash", line_color=ERROR_RED, annotation_text="LSL", annotation_position="top left")
-    fig.add_vline(x=USL, line_dash="dash", line_color=ERROR_RED, annotation_text="USL", annotation_position="top right")
-    fig.add_vline(x=mu, line_dash="dot", line_color=NEUTRAL_GREY, annotation_text=f"Mean={mu:.2f}", annotation_position="bottom right")
-    fig.update_layout(title_text=f'Process Capability (Cpk) Analysis - Titer (g/L)<br><b>Cpk = {cpk:.2f}</b> (Target: ≥1.33)',
-                      xaxis_title="Titer (g/L)", yaxis_title="Density", showlegend=False,
-                      title_font_size=20, title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
+    fig.add_vline(x=LSL, line_dash="dash", line_color=ERROR_RED, annotation_text="LSL", annotation_position="top left"); fig.add_vline(x=USL, line_dash="dash", line_color=ERROR_RED, annotation_text="USL", annotation_position="top right"); fig.add_vline(x=mu, line_dash="dot", line_color=NEUTRAL_GREY, annotation_text=f"Mean={mu:.2f}", annotation_position="bottom right")
+    fig.update_layout(title_text=f'Process Capability (Cpk) Analysis - Titer (g/L)<br><b>Cpk = {cpk:.2f}</b> (Target: ≥1.33)', xaxis_title="Titer (g/L)", yaxis_title="Density", showlegend=False, title_font_size=20, title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
     return fig
 
 def _render_professional_protocol_template() -> None:
@@ -286,26 +134,19 @@ def _render_professional_protocol_template() -> None:
 
 def plot_budget_variance(key: str) -> go.Figure:
     df = pd.DataFrame({'Category': ['CapEx Projects', 'OpEx (Team)', 'OpEx (Lab)', 'Contractors'], 'Budgeted': [2500, 850, 300, 400], 'Actual': [2650, 820, 310, 350]})
-    df['Variance'] = df['Actual'] - df['Budgeted']
-    df['Color'] = df['Variance'].apply(lambda x: ERROR_RED if x > 0 else SUCCESS_GREEN)
-    df['Text'] = df['Variance'].apply(lambda x: f'${x:+,}k')
-    fig = go.Figure(go.Bar(x=df['Variance'], y=df['Category'], orientation='h', marker_color=df['Color'], text=df['Text'], customdata=df[['Budgeted', 'Actual']],
-                           hovertemplate='<b>%{y}</b><br>Variance: %{x:+,}k<br>Budgeted: $%{customdata[0]}k<br>Actual: $%{customdata[1]}k<extra></extra>'))
+    df['Variance'] = df['Actual'] - df['Budgeted']; df['Color'] = df['Variance'].apply(lambda x: ERROR_RED if x > 0 else SUCCESS_GREEN); df['Text'] = df['Variance'].apply(lambda x: f'${x:+,}k')
+    fig = go.Figure(go.Bar(x=df['Variance'], y=df['Category'], orientation='h', marker_color=df['Color'], text=df['Text'], customdata=df[['Budgeted', 'Actual']], hovertemplate='<b>%{y}</b><br>Variance: %{x:+,}k<br>Budgeted: $%{customdata[0]}k<br>Actual: $%{customdata[1]}k<extra></extra>'))
     fig.update_traces(textposition='inside', textfont=dict(color='white', size=14, family="Arial, sans-serif"))
-    fig.update_layout(title_text='<b>Annual Budget Variance (Actual vs. Budgeted)</b>', xaxis_title="Variance (in $ thousands)", yaxis_title="",
-                      bargap=0.4, plot_bgcolor=BACKGROUND_GREY, title_x=0.5, font=dict(family="Arial, sans-serif", size=12))
+    fig.update_layout(title_text='<b>Annual Budget Variance (Actual vs. Budgeted)</b>', xaxis_title="Variance (in $ thousands)", yaxis_title="", bargap=0.4, plot_bgcolor=BACKGROUND_GREY, title_x=0.5, font=dict(family="Arial, sans-serif", size=12))
     return fig
 
 def plot_headcount_forecast(key: str) -> go.Figure:
     df = pd.DataFrame({'Quarter': ['Q1', 'Q2', 'Q3', 'Q4'], 'Current FTEs': [8, 8, 8, 8], 'Forecasted Need': [8, 9, 10, 10]})
-    df['Gap'] = df['Forecasted Need'] - df['Current FTEs']
-    fig = go.Figure()
+    df['Gap'] = df['Forecasted Need'] - df['Current FTEs']; fig = go.Figure()
     fig.add_trace(go.Bar(name='Current Headcount', x=df['Quarter'], y=df['Current FTEs'], marker_color=PRIMARY_COLOR, text=df['Current FTEs']))
     fig.add_trace(go.Bar(name='Resource Gap', x=df['Quarter'], y=df['Gap'], base=df['Current FTEs'], marker_color=WARNING_AMBER, text=df['Gap'].apply(lambda g: f'+{g}' if g > 0 else '')))
     fig.update_traces(textposition='inside', textfont_size=14)
-    fig.update_layout(barmode='stack', title='<b>Resource Gap Analysis: Headcount vs. Forecasted Need</b>',
-                      yaxis_title="Full-Time Equivalents (FTEs)", xaxis_title="Fiscal Quarter",
-                      legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1), title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
+    fig.update_layout(barmode='stack', title='<b>Resource Gap Analysis: Headcount vs. Forecasted Need</b>', yaxis_title="Full-Time Equivalents (FTEs)", xaxis_title="Fiscal Quarter", legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1), title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
     return fig
 
 def display_departmental_okrs(key: str) -> None:
@@ -449,14 +290,13 @@ def run_urs_risk_nlp_model(key: str) -> go.Figure:
     fig.add_annotation(x=0.75, y=9, text="High Ambiguity, <br>High Impact:<br><b>REJECT/REWRITE!</b>", showarrow=False, bgcolor="#D32F2F", font=dict(color='white'), borderpad=4)
     fig.update_layout(title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
     return fig
-
+    
 # --- PAGE RENDERING FUNCTIONS ---
 def render_main_page() -> None:
     st.title("🤖 Automated Equipment Validation Portfolio"); st.subheader("A Live Demonstration of Modern Validation Leadership"); st.divider()
     st.markdown("Welcome. This interactive environment provides **undeniable proof of expertise in the end-to-end validation of automated manufacturing equipment** in a strictly regulated GMP environment. It simulates how an effective leader manages a validation function, with a relentless focus on aligning technical execution, **Quality Systems (per 21 CFR 820 & ISO 13485)**, and strategic capital projects.")
     
-    st.subheader("Key Program Health KPIs", divider='blue');
-    # --- NEW: Display KPIs with Sparklines ---
+    st.subheader("Key Program Health KPIs", divider='blue')
     kpi_cols = st.columns(3)
     with kpi_cols[0]:
         with st.container(border=True):
@@ -485,19 +325,42 @@ def render_main_page() -> None:
             st.metric("Open Validation-Related CAPAs", "3", delta="1", delta_color="inverse")
             st.plotly_chart(plot_kpi_sparkline([5, 4, 4, 2, 2, 3], is_good_down=True), use_container_width=True)
 
-    with st.expander("Click here for a guided tour of this portfolio's key capabilities"):
-        st.info("1.  **Start with Strategy (`Tab 1`):** See how a leader manages budgets, forecasts resources, and sets departmental goals (OKRs).\n2.  **Oversee the Portfolio (`Tab 2`):** View the Gantt chart, RAG status, and resource allocation for all validation projects.\n3.  **Deep Dive into Execution (`Tab 3`):** Walk through a live simulation of a major capital project from FAT to PQ.\n4.  **Verify Specialized Expertise (`Tab 4`):** Explore capabilities in CSV, Cleaning, and Shipping Validation.\n5.  **Confirm Lifecycle Management (`Tab 5`):** Understand the approach to maintaining the validated state.\n6.  **Inspect the Documentation (`Tab 6`):** See how compliant, auditable protocols and reports are generated.")
+    with st.expander("📖 KPI Glossary: Definitions, Significance, and Actionability"):
+        st.markdown("""
+        - **Validation Program Compliance:**
+          - **Definition:** Percentage of GxP systems that are in a validated state and within their scheduled periodic review window.
+          - **Significance:** This is a primary indicator of the site's overall audit readiness and compliance posture. A low score indicates significant regulatory risk.
+          - **Actionability:** A downward trend triggers a root cause analysis. Actions may include re-prioritizing resources to overdue systems, escalating resource constraints to management, or simplifying the periodic review process for lower-risk systems.
+
+        - **Quality First Time Rate:**
+          - **Definition:** Percentage of validation protocols (IQ, OQ, PQ) executed without any deviations.
+          - **Significance:** A high rate indicates robust planning, clear protocol instructions, and well-designed, testable equipment. It is a leading indicator of departmental efficiency.
+          - **Actionability:** A low or declining rate prompts a review of recent deviations. Actions could include improving protocol templates, enhancing team training on GDP, or engaging with vendors earlier in the design phase to build in testability.
+
+        - **Capital Project On-Time Delivery:**
+          - **Definition:** Percentage of major capital projects for which all validation deliverables were completed on or before the planned schedule milestones.
+          - **Significance:** This measures the validation department's ability to act as a reliable partner in the broader business, directly impacting production launch timelines and revenue forecasts.
+          - **Actionability:** A low rate requires immediate intervention with project managers to review schedules, assess risks (via the Risk Burndown), and analyze resource allocation (via the Resource Heatmap).
+
+        - **CAPEX Validation Spend vs. Budget:**
+          - **Definition:** The percentage of the allocated capital expenditure budget for validation activities that has been spent.
+          - **Significance:** Measures financial control and forecasting accuracy. Consistently significant under-spending or over-spending indicates poor planning.
+          - **Actionability:** Deviations from the plan (>5%) trigger a review with project leads to understand the cause (e.g., scope change, vendor delays, accelerated timeline) and re-forecast future spend.
+
+        - **Avg. Protocol Review Cycle Time:**
+          - **Definition:** The average number of business days from a protocol's submission for review to its final approval by all parties (e.g., QA, Manufacturing).
+          - **Significance:** Long cycle times are a major source of inefficiency and can delay project execution. This KPI measures the effectiveness of the entire cross-functional documentation workflow.
+          - **Actionability:** An increasing trend would initiate discussions with QA and other departments to identify bottlenecks. Solutions could include developing standardized review checklists, holding pre-review meetings, or clarifying GDP expectations.
+
+        - **Open Validation-Related CAPAs:**
+          - **Definition:** The number of open Corrective and Preventive Actions where the Validation department is the designated owner for completion.
+          - **Significance:** While some CAPAs are expected, a high or increasing number can indicate systemic issues or an over-burdened team. It is a direct measure of the department's quality workload.
+          - **Actionability:** Each open CAPA is tracked with a due date. A rising trend prompts a review of CAPA sources to identify systemic problems (e.g., a recurring issue with a specific vendor or technology) that need a broader solution.
+        """)
 
 def render_strategic_management_page() -> None:
     st.title("📈 1. Strategic Management & Business Acumen")
-    render_manager_briefing(
-        title="Leading Validation as a Business Unit", 
-        content="An effective manager must translate technical excellence into business value. This dashboard demonstrates the ability to manage budgets, forecast resources, set strategic goals (OKRs), and articulate the financial value of a robust quality program.", 
-        reg_refs="ISO 13485:2016 (Sec 5 & 6), 21 CFR 820.20", 
-        business_impact="Ensures the validation department is a strategic, financially responsible partner that enables the company's growth and compliance goals.", 
-        quality_pillar="Resource Management & Financial Acumen.", 
-        risk_mitigation="Proactively identifies resource shortfalls and justifies the validation budget as a high-return investment in preventing failure costs."
-    )
+    render_manager_briefing(title="Leading Validation as a Business Unit", content="An effective manager must translate technical excellence into business value. This dashboard demonstrates the ability to manage budgets, forecast resources, set strategic goals (OKRs), and articulate the financial value of a robust quality program.", reg_refs="ISO 13485:2016 (Sec 5 & 6), 21 CFR 820.20", business_impact="Ensures the validation department is a strategic, financially responsible partner that enables the company's growth and compliance goals.", quality_pillar="Resource Management & Financial Acumen.", risk_mitigation="Proactively identifies resource shortfalls and justifies the validation budget as a high-return investment in preventing failure costs.")
     
     st.subheader("Departmental Strategy & Performance")
     col1, col2 = st.columns(2)
@@ -506,7 +369,6 @@ def render_strategic_management_page() -> None:
             st.markdown("##### Annual Budget Performance")
             st.plotly_chart(plot_budget_variance(key="budget"), use_container_width=True)
             st.success("**Actionable Insight:** Operating within overall budget. The slight CapEx overage was an approved expenditure for accelerated project timelines, offset by contractor savings.")
-
     with col2:
         with st.container(border=True):
             st.markdown("##### Headcount & Resource Forecasting")
@@ -518,10 +380,7 @@ def render_strategic_management_page() -> None:
     with col3:
         with st.container(border=True):
             st.plotly_chart(plot_cost_of_quality(key="coq"), use_container_width=True)
-            st.success("""
-            **Actionable Insight:** The CoQ model proves that for every **$1 spent on proactive validation**, we prevent an estimated **$4 in failure costs** (rework, deviations, batch loss). 
-            This data provides a powerful justification for our departmental budget and headcount.
-            """)
+            st.success("**Actionable Insight:** The CoQ model proves that for every **$1 spent on proactive validation**, we prevent an estimated **$4 in failure costs** (rework, deviations, batch loss). This data provides a powerful justification for our departmental budget and headcount.")
     with col4:
         with st.container(border=True):
             display_team_skill_matrix(key="skills")
