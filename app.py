@@ -275,48 +275,47 @@ def plot_predictive_compliance_risk() -> go.Figure:
     
 def create_pfd_validation_scheme() -> go.Figure:
     """
-    Digitally renders the Equipment Validation Scheme as a professional-grade
-    Process Flow Diagram (PFD) using domain-specific geometric shapes via SVG paths.
+    Digitally renders the Equipment Validation Scheme as a professional-grade process map
+    using clean, content-aware sized boxes.
     """
     fig = go.Figure()
     
-    # Define node positions, text, colors, and PFD shapes
-    # Coordinates are on a virtual canvas for precise placement
+    # Define nodes with manually tuned w/h properties for a balanced, professional layout
     nodes = {
         'sys_desc': {
-            'pos': [2.5, 9.2], 'w': 2, 'h': 0.8,
+            'pos': [2.5, 9.2], 'w': 2.3, 'h': 0.8,
             'text': '<b>System Description</b><br> • Specifications<br> • Functional/Performance Requirements', 
             'color': DARK_GREY, 'shape': 'terminator'},
         'fat_sat': {
-            'pos': [2.5, 7.5], 'w': 2, 'h': 1.0,
+            'pos': [2.5, 7.5], 'w': 2.3, 'h': 1.0,
             'text': '<b>FAT/SAT</b><br><i>Instrument/Manufacturer Related</i><br> • Instrument Components P&ID, electrical<br> • Instrument Performance, CV, repeatability', 
             'color': PRIMARY_COLOR, 'shape': 'terminator'},
         'val_activities': {
             'pos': [2.5, 4.2], 'w': 2.5, 'h': 2.8,
-            'text': '''<b>Validation Activities</b><br><br><u>Installation Qualification (IQ)</u><br> • Meet manufacturer’s specifications<br> • Manuals, maintenance plans<br><u>Operational Qualification (OQ)</u><br> • Test accuracy, precision and repeatability<br> • Confirm instrument resolution<br><u>Performance Qualification (PQ)</u><br><i>Production scale testing (define batch numbers, procure<br>material, align w/R&D)</i><br> • Meet production throughput demand<br> • Repeatability of production batches, risk-based<br>   sampling sizes, binomial distribution or AQL table<br> • Accuracy and precision under production conditions''', 
+            'text': '''<b>Validation Activities</b><br><br><u>Installation Qualification (IQ)</u><br> • Meet manufacturer’s specifications<br> • Manuals, maintenance plans<br><u>Operational Qualification (OQ)</u><br> • Test accuracy, precision and repeatability<br> • Confirm instrument resolution<br><u>Performance Qualification (PQ)</u><br><i>Production scale testing (define batch numbers, procure<br>material, align w/R&D)</i>''', 
             'color': NEUTRAL_GREY, 'shape': 'terminator'},
         'sample_size': {
-            'pos': [2.5, 0.8], 'w': 2, 'h': 0.6,
+            'pos': [2.5, 0.8], 'w': 2.3, 'h': 0.6,
             'text': '<b>Sample Size</b><br>Determined by “Binomial Power Analysis”<br>or AQL table', 
-            'color': '#D35400', 'shape': 'data'},
+            'color': '#D35400', 'shape': 'process'},
         'acceptance': {
-            'pos': [6.5, 5.8], 'w': 1.5, 'h': 1.2,
-            'text': '<b>Acceptance<br>Criteria</b><br> • IQ Acceptance<br> • OQ Acceptance<br> • PQ Acceptance', 
+            'pos': [6.5, 5.8], 'w': 1.8, 'h': 0.9,
+            'text': '<b>Acceptance Criteria</b><br> • IQ Acceptance Criteria<br> • OQ Acceptance Criteria<br> • PQ Acceptance Criteria', 
             'color': PRIMARY_COLOR, 'shape': 'process'},
         'docs': {
-            'pos': [8.5, 8], 'w': 2.2, 'h': 1.0,
+            'pos': [8.5, 8.0], 'w': 2.5, 'h': 1.1,
             'text': '<b>Documentation</b><br> • IQ, OQ, PQ Documentation<br> • Master Validation Plan (MVP)<br> • Design History File (DHF)<br> • Device Master Record (DMR)', 
             'color': PRIMARY_COLOR, 'shape': 'terminator'},
         'onboarding': {
-            'pos': [6.5, 3.8], 'w': 1.8, 'h': 0.7,
-            'text': '<b>Equipment Onboarding</b><br> • Defining calibration points/frequency<br> • Maintenance schedule', 
+            'pos': [6.5, 3.8], 'w': 1.8, 'h': 0.8,
+            'text': '<b>Equipment Onboarding</b><br> • Defining calibration<br>   points/frequency<br> • Maintenance schedule', 
             'color': PRIMARY_COLOR, 'shape': 'process'},
         'sops': {
-            'pos': [9.5, 3.8], 'w': 1.5, 'h': 0.7,
+            'pos': [9.5, 3.8], 'w': 1.5, 'h': 0.8,
             'text': '<b>Protocols & SOPs</b><br> • Personnel Training<br> • <span style="color:red">SOPs/Protocols</span>', 
             'color': PRIMARY_COLOR, 'shape': 'terminator'},
         'change_control': {
-            'pos': [6.5, 1.8], 'w': 1.8, 'h': 1.0,
+            'pos': [6.5, 1.8], 'w': 1.8, 'h': 1.1,
             'text': '<b>Change Control: ECOs/DCOs</b><br> • Change Request<br> • Impact Assessment<br> • Revalidation Requirement<br> • Engineering/Docs', 
             'color': PRIMARY_COLOR, 'shape': 'process'},
     }
@@ -329,42 +328,52 @@ def create_pfd_validation_scheme() -> go.Figure:
         shape_type = node.get('shape')
         font_size = 10.5 if key != 'val_activities' else 11
         
-        path = ""
-        # Define SVG paths for each shape type
-        if shape_type in ['process', 'data']: # Rectangle
-            path = f"M {x_c-w},{y_c-h} L {x_c+w},{y_c-h} L {x_c+w},{y_c+h} L {x_c-w},{y_c+h} Z"
-        elif shape_type == 'terminator': # Rounded Rectangle
-            r = 0.4 
-            path = (f"M {x_c-w+r},{y_c-h} L {x_c+w-r},{y_c-h} A {r},{r} 0 0 1 {x_c+w},{y_c-h+r} "
-                    f"L {x_c+w},{y_c+h-r} A {r},{r} 0 0 1 {x_c+w-r},{y_c+h} "
-                    f"L {x_c-w+r},{y_c+h} A {r},{r} 0 0 1 {x_c-w},{y_c+h-r} "
-                    f"L {x_c-w},{y_c-h+r} A {r},{r} 0 0 1 {x_c-w+r},{y_c-h} Z")
-
-        fig.add_shape(type="path", path=path, line=dict(color="Black"), fillcolor=node['color'], opacity=0.95, layer="below")
-        fig.add_annotation(x=x_c, y=y_c, text=node['text'], showarrow=False, align=align, font=dict(color='white' if node['color'] not in [NEUTRAL_GREY] else 'black', size=font_size))
+        fig.add_shape(
+            type="rect", 
+            x0=x_c-w, y0=y_c-h, x1=x_c+w, y1=y_c+h, 
+            line=dict(color="Black"), 
+            fillcolor=node['color'], 
+            opacity=0.95, 
+            layer="below",
+            cornerradius=20 if shape_type == 'terminator' else 0 
+        )
+        fig.add_annotation(
+            x=x_c, y=y_c, text=node['text'], 
+            showarrow=False, align=align, 
+            font=dict(color='white' if node['color'] not in [NEUTRAL_GREY] else 'black', size=font_size)
+        )
 
     # Add Arrows
-    def add_arrow(start_key, end_key, start_anchor, end_anchor, **kwargs):
+    def add_arrow(start_key, end_key, start_anchor, end_anchor):
         start, end = nodes[start_key], nodes[end_key]
-        x0, y0 = start['pos'][0] + start_anchor[0]*start['w'], start['pos'][1] + start_anchor[1]*start['h']
-        x1, y1 = end['pos'][0] + end_anchor[0]*end['w'], end['pos'][1] + end_anchor[1]*end['h']
-        fig.add_annotation(x=x1, y=y1, ax=x0, ay=y0, showarrow=True, arrowhead=2, arrowwidth=2, arrowcolor="black", **kwargs)
+        x0 = start['pos'][0] + start_anchor[0] * start['w']
+        y0 = start['pos'][1] + start_anchor[1] * start['h']
+        x1 = end['pos'][0] + end_anchor[0] * end['w']
+        y1 = end['pos'][1] + end_anchor[1] * end['h']
+        fig.add_annotation(x=x1, y=y1, ax=x0, ay=y0, showarrow=True, arrowhead=2, arrowwidth=2, arrowcolor="black")
     
     add_arrow('sys_desc', 'fat_sat', (0, -1), (0, 1))
     add_arrow('fat_sat', 'val_activities', (0, -1), (0, 1))
     add_arrow('val_activities', 'sample_size', (0, -1), (0, 1))
-    add_arrow('val_activities', 'acceptance', (1, 0), (0, -1)) # Pointing to top of acceptance box
-
+    add_arrow('val_activities', 'acceptance', (1, 0), (-1, 0))
+    
     # Feedback Loops
-    fig.add_shape(type="path", path=" M 9.5,4.5 C 10.5,6.5 8.5,7.5 7.5,7", line=dict(color="black", width=3, dash='dot'))
-    fig.add_annotation(x=7.5, y=7, ax=8, ay=7.2, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor="black") # Arrowhead for black loop
-    fig.add_shape(type="path", path=" M 6.5,2.8 C 5,3.5 5,4.5 5,5.8", line=dict(color=ERROR_RED, width=3, dash='dot'))
-    fig.add_annotation(x=5, y=5.8, ax=5.3, ay=5.4, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor=ERROR_RED) # Arrowhead for red loop
+    fig.add_shape(type="path", path=" M 9.5,4.6 C 10.5,6.5 8.5,7.5 7.5,7", line=dict(color="black", width=3, dash='dot'))
+    fig.add_annotation(x=7.5, y=7, ax=8, ay=7.2, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor="black")
+    fig.add_shape(type="path", path=" M 6.5,2.9 C 5.5,3.7 5.5,4.7 6.5,5.8", line=dict(color=ERROR_RED, width=3, dash='dot'))
+    fig.add_annotation(x=6.5, y=5.8, ax=6.2, ay=5.4, showarrow=True, arrowhead=2, arrowwidth=3, arrowcolor=ERROR_RED)
 
     # Horizontal connection for onboarding loop
     fig.add_shape(type="line", x0=nodes['acceptance']['pos'][0], y0=nodes['acceptance']['pos'][1], x1=nodes['onboarding']['pos'][0], y1=nodes['onboarding']['pos'][1], line=dict(color="black", width=2, dash='dot'))
 
-    fig.update_layout(title="<b>Equipment Validation Process Flow Diagram (PFD)</b>", xaxis=dict(range=[0, 11.5], visible=False), yaxis=dict(range=[0, 10.5], visible=False), plot_bgcolor=BACKGROUND_GREY, margin=dict(l=20, r=20, t=40, b=20), height=800)
+    fig.update_layout(
+        title="<b>Equipment Validation Process Map</b>",
+        xaxis=dict(range=[0, 11.5], visible=False),
+        yaxis=dict(range=[0, 10.5], visible=False),
+        plot_bgcolor=BACKGROUND_GREY,
+        margin=dict(l=20, r=20, t=40, b=20),
+        height=800
+    )
     return fig
 def create_equipment_v_model() -> go.Figure:
     """Creates a V-Model diagram specific to equipment validation."""
