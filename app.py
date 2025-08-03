@@ -176,6 +176,7 @@ def create_pipeline_advisor(key):
         'Target_LoD_Tightness': np.random.uniform(0.1, 1, 20),
         'V_V_Duration': np.random.uniform(3, 18, 20)
     })
+    feature_names = ['New_Tech_Count', 'Complexity_Score', 'Target_LoD_Tightness']
     X = historical_data[['New_Tech_Count', 'Complexity_Score', 'Target_LoD_Tightness']]
     y = historical_data['V_V_Duration']
     model = RandomForestRegressor(n_estimators=100, random_state=42).fit(X, y)
