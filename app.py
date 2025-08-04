@@ -1347,7 +1347,14 @@ def render_e2e_validation_hub_page() -> None:
                 
             with c2: 
                 st.markdown("###### Process Stability (SPC)")
-                st.info("**Purpose:** The I-MR chart is a fundamental SPC tool used to monitor a process over time. It answers the question: "Is our process stable and predictable, or is it being influenced by unexpected, special causes of variation?"- **Control Limits (UCL/LCL):** The red dotted lines at ±3σ (standard deviations) are the voice of the process. A point outside these limits indicates that a statistically significant event has occurred.- **Guardbanding:** The yellow shaded areas represent **warning limits** set at ±2σ. This is a proactive control strategy. Points falling in this zone are not yet failures, but they serve as an early warning that the process may be drifting towards an out-of-control state.""")
+                st.info("""
+                **Purpose: Statistical Process Control (SPC)**
+
+                The I-MR chart is a fundamental SPC tool used to monitor a process over time. It answers the question: "Is our process stable and predictable, or is it being influenced by unexpected, special causes of variation?"
+                
+                - **Control Limits (UCL/LCL):** The red dotted lines at ±3σ (standard deviations) are the voice of the process. A point outside these limits indicates that a statistically significant event has occurred.
+                - **Guardbanding:** The yellow shaded areas represent **warning limits** set at ±2σ. This is a proactive control strategy. Points falling in this zone are not yet failures, but they serve as an early warning that the process may be drifting towards an out-of-control state.
+                """)
                 spc_fig, spc_alerts = plot_process_stability_chart("pq_spc")
                 st.plotly_chart(spc_fig, use_container_width=True)
             
