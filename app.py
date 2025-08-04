@@ -223,20 +223,20 @@ def case_study_taping_soldering():
     st.success("**Actionable Insight:** The thermal mapping reveals a critical hot spot (+8.1°C over setpoint) in the center of the weld horn, which is outside our specification of ±5°C. This could cause material degradation and compromise the cassette seal. **Action:** A work order will be issued for the maintenance team to inspect the heating element and thermocouple in zone Y=2, X=2, and to verify the PID controller tuning for that zone before proceeding to PQ.")
 
 def case_study_levey_jennings():
-briefing_card = f"""
-    <div style="border: 1px solid {BACKGROUND_GREY}; border-radius: 5px; padding: 15px; margin-bottom: 20px; background-color: #FFFFFF;">
-        <p style="margin-bottom: 10px;">
-            <strong style="color: {PRIMARY_COLOR};">Context:</strong> A critical QC Reagent Control Lot is run daily on a diagnostic analyzer to ensure the measurement system is stable. The target mean is 100 mg/dL with a known standard deviation (SD) of 2 mg/dL.
-        </p>
-        <p style="margin-bottom: 10px;">
-            <strong style="color: {DARK_GREY};">Purpose:</strong> To visualize the precision and accuracy of a test system over time by plotting control values against their acceptable limits (mean ±1, 2, and 3 SD).
-        </p>
-        <p style="margin-bottom: 0;">
-            <strong style="color: {SUCCESS_GREEN};">Reason for Use:</strong> This chart is the industry standard for lab QC. Its well-defined zones, combined with Westgard rules, provide a powerful, standardized system for detecting both random error (e.g., a 1-3s violation) and systematic error (e.g., a 2-2s violation) with high confidence.
-        </p>
-    </div>
-    """
-    st.markdown(briefing_card, unsafe_allow_html=True)
+    briefing_card = f"""
+        <div style="border: 1px solid {BACKGROUND_GREY}; border-radius: 5px; padding: 15px; margin-bottom: 20px; background-color: #FFFFFF;">
+            <p style="margin-bottom: 10px;">
+                <strong style="color: {PRIMARY_COLOR};">Context:</strong> A critical QC Reagent Control Lot is run daily on a diagnostic analyzer to ensure the measurement system is stable. The target mean is 100 mg/dL with a known standard deviation (SD) of 2 mg/dL.
+            </p>
+            <p style="margin-bottom: 10px;">
+                <strong style="color: {DARK_GREY};">Purpose:</strong> To visualize the precision and accuracy of a test system over time by plotting control values against their acceptable limits (mean ±1, 2, and 3 SD).
+            </p>
+            <p style="margin-bottom: 0;">
+                <strong style="color: {SUCCESS_GREEN};">Reason for Use:</strong> This chart is the industry standard for lab QC. Its well-defined zones, combined with Westgard rules, provide a powerful, standardized system for detecting both random error (e.g., a 1-3s violation) and systematic error (e.g., a 2-2s violation) with high confidence.
+            </p>
+        </div>
+        """
+        st.markdown(briefing_card, unsafe_allow_html=True)
     
     # Generate data with a specific violation
     rng = np.random.default_rng(42)
