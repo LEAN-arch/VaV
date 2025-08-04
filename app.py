@@ -650,39 +650,89 @@ def plot_process_stability_chart(key: str) -> Tuple[go.Figure, list]:
     alerts = analyze_spc_rules(df, I_UCL, I_LCL, I_CL)
     return fig, alerts
 
-def plot_csv_dashboard(key: str) -> None:
+def plot_csv_dashboard_enhanced(key: str) -> None:
+    """Enhanced CSV dashboard with a detailed ALCOA+ checklist."""
+    st.info("**Purpose:** This dashboard tracks the validation status of all GxP computerized systems associated with a project, ensuring compliance with data integrity principles (ALCOA+) and 21 CFR Part 11 requirements for electronic records and signatures.")
+    
     col1, col2 = st.columns(2)
     with col1:
         st.metric("21 CFR Part 11 Compliance Status", "PASS", "✔️", help="Electronic records and signatures meet all technical and procedural requirements.")
-    with col2:
         st.metric("Data Integrity Risk Score", "Low", "-5% vs Last Quarter", help="Calculated based on ALCOA+ principles.")
-    df = pd.DataFrame({ "GAMP 5 Category": ["Cat 4: Configured", "Cat 5: Custom"], "System": ["HMI Software", "LIMS Interface"], "Status": ["Validation Complete", "IQ/OQ In Progress"] })
-    st.dataframe(style_dataframe(df), use_container_width=True)
+        
+    with col2:
+        alcoa_data = {
+            'Principle': ['Attributable', 'Legible', 'Contemporaneous', 'Original', 'Accurate', 'Complete', 'Consistent', 'Enduring', 'Available'],
+            'Verification Method': ['Unique User Logins', 'Secure PDF Export', 'NTP-Synced Timestamps', 'Read-Only Audit Trail', 'Validated Calculations', 'No Data Deletion', 'Sequential Records', 'Secure Archiving', 'System Uptime'],
+            'Status': ['✔️', '✔️', '✔️', '✔️', '✔️', '✔️', '✔️', '✔️', '✔️']
+        }
+        df_alcoa = pd.DataFrame(alcoa_data)
+        st.markdown("###### ALCOA+ Compliance Checklist")
+        st.dataframe(df_alcoa, use_container_width=True, hide_index=True)
 
-def plot_cleaning_validation_results(key: str) -> go.Figure:
-    df = pd.DataFrame({'Sample Location': ['Swab 1 (Reactor Wall)', 'Swab 2 (Agitator Blade)', 'Swab 3 (Fill Nozzle)', 'Final Rinse'], 'TOC Result (ppb)': [150, 180, 165, 25], 'Acceptance Limit (ppb)': [500, 500, 500, 50]})
-    df['Status'] = df.apply(lambda row: SUCCESS_GREEN if row['TOC Result (ppb)'] < row['Acceptance Limit (ppb)'] else ERROR_RED, axis=1)
-    fig = px.bar(df, x='Sample Location', y='TOC Result (ppb)', title='<b>Cleaning Validation Results (Total Organic Carbon)</b>', text='TOC Result (ppb)')
-    fig.update_traces(marker_color=df['Status'])
-    fig.add_trace(go.Scatter(x=df['Sample Location'], y=df['Acceptance Limit (ppb)'], name='Acceptance Limit', mode='lines+markers', line=dict(color=ERROR_RED, dash='dash', width=3)))
+def plot_cleaning_validation_results_enhanced(key: str) -> go.Figure:
+    """Enhanced Cleaning Validation chart for a multi-product scenario."""
+    locations = ['Swab 1 (Reactor Wall)', 'Swab 2 (Agitator Blade)', 'Swab 3 (Fill Nozzle)', 'Final Rinse']
+    df = pd.DataFrame({
+        'Sample Location': locations * 2,
+        'Product': ['Product A (Worst-Case)']*4 + ['Product B (Campaign)']*4,
+        'TOC Result (ppb)': [150, 180, 165, 25, 80, 95, 85, 15],
+        'Acceptance Limit (ppb)': [500, 500, 500, 50] * 2
+    })
+    
+    fig = px.bar(df, x='Sample Location', y='TOC Result (ppb)', color='Product', 
+                 barmode='group', title='<b>Cleaning Validation Results (Multi-Product)</b>',
+                 text_auto='.0f')
+                 
+    fig.add_trace(go.Scatter(
+        x=df['Sample Location'].unique(), 
+        y=[500, 500, 500, 50],
+        name='Acceptance Limit', 
+        mode='lines+markers', 
+        line=dict(color=ERROR_RED, dash='dash', width=3)
+    ))
     fig.update_layout(title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
     return fig
 
-def plot_shipping_validation_temp(key: str) -> go.Figure:
-    rng = np.random.default_rng(30); time = pd.to_datetime(pd.date_range("2023-01-01", periods=48, freq="h")); temp = rng.normal(4, 0.5, 48); temp[24] = 8.5 
-    fig = px.line(x=time, y=temp, title='<b>Shipping Lane PQ: Temperature Profile</b>', markers=True)
-    fig.add_hrect(y0=2, y1=8, line_width=0, fillcolor=SUCCESS_GREEN, opacity=0.2, annotation_text="In Spec (2-8°C)", annotation_position="top left")
-    excursion_time = time[temp > 8]
-    if not excursion_time.empty:
-        fig.add_annotation(x=excursion_time[0], y=temp[24], text="Excursion!", showarrow=True, arrowhead=1, ax=0, ay=-40, bordercolor="#c7c7c7", borderwidth=2, borderpad=4, bgcolor=ERROR_RED, opacity=0.8, font=dict(color="white"))
-    fig.update_layout(yaxis_title="Temperature (°C)", title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
+def plot_shipping_validation_temp_enhanced(key: str) -> go.Figure:
+    """Enhanced shipping validation chart with dual axes for Temp and Shock."""
+    rng = np.random.default_rng(30); 
+    time = pd.to_datetime(pd.date_range("2023-01-01", periods=48, freq="h"))
+    temp = rng.normal(4, 0.5, 48)
+    temp[24] = 8.5 # Temperature excursion
+    shock = rng.random(48) * 10 # Baseline G-force
+    shock[35] = 55 # Shock event
+    
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    
+    fig.add_trace(go.Scatter(x=time, y=temp, name='Temperature (°C)', line=dict(color=PRIMARY_COLOR)), secondary_y=False)
+    fig.add_hrect(y0=2, y1=8, line_width=0, fillcolor=SUCCESS_GREEN, opacity=0.1, secondary_y=False, annotation_text="Temp Spec", annotation_position="top left")
+    fig.add_trace(go.Bar(x=time, y=shock, name='Shock (G-force)', marker_color=ERROR_RED, opacity=0.5), secondary_y=True)
+    
+    fig.update_layout(title_text='<b>Shipping Lane PQ: Temperature & Shock Profile</b>', title_x=0.5, plot_bgcolor=BACKGROUND_GREY, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+    fig.update_yaxes(title_text="Temperature (°C)", secondary_y=False, range=[0, 10])
+    fig.update_yaxes(title_text="Shock (G-force)", secondary_y=True, range=[0, 100])
     return fig
 
-def plot_doe_optimization(key: str) -> go.Figure:
-    temp = np.linspace(30, 40, 10); ph = np.linspace(6.8, 7.6, 10); temp_grid, ph_grid = np.meshgrid(temp, ph); signal = 100 - (temp_grid - 37)**2 - 20*(ph_grid - 7.2)**2 + np.random.rand(10, 10)*2
-    fig = go.Figure(data=[go.Surface(z=signal, x=temp, y=ph, colorscale='viridis', colorbar_title='Yield')])
-    fig.update_layout(title='<b>DOE Response Surface for Process Optimization</b>', scene=dict(xaxis_title='Temperature (°C)', yaxis_title='pH', zaxis_title='Product Yield (%)'), title_x=0.5, margin=dict(l=0, r=0, b=0, t=40))
-    return fig
+def plot_doe_optimization_enhanced(key: str) -> None:
+    """Enhanced DOE visualization with 2D Contour Plot showing operating space."""
+    temp = np.linspace(30, 40, 10); ph = np.linspace(6.8, 7.6, 10); 
+    temp_grid, ph_grid = np.meshgrid(temp, ph)
+    signal = 100 - (temp_grid - 37)**2 - 20*(ph_grid - 7.2)**2 + np.random.rand(10, 10)*2
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        fig_3d = go.Figure(data=[go.Surface(z=signal, x=temp, y=ph, colorscale='viridis', colorbar_title='Yield')])
+        fig_3d.update_layout(title='<b>DOE Response Surface (3D)</b>', scene=dict(xaxis_title='Temperature (°C)', yaxis_title='pH', zaxis_title='Yield (%)'), margin=dict(l=0, r=0, b=0, t=40))
+        st.plotly_chart(fig_3d, use_container_width=True)
+
+    with col2:
+        fig_2d = go.Figure(data=go.Contour(z=signal, x=temp, y=ph, colorscale='viridis', contours_coloring='lines', line_width=2))
+        fig_2d.add_shape(type="rect", x0=36, y0=7.1, x1=38, y1=7.3, line=dict(color=SUCCESS_GREEN, width=3), name='NOR')
+        fig_2d.add_shape(type="rect", x0=35, y0=7.0, x1=39, y1=7.4, line=dict(color=WARNING_AMBER, width=2, dash="dash"), name='PAR')
+        fig_2d.add_annotation(x=37, y=7.2, text="<b>NOR</b><br>(Normal Operating<br>Range)", showarrow=False, font=dict(color=SUCCESS_GREEN))
+        fig_2d.add_annotation(x=35.1, y=7.38, text="<b>PAR</b> (Proven Acceptable Range)", showarrow=False, xanchor="left", yanchor="top", font=dict(color=WARNING_AMBER))
+        fig_2d.update_layout(title='<b>Process Operating Space (2D)</b>', xaxis_title='Temperature (°C)', yaxis_title='pH', margin=dict(l=0, r=0, b=0, t=40))
+        st.plotly_chart(fig_2d, use_container_width=True)
 
 def plot_cost_of_quality(key: str) -> go.Figure:
     categories = ['Prevention Costs (e.g., Planning, Training)', 'Appraisal Costs (e.g., Testing, FAT/SAT)', 'Internal Failure Costs (e.g., Rework, Deviations)', 'External Failure Costs (e.g., Recall, Audit Findings)']
@@ -1048,12 +1098,33 @@ def render_e2e_validation_hub_page() -> None:
 def render_specialized_validation_page() -> None:
     st.title("🧪 4. Specialized Validation Hubs")
     render_manager_briefing(title="Demonstrating Breadth of Expertise", content="Beyond standard equipment qualification, a Validation Manager must be fluent in specialized validation disciplines critical to GMP manufacturing. This hub showcases expertise in Computer System Validation (CSV), Cleaning Validation, and Process Characterization.", reg_refs="21 CFR Part 11, GAMP 5, PDA TR 29 (Cleaning Validation)", business_impact="Ensures all aspects of the manufacturing process, including supporting systems and processes, are fully compliant and controlled, preventing common sources of regulatory findings.", quality_pillar="Cross-functional Technical Leadership.", risk_mitigation="Ensures compliance in niche, high-risk areas like data integrity (CSV) and cross-contamination (Cleaning) that are frequent targets of audits.")
+    
     tab1, tab2, tab3, tab4 = st.tabs(["🖥️ Computer System Validation (CSV)", "🧼 Cleaning Validation", "🔬 Process Characterization (DOE)", "📦 Shipping Validation"])
-    with tab1: st.subheader("GAMP 5 CSV for Automated Systems"); st.info("**Purpose:** This dashboard tracks the validation status of all GxP computerized systems associated with a project, ensuring compliance with data integrity and 21 CFR Part 11 requirements for electronic records and signatures."); plot_csv_dashboard("csv"); st.success("**Actionable Insight:** The successful validation of the HMI confirms 21 CFR Part 11 compliance for electronic signatures, unblocking the system for GMP use. The LIMS interface validation is the next critical path item.")
-    with tab2: st.subheader("Cleaning Validation for Multi-Product Facility"); st.info("**Purpose:** This plot shows the results from a cleaning validation study, confirming that residual product and cleaning agent levels are below the pre-defined, toxicologically-based acceptance limits to prevent cross-contamination."); st.plotly_chart(plot_cleaning_validation_results("cleaning"), use_container_width=True); st.success("**Actionable Insight:** All results are well below 50% of the acceptance limit, providing a high degree of assurance that the cleaning process effectively prevents cross-contamination. The cleaning procedure can be approved and finalized.")
-    with tab3: st.subheader("Process Characterization using Design of Experiments (DOE)"); st.info("**Purpose:** DOE is a powerful statistical tool used during process development to identify the optimal settings (e.g., temperature, pH) that maximize product yield and robustness. This data is critical for defining and defending the Normal Operating Range (NOR) during validation."); st.plotly_chart(plot_doe_optimization("doe"), use_container_width=True); st.success("**Actionable Insight:** The response surface clearly defines the NOR for Temperature (36-38°C) and pH (7.1-7.3). These parameters will be specified in the batch record and challenged at their limits during OQ.")
-    with tab4: st.subheader("Shipping Lane Performance Qualification"); st.info("**Purpose:** This PQ study uses calibrated temperature loggers to confirm that the validated shipping container and process can maintain the required temperature range (e.g., 2-8°C) over a simulated, worst-case transit duration."); st.plotly_chart(plot_shipping_validation_temp("shipping"), use_container_width=True); st.success("**Actionable Insight:** Despite the brief external temperature excursion to 30°C at hour 24, the qualified shipper maintained internal temperatures within the required 2-8°C range, validating the robustness of the packaging configuration for this shipping lane.")
 
+    with tab1:
+        st.subheader("GAMP 5 CSV for Automated Systems")
+        plot_csv_dashboard_enhanced(key="csv")
+        st.success("""
+        **Actionable Insight:** The successful completion of the ALCOA+ checklist provides objective evidence that the system's data is trustworthy, a foundational requirement for any GMP computerized system. This detailed verification is critical for defending the system during regulatory audits.
+        """)
+
+    with tab2:
+        st.subheader("Cleaning Validation for Multi-Product Facility")
+        st.info("**Purpose:** This chart shows results from a cleaning validation study for a multi-product facility. The strategy is to validate the cleaning procedure using the 'worst-case' product (most difficult to clean, most toxic, or lowest solubility) to demonstrate effectiveness for all products made on the equipment.")
+        st.plotly_chart(plot_cleaning_validation_results_enhanced(key="cleaning"), use_container_width=True)
+        st.success("**Actionable Insight:** The results for the 'worst-case' Product A are well below acceptance limits. As expected, the results for the easier-to-clean Product B are even lower. This data robustly proves the cleaning procedure is effective for the entire product family, allowing for efficient product changeover.")
+
+    with tab3:
+        st.subheader("Process Characterization using Design of Experiments (DOE)")
+        st.info("**Purpose:** DOE is a powerful statistical tool used during process development to define a design space. The 2D Contour Plot visualizes this space, defining the Normal Operating Range (NOR) for routine production and the wider Proven Acceptable Range (PAR), which is the 'safe zone' where quality is assured.")
+        plot_doe_optimization_enhanced(key="doe")
+        st.success("**Actionable Insight:** The established PAR provides manufacturing with operational flexibility. As long as the process remains within this wider range, minor fluctuations do not constitute a deviation or require re-validation. This data-driven approach, aligned with ICH Q8, significantly reduces quality overhead and supports continuous improvement.")
+
+    with tab4:
+        st.subheader("Shipping Lane Performance Qualification")
+        st.info("**Purpose:** This PQ study simulates a worst-case transit route, monitoring both temperature and shock/vibration to ensure the validated packaging can protect the product integrity from both environmental and physical hazards.")
+        st.plotly_chart(plot_shipping_validation_temp_enhanced(key="shipping"), use_container_width=True)
+        st.success("**Actionable Insight:** The data confirms two key findings: 1) The insulated shipper successfully maintained the internal product temperature within the required 2-8°C range despite an external excursion. 2) A significant shock event of 55G was recorded but remained below the product's known fragility limit of 80G. **Conclusion:** The shipping configuration is validated as robust against both thermal and physical hazards for this lane.")
 def render_validation_program_health_page() -> None:
     st.title("⚕️ 5. Validation Program Health & Continuous Improvement")
     render_manager_briefing(title="Maintaining the Validated State", content="This dashboard demonstrates the ongoing oversight required to manage the site's validation program health. It showcases a data-driven approach to **Periodic Review**, the development of a risk-based **Revalidation Strategy**, and the execution of **Continuous Improvement Initiatives**.", reg_refs="FDA 21 CFR 820.75(c) (Revalidation), ISO 13485:2016 (Sec 8.4)", business_impact="Ensures long-term compliance, prevents costly process drifts, optimizes resource allocation for revalidation, and supports uninterrupted supply of medicine to patients.", quality_pillar="Lifecycle Management & Continuous Improvement.", risk_mitigation="Guards against compliance drift and ensures systems remain in a validated state throughout their operational life, preventing production holds or recalls.")
