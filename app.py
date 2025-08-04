@@ -506,15 +506,36 @@ def run_project_duration_forecaster(key: str) -> None:
     st_shap(shap.force_plot(explainer.expected_value, shap_values[0,:], new_project_data.iloc[0,:]), 150)
     st.success("**Actionable Insight:** The SHAP analysis reveals that the high '# of URS' is the primary factor increasing the project's predicted duration. To shorten this timeline, we should focus on consolidating or simplifying user requirements during the planning phase.")
 
-def plot_cpk_analysis(key: str) -> go.Figure:
-    rng = np.random.default_rng(42); data = rng.normal(loc=5.15, scale=0.05, size=100); LSL, USL = 5.0, 5.3; mu, std = np.mean(data), np.std(data, ddof=1)
-    cpk = min((USL - mu) / (3 * std), (mu - LSL) / (3 * std)); fig = go.Figure()
+def plot_cpk_analysis(key: str) -> Tuple[go.Figure, float]:
+    """
+    Creates a process capability (Cpk) chart for PQ and returns the figure and Cpk value.
+    """
+    rng = np.random.default_rng(42)
+    data = rng.normal(loc=5.15, scale=0.05, size=100)
+    LSL, USL = 5.0, 5.3
+    mu, std = np.mean(data), np.std(data, ddof=1)
+    
+    # Ensure std dev is not zero to avoid division errors
+    if std > 0:
+        cpk = min((USL - mu) / (3 * std), (mu - LSL) / (3 * std))
+    else:
+        cpk = 0.0
+
+    fig = go.Figure()
     fig.add_trace(go.Histogram(x=data, nbinsx=20, name='Observed Data', histnorm='probability density', marker_color=PRIMARY_COLOR, opacity=0.7))
-    x_fit = np.linspace(min(data), max(data), 200); y_fit = norm.pdf(x_fit, mu, std)
+    x_fit = np.linspace(min(data), max(data), 200)
+    y_fit = norm.pdf(x_fit, mu, std)
     fig.add_trace(go.Scatter(x=x_fit, y=y_fit, mode='lines', name='Fitted Normal Distribution', line=dict(color=SUCCESS_GREEN, width=2)))
-    fig.add_vline(x=LSL, line_dash="dash", line_color=ERROR_RED, annotation_text="LSL", annotation_position="top left"); fig.add_vline(x=USL, line_dash="dash", line_color=ERROR_RED, annotation_text="USL", annotation_position="top right"); fig.add_vline(x=mu, line_dash="dot", line_color=NEUTRAL_GREY, annotation_text=f"Mean={mu:.2f}", annotation_position="bottom right")
-    fig.update_layout(title_text=f'Process Capability (Cpk) Analysis - Titer (g/L)<br><b>Cpk = {cpk:.2f}</b> (Target: ≥1.33)', xaxis_title="Titer (g/L)", yaxis_title="Density", showlegend=False, title_font_size=20, title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
-    return fig
+    fig.add_vline(x=LSL, line_dash="dash", line_color=ERROR_RED, annotation_text="LSL", annotation_position="top left")
+    fig.add_vline(x=USL, line_dash="dash", line_color=ERROR_RED, annotation_text="USL", annotation_position="top right")
+    fig.add_vline(x=mu, line_dash="dot", line_color=NEUTRAL_GREY, annotation_text=f"Mean={mu:.2f}", annotation_position="bottom right")
+    
+    fig.update_layout(
+        title_text=f'Process Capability (Cpk) Analysis - Titer (g/L)<br><b>Cpk = {cpk:.2f}</b> (Target: ≥1.33)',
+        xaxis_title="Titer (g/L)", yaxis_title="Density", showlegend=False,
+        title_font_size=20, title_x=0.5, plot_bgcolor=BACKGROUND_GREY
+    )
+    return fig, cpk
 
 def _render_professional_protocol_template() -> None:
     st.header("IQ/OQ Protocol: VAL-TP-101"); st.subheader("Automated Bioreactor Suite (ASSET-123)"); st.divider()
@@ -998,10 +1019,18 @@ def render_e2e_validation_hub_page() -> None:
             c1, c2 = st.columns(2)
             with c1: 
                 st.markdown("###### Process Capability")
-                st.plotly_chart(plot_cpk_analysis("pq_cpk"), use_container_width=True)
-                st.success("""
-                **Actionable Insight:** The Cpk of 1.67 is well above the industry standard target of ≥1.33. This high value indicates that the process is well-centered and has very low variability, meaning it is highly capable of consistently producing product that meets its specification for Titer.
-                """)
+                cpk_fig, cpk_value = plot_cpk_analysis("pq_cpk")
+                st.plotly_chart(cpk_fig, use_container_width=True)
+                
+                # --- DYNAMIC AND CONDITIONAL INSIGHT ---
+                if cpk_value >= 1.33:
+                    st.success(f"""
+                    **Actionable Insight:** The Cpk of **{cpk_value:.2f}** is above the industry standard target of ≥1.33. This high value indicates that the process is well-centered with low variability, meaning it is highly capable of consistently meeting the Titer specification.
+                    """)
+                else:
+                    st.error(f"""
+                    **Actionable Insight:** The Cpk of **{cpk_value:.2f}** is **BELOW** the required target of ≥1.33. This indicates the process is not capable of consistently meeting the Titer specification. **Action:** An investigation is required with Process Engineering to reduce process variability before the system can be qualified.
+                    """)
             with c2: 
                 st.markdown("###### Process Stability")
                 spc_fig, spc_alerts = plot_process_stability_chart("pq_spc")
@@ -1009,7 +1038,6 @@ def render_e2e_validation_hub_page() -> None:
                 if spc_alerts:
                     st.error(f"**🚨 Automated SPC Alert Detected:** {spc_alerts[0]}")
                     st.success("**Actionable Insight:** The automated rule check has detected a process shift. This would trigger an immediate investigation with Process Engineering to identify the root cause (e.g., raw material change, sensor drift) before the final validation report can be signed.")
-
 def render_specialized_validation_page() -> None:
     st.title("🧪 4. Specialized Validation Hubs")
     render_manager_briefing(title="Demonstrating Breadth of Expertise", content="Beyond standard equipment qualification, a Validation Manager must be fluent in specialized validation disciplines critical to GMP manufacturing. This hub showcases expertise in Computer System Validation (CSV), Cleaning Validation, and Process Characterization.", reg_refs="21 CFR Part 11, GAMP 5, PDA TR 29 (Cleaning Validation)", business_impact="Ensures all aspects of the manufacturing process, including supporting systems and processes, are fully compliant and controlled, preventing common sources of regulatory findings.", quality_pillar="Cross-functional Technical Leadership.", risk_mitigation="Ensures compliance in niche, high-risk areas like data integrity (CSV) and cross-contamination (Cleaning) that are frequent targets of audits.")
