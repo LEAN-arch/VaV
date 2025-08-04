@@ -81,7 +81,65 @@ def plot_kpi_sparkline(data: list, unit: str, x_axis_label: str, is_good_down: b
     return fig
 
 # --- DATA GENERATORS & VISUALIZATIONS ---
+def case_study_power_analysis_calculator():
+    briefing_card = f"""
+    <div style="background-color: #E3F2FD; border: 1px solid {PRIMARY_COLOR}; border-radius: 5px; padding: 15px; margin-bottom: 20px; color: {DARK_GREY};">
+        <p style="margin-bottom: 10px;">
+            <strong style="color: {PRIMARY_COLOR};">Context:</strong> Before executing a Performance Qualification (PQ), we must define and justify the number of samples to test. This is especially critical for attribute data (e.g., pass/fail, conforming/non-conforming).
+        </p>
+        <p style="margin-bottom: 10px;">
+            <strong style="color: {DARK_GREY};">Purpose:</strong> This interactive calculator determines the required sample size (n) to demonstrate a specific process success rate (Reliability) with a given statistical Confidence, assuming zero failures are found in the sample.
+        </p>
+        <p style="margin-bottom: 0;">
+            <strong style="color: {SUCCESS_GREEN};">Reason for Use:</strong> This tool replaces arbitrary sample sizes with a statistically defensible method, a frequent target of auditor questions. It provides the objective evidence required for Validation Plans and aligns with risk management principles from **ICH Q9** and **ISO 14971**.
+        </p>
+    </div>
+    """
+    st.markdown(briefing_card, unsafe_allow_html=True)
 
+    st.subheader("Interactive Sample Size Calculator")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        confidence_level = st.slider(
+            "Confidence Level (%) - How sure do you want to be?",
+            min_value=80.0, max_value=99.9, value=95.0, step=0.1, format="%.1f%%"
+        )
+    with col2:
+        reliability = st.slider(
+            "Required Reliability (Success Rate, %)",
+            min_value=90.0, max_value=99.9, value=99.0, step=0.1, format="%.1f%%"
+        )
+    
+    # Calculation
+    # Formula for zero failures: n = ln(1-C) / ln(R)
+    # where C is confidence and R is reliability
+    c = confidence_level / 100
+    r = reliability / 100
+    
+    sample_size = "N/A"
+    if r < 1.0:
+        # Use numpy for log and ceiling functions to avoid adding a new import
+        n_float = np.log(1 - c) / np.log(r)
+        sample_size = int(np.ceil(n_float))
+    else: # Cannot demonstrate 100% reliability with a finite sample
+        sample_size = "Infinite"
+
+    st.metric(
+        label="Statistically Required Sample Size (n)",
+        value=f"{sample_size} units",
+        help="This is the minimum number of units you must test and find zero failures to make your statistical claim."
+    )
+    
+    st.success(f"""
+    **Actionable Insight & Interpretation:**
+
+    To demonstrate with **{confidence_level:.1f}% confidence** that your process is at least **{reliability:.1f}% reliable** (i.e., has a defect rate of no more than {100-reliability:.1f}%), you must randomly sample and test **{sample_size} units** from a stable process and have **zero failures**.
+
+    This statement and its parameters should be documented directly in your Validation Plan (VP) to proactively address auditor questions regarding your sampling strategy. This tool enables a data-driven discussion on the trade-off between statistical risk and the cost of testing.
+    """)
+
+    st.info("Note: This common calculation is based on the binomial distribution and assumes you are testing for attribute data and will accept zero failures in your sample.", icon="ℹ️")
 def case_study_csv():
     st.info("**Purpose:** A compliant Computer System Validation (CSV) project follows a structured lifecycle. This Gantt chart visualizes the execution of a CSV project, including critical parallel workstreams for IT infrastructure and ERES testing.")
     df = pd.DataFrame([
@@ -1736,6 +1794,8 @@ def render_specialized_validation_page() -> None:
 
     with tab1:
         st.header("Process & Equipment Validation")
+        with st.expander("📊 **Case Study: Statistical Sample Size Justification (Binomial Power Analysis)**"):
+            case_study_power_analysis_calculator()
         with st.expander("🔬 **Case Study: Process Characterization (DOE)**", expanded=True):
             case_study_doe()
         with st.expander("❄️ **Case Study: Validating a Lyophilizer Equipment Cycle & Drying**"):
