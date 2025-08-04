@@ -224,19 +224,19 @@ def case_study_taping_soldering():
 
 def case_study_levey_jennings():
     briefing_card = f"""
-        <div style="border: 1px solid {BACKGROUND_GREY}; border-radius: 5px; padding: 15px; margin-bottom: 20px; background-color: #FFFFFF;">
-            <p style="margin-bottom: 10px;">
-                <strong style="color: {PRIMARY_COLOR};">Context:</strong> A critical QC Reagent Control Lot is run daily on a diagnostic analyzer to ensure the measurement system is stable. The target mean is 100 mg/dL with a known standard deviation (SD) of 2 mg/dL.
-            </p>
-            <p style="margin-bottom: 10px;">
-                <strong style="color: {DARK_GREY};">Purpose:</strong> To visualize the precision and accuracy of a test system over time by plotting control values against their acceptable limits (mean ±1, 2, and 3 SD).
-            </p>
-            <p style="margin-bottom: 0;">
-                <strong style="color: {SUCCESS_GREEN};">Reason for Use:</strong> This chart is the industry standard for lab QC. Its well-defined zones, combined with Westgard rules, provide a powerful, standardized system for detecting both random error (e.g., a 1-3s violation) and systematic error (e.g., a 2-2s violation) with high confidence.
-            </p>
-        </div>
-        """
-        st.markdown(briefing_card, unsafe_allow_html=True)
+    <div style="border: 1px solid {BACKGROUND_GREY}; border-radius: 5px; padding: 15px; margin-bottom: 20px; background-color: #FFFFFF;">
+        <p style="margin-bottom: 10px;">
+            <strong style="color: {PRIMARY_COLOR};">Context:</strong> A critical QC Reagent Control Lot is run daily on a diagnostic analyzer to ensure the measurement system is stable. The target mean is 100 mg/dL with a known standard deviation (SD) of 2 mg/dL.
+        </p>
+        <p style="margin-bottom: 10px;">
+            <strong style="color: {DARK_GREY};">Purpose:</strong> To visualize the precision and accuracy of a test system over time by plotting control values against their acceptable limits (mean ±1, 2, and 3 SD).
+        </p>
+        <p style="margin-bottom: 0;">
+            <strong style="color: {SUCCESS_GREEN};">Reason for Use:</strong> This chart is the industry standard for lab QC. Its well-defined zones, combined with Westgard rules, provide a powerful, standardized system for detecting both random error (e.g., a 1-3s violation) and systematic error (e.g., a 2-2s violation) with high confidence.
+        </p>
+    </div>
+    """
+    st.markdown(briefing_card, unsafe_allow_html=True)
     
     # Generate data with a specific violation
     rng = np.random.default_rng(42)
@@ -283,13 +283,21 @@ def case_study_levey_jennings():
     - The **1-3s violation** on {violation_3s['Date'].dt.date.iloc[0]} required immediate rejection of the run and an investigation into random error (e.g., bubble in reagent, sample mix-up).
     - The **2-2s violation** indicates a systematic shift. A work order was issued to recalibrate the instrument and review the current reagent lot for degradation.
     """)
-
 def case_study_ewma_chart():
-    st.markdown("""
-    **Context:** We are monitoring the critical impurity level (%) in a biologic drug substance produced by a chromatography column that is known to degrade slowly over many cycles. A small, gradual increase in impurity is a sign that the column needs repacking.
-    **Purpose:** To detect small, persistent shifts in the process mean that might be missed by standard Shewhart charts.
-    **Reason for Use:** The EWMA chart incorporates "memory" of past data points by giving them exponentially decreasing weights. This makes it far more sensitive to small drifts than an I-MR chart, which only considers the last one or two data points. It enables proactive intervention *before* a specification limit is breached.
-    """)
+    briefing_card = f"""
+    <div style="border: 1px solid {BACKGROUND_GREY}; border-radius: 5px; padding: 15px; margin-bottom: 20px; background-color: #FFFFFF;">
+        <p style="margin-bottom: 10px;">
+            <strong style="color: {PRIMARY_COLOR};">Context:</strong> We are monitoring the critical impurity level (%) in a biologic drug substance produced by a chromatography column that is known to degrade slowly over many cycles. A small, gradual increase in impurity is a leading indicator of column failure.
+        </p>
+        <p style="margin-bottom: 10px;">
+            <strong style="color: {DARK_GREY};">Purpose:</strong> To detect small but persistent shifts in the process mean, which might be too subtle for standard Shewhart charts to identify in a timely manner.
+        </p>
+        <p style="margin-bottom: 0;">
+            <strong style="color: {SUCCESS_GREEN};">Reason for Use:</strong> The EWMA chart incorporates "memory" of past data points by giving them exponentially decreasing weights. This makes it far more sensitive to gradual drifts, enabling proactive intervention (like column repacking) *before* a specification limit is ever breached.
+        </p>
+    </div>
+    """
+    st.markdown(briefing_card, unsafe_allow_html=True)
 
     # Generate data with a small, persistent shift
     rng = np.random.default_rng(10)
@@ -323,17 +331,26 @@ def case_study_ewma_chart():
     fig.update_layout(title="<b>EWMA Chart for Chromatography Column Degradation</b>", xaxis_title="Batch Number", yaxis_title="Impurity Level (%)", title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
     st.plotly_chart(fig, use_container_width=True)
 
-    st.success("""
+    st.success(f"""
     **Actionable Insight:** The EWMA chart signaled an out-of-control condition at **Batch #{violation}**, much earlier than a standard chart would have. This early warning, triggered by the sustained small increase in impurity, allows for proactive maintenance. 
     **Decision:** A work order will be issued to repack the chromatography column at the end of the current campaign, preventing the production of any out-of-specification material and avoiding a costly deviation investigation.
     """)
-
+    
 def case_study_cusum_chart():
-    st.markdown("""
-    **Context:** We are monitoring the fill volume (in mL) of a high-speed aseptic filling line. A small, sudden clog in a filling nozzle could cause a persistent underfill that must be detected immediately to prevent an entire lot from being compromised.
-    **Purpose:** To rapidly detect small, sustained shifts in the process average. The chart accumulates deviations from the target, making small shifts visually apparent very quickly.
-    **Reason for Use:** While EWMA is also good for small shifts, CUSUM is often faster at detecting the *start* of the shift. This is critical in high-volume, high-cost processes like aseptic filling where minimizing the number of defective units is paramount.
-    """)
+    briefing_card = f"""
+    <div style="border: 1px solid {BACKGROUND_GREY}; border-radius: 5px; padding: 15px; margin-bottom: 20px; background-color: #FFFFFF;">
+        <p style="margin-bottom: 10px;">
+            <strong style="color: {PRIMARY_COLOR};">Context:</strong> We are monitoring the fill volume (in mL) of a high-speed aseptic filling line. A small, sudden clog in a filling nozzle could cause a persistent underfill that must be detected immediately to prevent an entire lot from being compromised.
+        </p>
+        <p style="margin-bottom: 10px;">
+            <strong style="color: {DARK_GREY};">Purpose:</strong> To rapidly detect the *onset* of a small, sustained shift in the process average by accumulating deviations from a target value.
+        </p>
+        <p style="margin-bottom: 0;">
+            <strong style="color: {SUCCESS_GREEN};">Reason for Use:</strong> While EWMA is also good for small shifts, CUSUM is often faster at detecting the *start* of the shift. This is critical in high-volume, high-cost processes where minimizing the number of defective units produced after a failure begins is the primary goal.
+        </p>
+    </div>
+    """
+    st.markdown(briefing_card, unsafe_allow_html=True)
     
     # Generate data with a sudden, small shift
     rng = np.random.default_rng(50)
@@ -369,11 +386,21 @@ def case_study_cusum_chart():
     """)
 
 def case_study_advanced_imr():
-    st.markdown("""
-    **Context:** Continuous monitoring of the differential pressure (DP) between a Grade A aseptic processing area and the surrounding Grade B area. Maintaining a positive pressure gradient is a critical control parameter to prevent ingress of contaminants.
-    **Purpose:** To monitor the stability and variability of a critical environmental parameter over time, detecting any special cause variation that could indicate a breach of containment.
-    **Reason for Use:** The I-MR chart is the ideal tool for this application because we are dealing with individual measurements taken at regular intervals. The I-chart tracks the DP level itself, while the MR-chart tracks its short-term variability. A sudden change in variability (a spike on the MR chart) is often the first sign of a problem, even before the I-chart goes out of control.
-    """)
+    briefing_card = f"""
+    <div style="border: 1px solid {BACKGROUND_GREY}; border-radius: 5px; padding: 15px; margin-bottom: 20px; background-color: #FFFFFF;">
+        <p style="margin-bottom: 10px;">
+            <strong style="color: {PRIMARY_COLOR};">Context:</strong> Continuous monitoring of the differential pressure (DP) between a Grade A aseptic processing area and the surrounding Grade B area. Maintaining a positive pressure gradient is a critical control parameter to prevent the ingress of contaminants.
+        </p>
+        <p style="margin-bottom: 10px;">
+            <strong style="color: {DARK_GREY};">Purpose:</strong> To monitor the stability and variability of a critical environmental parameter over time, detecting any special cause variation that could indicate a breach of containment.
+        </p>
+        <p style="margin-bottom: 0;">
+            <strong style="color: {SUCCESS_GREEN};">Reason for Use:</strong> The I-MR chart is the ideal tool for individual measurements taken at intervals. The I-chart tracks the DP level, while the MR-chart tracks its variability. A spike in variability on the MR-chart is often the *first* sign of a problem (e.g., a failing fan motor, a faulty door seal) even before the pressure itself goes out of spec.
+        </p>
+    </div>
+    """
+    st.markdown(briefing_card, unsafe_allow_html=True)
+    
     rng = np.random.default_rng(25)
     data = rng.normal(15, 0.5, 48) # Target: 15 Pa
     data[30] = 10 # Sudden drop - e.g., door opened
@@ -414,11 +441,21 @@ def case_study_advanced_imr():
     """)
 
 def case_study_zone_chart():
-    st.markdown("""
-    **Context:** Monitoring the seal strength (in Newtons) of a medical device pouch on a high-speed, validated heat-sealing line. The process is mature and highly capable, so we need a sensitive tool to detect early signs of drift.
-    **Purpose:** To analyze process stability with greater sensitivity than a standard chart by dividing the area between control limits into sigma-based zones (A, B, C).
-    **Reason for Use:** For a mature, well-understood process, simply staying within +/- 3 SD is not enough. The Zone Chart allows for the application of pattern-based rules (e.g., Westgard or Nelson rules) to detect unnatural patterns *within* the control limits, such as runs, trends, or stratification. This provides a much earlier warning of potential issues.
-    """)
+    briefing_card = f"""
+    <div style="border: 1px solid {BACKGROUND_GREY}; border-radius: 5px; padding: 15px; margin-bottom: 20px; background-color: #FFFFFF;">
+        <p style="margin-bottom: 10px;">
+            <strong style="color: {PRIMARY_COLOR};">Context:</strong> Monitoring the seal strength (in Newtons) of a medical device pouch on a high-speed, validated heat-sealing line. The process is mature and highly capable, so we need a sensitive tool to detect early signs of drift.
+        </p>
+        <p style="margin-bottom: 10px;">
+            <strong style="color: {DARK_GREY};">Purpose:</strong> To analyze process stability with greater sensitivity by dividing the control chart into sigma-based zones and applying pattern-based rules.
+        </p>
+        <p style="margin-bottom: 0;">
+            <strong style="color: {SUCCESS_GREEN};">Reason for Use:</strong> For a mature process, simply staying within +/- 3 SD is not enough. The Zone Chart detects unnatural patterns *within* the control limits (e.g., runs, trends, stratification). This provides a much earlier warning of potential issues, allowing for investigation and correction during planned maintenance rather than as an emergency line-down event.
+        </p>
+    </div>
+    """
+    st.markdown(briefing_card, unsafe_allow_html=True)
+    
     rng = np.random.default_rng(33)
     mean = 20; sd = 0.5
     data = rng.normal(mean, sd, 25)
@@ -455,13 +492,22 @@ def case_study_zone_chart():
     **Actionable Insight:** Although no single point is outside the +/- 3 sigma control limits, the Zone Chart's automated rule analysis detected a run of 8 consecutive points below the center line. This is a statistically significant, non-random pattern indicating a systematic process shift.
     **Decision:** This early warning triggers a non-emergency investigation. The maintenance team will check the calibration of the sealing platen's thermocouple and inspect for heater element degradation during the next scheduled planned maintenance, addressing the drift before it can cause a failure.
     """)
-
+    
 def case_study_hotelling_t2():
-    st.markdown("""
-    **Context:** We are validating a new automated buffer preparation skid. Two critical, and inherently correlated, quality attributes are the final **Salt Concentration** and the **pH**. An error in weighing the primary salt component will affect both variables.
-    **Purpose:** To simultaneously monitor the stability of two or more correlated process variables. It condenses the multivariate information into a single, easy-to-interpret value (T²).
-    **Reason for Use:** This chart is vastly superior to running two separate I-MR charts for Concentration and pH. A small, simultaneous shift in both variables might not trigger an alarm on either individual chart, but the *combined state* of the system is out of control. The T² chart is specifically designed to detect these joint-shifts, preventing the release of a subtly incorrect but non-compliant buffer.
-    """)
+    briefing_card = f"""
+    <div style="border: 1px solid {BACKGROUND_GREY}; border-radius: 5px; padding: 15px; margin-bottom: 20px; background-color: #FFFFFF;">
+        <p style="margin-bottom: 10px;">
+            <strong style="color: {PRIMARY_COLOR};">Context:</strong> We are validating a new automated buffer preparation skid. Two critical, and inherently correlated, quality attributes are the final **Salt Concentration** and the **pH**. An error in weighing the primary salt component will affect both variables simultaneously.
+        </p>
+        <p style="margin-bottom: 10px;">
+            <strong style="color: {DARK_GREY};">Purpose:</strong> To simultaneously monitor the stability of two or more correlated process variables, condensing the multivariate information into a single, easy-to-interpret statistic (T²).
+        </p>
+        <p style="margin-bottom: 0;">
+            <strong style="color: {SUCCESS_GREEN};">Reason for Use:</strong> This chart is vastly superior to running two separate univariate charts. A small, simultaneous shift in both variables might not trigger an alarm on either individual chart, but the *combined state* of the system is out of control. The T² chart is specifically designed to detect these joint-shifts, preventing the release of a subtly incorrect but non-compliant final product.
+        </p>
+    </div>
+    """
+    st.markdown(briefing_card, unsafe_allow_html=True)
     
     # 1. Generate correlated multivariate data
     rng = np.random.default_rng(123)
