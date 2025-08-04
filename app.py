@@ -1289,20 +1289,32 @@ def render_specialized_validation_page() -> None:
         st.plotly_chart(fig, use_container_width=True)
         st.success(f"**Actionable Insight:** The system's **Sensitivity is {sensitivity:.1f}%** (it correctly identifies 95% of real defects), which meets our primary goal of preventing escapes to the customer. However, the 2 False Positives represent a direct cost in unnecessary scrap. The 5 False Negatives are the most critical to investigate, as they represent potential escapes. **Action:** A review of these 5 parts is required to determine if the AI model needs retraining on a new defect type.")
 
-    def case_study_electrostatic_control():
-        st.info("**Context:** For plastic biochips, uncontrolled electrostatic discharge (ESD) can damage sensitive electronics or cause handling errors. This study compares two mitigation strategies against an uncontrolled baseline.")
-        df = pd.DataFrame({'Stage': ["Cassette Unmolding", "Biochip Placement", "Lid Taping", "Final Packaging"], 'Uncontrolled (V)': [1850, 2200, 2550, 1900], 'Anti-Static Coating (V)': [450, 520, 600, 480], 'Ionizer System (V)': [85, 45, 60, 50]})
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=df['Uncontrolled (V)'], y=df['Stage'], name='Uncontrolled', mode='markers', marker=dict(color=ERROR_RED, size=15)))
-        fig.add_trace(go.Scatter(x=df['Anti-Static Coating (V)'], y=df['Stage'], name='Anti-Static Coating', mode='markers', marker=dict(color=WARNING_AMBER, size=15)))
-        fig.add_trace(go.Scatter(x=df['With Ionizer (V)'], y=df['Stage'], name='With Ionizer', mode='markers', marker=dict(color=SUCCESS_GREEN, size=15)))
-        for i, row in df.iterrows():
-            fig.add_shape(type="line", x0=row['With Ionizer (V)'], y0=row['Stage'], x1=row['Uncontrolled (V)'], y1=row['Stage'], line=dict(color=NEUTRAL_GREY, width=2))
-        fig.add_vline(x=100, line_dash="dash", annotation_text="Acceptance Limit (<100V)")
-        fig.update_layout(title_text="<b>OQ: Comparison of ESD Control Methods</b>", title_x=0.5, xaxis_title="Surface Voltage (V)")
-        st.plotly_chart(fig, use_container_width=True)
-        st.success("**Actionable Insight:** This comparative study definitively proves the Ionizer System is the superior control method, reducing surface voltage by over 95% and staying well below the <100V damage threshold. The Anti-Static Coating is insufficient. **Decision:** The Ionizer system is a required, critical utility for this production line.")
-
+def case_study_electrostatic_control():
+    st.info("**Context:** For plastic biochips and cassettes, uncontrolled electrostatic discharge (ESD) can damage sensitive onboard electronics or cause latent failures. This validation study compares two mitigation strategies against an uncontrolled baseline.")
+    df = pd.DataFrame({
+        'Stage': ["Cassette Unmolding", "Biochip Placement", "Lid Taping", "Final Packaging"], 
+        'Uncontrolled (V)': [1850, 2200, 2550, 1900], 
+        'Anti-Static Coating (V)': [450, 520, 600, 480], 
+        'Ionizer System (V)': [85, 45, 60, 50]  # This is the correct column name
+    })
+    
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=df['Uncontrolled (V)'], y=df['Stage'], name='Uncontrolled', mode='markers', marker=dict(color=ERROR_RED, size=15)))
+    fig.add_trace(go.Scatter(x=df['Anti-Static Coating (V)'], y=df['Stage'], name='Anti-Static Coating', mode='markers', marker=dict(color=WARNING_AMBER, size=15)))
+    fig.add_trace(go.Scatter(x=df['Ionizer System (V)'], y=df['Stage'], name='With Ionizer', mode='markers', marker=dict(color=SUCCESS_GREEN, size=15)))
+    
+    for i, row in df.iterrows():
+        # --- FIX for KeyError: Use the correct column name 'Ionizer System (V)' ---
+        fig.add_shape(type="line", 
+            x0=row['Ionizer System (V)'], y0=row['Stage'], 
+            x1=row['Uncontrolled (V)'], y1=row['Stage'], 
+            line=dict(color=NEUTRAL_GREY, width=2)
+        )
+        
+    fig.add_vline(x=100, line_dash="dash", annotation_text="Acceptance Limit (<100V)")
+    fig.update_layout(title_text="<b>OQ: Comparison of ESD Control Methods</b>", title_x=0.5, xaxis_title="Surface Voltage (V)")
+    st.plotly_chart(fig, use_container_width=True)
+    st.success("**Actionable Insight:** This comparative study definitively proves the Ionizer System is the superior control method, reducing surface voltage by over 95% and staying well below the <100V damage threshold. The Anti-Static Coating is insufficient. **Decision:** The Ionizer system is a required, critical utility for this production line.")
     def case_study_taping_soldering():
         st.info("**Context:** For thermal processes like heat staking or ultrasonic soldering, the OQ must prove that critical parameters are precisely and uniformly controlled across the entire operational surface to ensure a consistent seal.")
         data = np.random.normal(250.5, 0.5, (5, 5)); data[2,2] = 258.1 # Simulate a hot spot
