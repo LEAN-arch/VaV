@@ -82,8 +82,6 @@ def plot_kpi_sparkline(data: list, unit: str, x_axis_label: str, is_good_down: b
 
 # --- DATA GENERATORS & VISUALIZATIONS ---
 
-# --- START: New Helper functions for Specialized Hubs ---
-
 def case_study_csv():
     st.info("**Purpose:** A compliant Computer System Validation (CSV) project follows a structured lifecycle. This Gantt chart visualizes the execution of a CSV project, including critical parallel workstreams for IT infrastructure and ERES testing.")
     df = pd.DataFrame([
@@ -782,15 +780,39 @@ def analyze_spc_rules(df: pd.DataFrame, ucl: float, lcl: float, mean: float) -> 
     return alerts
 
 def plot_process_stability_chart(key: str) -> Tuple[go.Figure, list]:
-    rng = np.random.default_rng(22); data = rng.normal(5.2, 0.25, 25); data[15:] = data[15:] + 0.3 
-    df = pd.DataFrame({'Titer': data}); df['MR'] = df['Titer'].diff().abs()
-    I_CL = df['Titer'].mean(); MR_CL = df['MR'].mean(); I_UCL = I_CL + 2.66 * MR_CL; I_LCL = I_CL - 2.66 * MR_CL; MR_UCL = 3.267 * MR_CL
+    """Creates an I-MR chart and returns the figure and any detected SPC alerts."""
+    rng = np.random.default_rng(22)
+    # Start with a stable process
+    data = rng.normal(5.1, 0.05, 25) 
+    # --- DEFINITIVE FIX: Introduce a large, unmistakable process shift to guarantee an alert ---
+    data[15:] = data[15:] + 0.3 
+    
+    df = pd.DataFrame({'Titer': data})
+    df['MR'] = df['Titer'].diff().abs()
+    
+    # Recalculate limits based on the *entire* dataset to show the shift
+    I_CL = df['Titer'].mean()
+    MR_CL = df['MR'].mean()
+    I_UCL = I_CL + 2.66 * MR_CL
+    I_LCL = I_CL - 2.66 * MR_CL
+    
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1, subplot_titles=("<b>Individuals (I) Chart</b>", "<b>Moving Range (MR) Chart</b>"))
+    
+    # I-Chart
     fig.add_trace(go.Scatter(x=df.index, y=df['Titer'], name='Titer (g/L)', mode='lines+markers', marker_color=PRIMARY_COLOR), row=1, col=1)
-    fig.add_hline(y=I_CL, line_dash="dash", line_color=SUCCESS_GREEN, row=1, col=1, annotation_text="CL"); fig.add_hline(y=I_UCL, line_dash="dot", line_color=ERROR_RED, row=1, col=1, annotation_text="UCL"); fig.add_hline(y=I_LCL, line_dash="dot", line_color=ERROR_RED, row=1, col=1, annotation_text="LCL")
+    fig.add_hline(y=I_CL, line_dash="dash", line_color=SUCCESS_GREEN, row=1, col=1, annotation_text="CL")
+    fig.add_hline(y=I_UCL, line_dash="dot", line_color=ERROR_RED, row=1, col=1, annotation_text="UCL")
+    fig.add_hline(y=I_LCL, line_dash="dot", line_color=ERROR_RED, row=1, col=1, annotation_text="LCL")
+    
+    # MR-Chart
     fig.add_trace(go.Scatter(x=df.index, y=df['MR'], name='Moving Range', mode='lines+markers', marker_color=WARNING_AMBER), row=2, col=1)
-    fig.add_hline(y=MR_CL, line_dash="dash", line_color=SUCCESS_GREEN, row=2, col=1, annotation_text="CL"); fig.add_hline(y=MR_UCL, line_dash="dot", line_color=ERROR_RED, row=2, col=1, annotation_text="UCL")
+    MR_UCL = 3.267 * MR_CL
+    fig.add_hline(y=MR_CL, line_dash="dash", line_color=SUCCESS_GREEN, row=2, col=1, annotation_text="CL")
+    fig.add_hline(y=MR_UCL, line_dash="dot", line_color=ERROR_RED, row=2, col=1, annotation_text="UCL")
+    
     fig.update_layout(height=400, showlegend=False, title_text="<b>Process Stability (I-MR Chart) for PQ Run 1 Titer</b>", title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
+    
+    # Analyze for SPC rule violations
     alerts = analyze_spc_rules(df, I_UCL, I_LCL, I_CL)
     return fig, alerts
 
@@ -1281,7 +1303,7 @@ def render_e2e_validation_hub_page() -> None:
 
         st.subheader("Phase 4: Performance Qualification", divider='blue')
         with st.container(border=True):
-            st.info("**Context:** PQ is the final qualification step, designed to prove the equipment can consistently and repeatably produce quality product under normal, real-world manufacturing conditions using production personnel and materials.")
+            st.info("**Context:** PQ is the final qualification step, designed to prove the equipment can consistently and repeatably produce quality product under normal, real-world manufacturing conditions.")
             c1, c2 = st.columns(2)
             with c1: 
                 st.markdown("###### Process Capability (Cpk)")
@@ -1289,31 +1311,33 @@ def render_e2e_validation_hub_page() -> None:
                 cpk_fig, cpk_value = plot_cpk_analysis("pq_cpk")
                 st.plotly_chart(cpk_fig, use_container_width=True)
                 
-                if cpk_value >= 1.33:
-                    st.success(f"""
-                    **Actionable Insight:** The Cpk of **{cpk_value:.2f}** exceeds the target of ≥1.33. This indicates the process is highly capable of meeting the Titer specification.
-                    """)
-                else:
-                    st.error(f"""
-                    **Actionable Insight:** The Cpk of **{cpk_value:.2f}** is **BELOW** the required target of ≥1.33. This indicates the process is not capable. **Action:** An investigation is required to reduce process variability.
-                    """)
             with c2: 
                 st.markdown("###### Process Stability (SPC)")
                 st.info("**Purpose:** The I-MR chart verifies that the process is stable and predictable over time. A stable process is a prerequisite for a valid Cpk calculation.")
                 spc_fig, spc_alerts = plot_process_stability_chart("pq_spc")
                 st.plotly_chart(spc_fig, use_container_width=True)
-                
-                # --- CORRECTED and DYNAMIC INSIGHT ---
-                if spc_alerts:
-                    st.error(f"**🚨 Automated SPC Alert:** {spc_alerts[0]}")
-                    st.success(f"""
-                    **Actionable Insight:** The automated rule check has detected a process shift, indicating the process is **not stable**. A process that is not in a state of statistical control is unpredictable. Therefore, the calculated Cpk of **{cpk_value:.2f} is statistically meaningless**. 
-                    **Action:** The top priority is to investigate the root cause of the instability (the process shift) *before* assessing capability.
-                    """)
-                else:
-                    # This case won't be hit with the current simulated data, but is here for robustness
-                    st.success("**Actionable Insight:** No out-of-control signals were detected. This confirms the process is in a state of statistical control, which validates the Cpk result and demonstrates the process is both stable and capable.")
-                    
+            
+            st.markdown("---")
+            st.subheader("Overall PQ Conclusion")
+            # --- DEFINITIVE FIX: Logically connected, hierarchical insights ---
+            if spc_alerts:
+                st.error(f"**Finding:** The automated SPC analysis detected an out-of-control signal: **{spc_alerts[0]}**.")
+                st.warning(f"""
+                **Actionable Insight:** The process is **NOT STABLE**. A process that is not in a state of statistical control is unpredictable. Therefore, the calculated Cpk of **{cpk_value:.2f} is statistically meaningless** and cannot be used to qualify the system. 
+                **Decision:** **PQ Failed.** An investigation must be launched with Process Engineering to identify the root cause of the process shift. The PQ must be re-executed after corrective actions are implemented.
+                """)
+            elif cpk_value < 1.33:
+                 st.error(f"**Finding:** The process is stable, but the Cpk of **{cpk_value:.2f}** is **BELOW** the required target of ≥1.33.")
+                 st.warning("""
+                 **Actionable Insight:** The process is stable but **NOT CAPABLE**. It consistently produces product that is too close to the specification limits.
+                 **Decision:** **PQ Failed.** An investigation is required with Process Engineering to reduce process variability (e.g., through DOE or raw material analysis) before re-executing the PQ.
+                 """)
+            else:
+                st.success(f"""
+                **Actionable Insight:** The process is demonstrated to be both **STABLE** (no SPC alerts) and **CAPABLE** (Cpk of {cpk_value:.2f} ≥ 1.33). 
+                **Decision:** **PQ Passed.** The system is officially qualified and can be released for commercial manufacturing.
+                """)
+
 def render_specialized_validation_page() -> None:
     st.title("🧪 4. Specialized Validation Hubs")
     render_manager_briefing(title="Demonstrating Breadth of Expertise", content="Beyond standard equipment qualification, a Validation Manager must be fluent in specialized validation disciplines critical to GMP manufacturing. This hub showcases expertise across a wide range of complex, real-world MedTech and Biopharma applications.", reg_refs="21 CFR Part 11, GAMP 5, ISO 14971, PDA Technical Reports", business_impact="Ensures all aspects of the manufacturing process, including novel and complex systems, are fully compliant and controlled, preventing common sources of regulatory findings and production delays.", quality_pillar="Cross-functional Technical Leadership.", risk_mitigation="Ensures compliance in niche, high-risk areas like data integrity (CSV), sterility (lyophilization), and microfluidics that are frequent targets of audits.")
