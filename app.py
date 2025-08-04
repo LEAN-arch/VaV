@@ -771,26 +771,45 @@ def plot_oq_challenge_results(key: str) -> go.Figure:
     fig.update_layout(title='<b>OQ Challenge: Bioreactor Temperature Control</b>', xaxis_title='Time', yaxis_title='Temperature (°C)', title_x=0.5, plot_bgcolor=BACKGROUND_GREY); return fig
 
 def analyze_spc_rules(df: pd.DataFrame, ucl: float, lcl: float, mean: float) -> list:
+    """
+    Applies Nelson Rules to SPC data to automatically detect out-of-control trends,
+    including checks for guardband zones.
+    """
     alerts = []
-    if any(df['Titer'] > ucl) or any(df['Titer'] < lcl): alerts.append("Rule 1 Violation: A data point has exceeded the control limits.")
+    sigma = (ucl - mean) / 3
+    
+    # Rule 1: One point outside the control limits (+/- 3 sigma)
+    if any(df['Titer'] > ucl) or any(df['Titer'] < lcl):
+        alerts.append("Rule 1 Violation: A data point has exceeded the +/- 3 sigma control limits.")
+    
+    # Rule 4 (Guardbanding): 2 of 3 consecutive points in the warning zone (+/- 2 sigma)
+    upper_warning = mean + (2 * sigma)
+    lower_warning = mean - (2 * sigma)
+    for i in range(len(df) - 2):
+        points = df['Titer'][i:i+3]
+        if sum(points > upper_warning) >= 2 or sum(points < lower_warning) >= 2:
+            alerts.append("Guardband Alert (Rule 4): Two of three consecutive points are in the +/- 2 sigma warning zone, indicating a potential process shift.")
+            break # Only need to find it once
+            
+    # Rule 2: Nine points in a row on the same side of the mean
     for i in range(len(df) - 8):
         if all(df['Titer'][i:i+9] > mean) or all(df['Titer'][i:i+9] < mean):
-            alerts.append("Rule 2 Violation: A run of 9 points on one side of the mean detected (process shift)."); break
-    if len(df)>2 and df['Titer'].iloc[-1] > mean + (2 * (ucl-mean)/3) and df['Titer'].iloc[-2] > mean + (2 * (ucl-mean)/3): alerts.append("Rule 3 (Simulated) Violation: Two of three consecutive points are in Zone A (potential loss of control).")
+            alerts.append("Rule 2 Violation: A run of 9 points on one side of the mean detected (process shift).")
+            break
+
     return alerts
 
 def plot_process_stability_chart(key: str) -> Tuple[go.Figure, list]:
-    """Creates an I-MR chart and returns the figure and any detected SPC alerts."""
+    """Creates an I-MR chart with guardbanding and a guaranteed process shift for demonstration."""
     rng = np.random.default_rng(22)
     # Start with a stable process
     data = rng.normal(5.1, 0.05, 25) 
-    # --- DEFINITIVE FIX: Introduce a large, unmistakable process shift to guarantee an alert ---
-    data[15:] = data[15:] + 0.3 
+    # Introduce a process shift that will trigger the guardband rule
+    data[15:] = data[15:] + 0.15
     
     df = pd.DataFrame({'Titer': data})
     df['MR'] = df['Titer'].diff().abs()
     
-    # Recalculate limits based on the *entire* dataset to show the shift
     I_CL = df['Titer'].mean()
     MR_CL = df['MR'].mean()
     I_UCL = I_CL + 2.66 * MR_CL
@@ -804,13 +823,20 @@ def plot_process_stability_chart(key: str) -> Tuple[go.Figure, list]:
     fig.add_hline(y=I_UCL, line_dash="dot", line_color=ERROR_RED, row=1, col=1, annotation_text="UCL")
     fig.add_hline(y=I_LCL, line_dash="dot", line_color=ERROR_RED, row=1, col=1, annotation_text="LCL")
     
+    # --- ENHANCEMENT: Add Guardband zones ---
+    sigma = (I_UCL - I_CL) / 3
+    upper_guardband = I_CL + 2 * sigma
+    lower_guardband = I_CL - 2 * sigma
+    fig.add_hrect(y0=upper_guardband, y1=I_UCL, line_width=0, fillcolor=WARNING_AMBER, opacity=0.2, row=1, col=1)
+    fig.add_hrect(y0=I_LCL, y1=lower_guardband, line_width=0, fillcolor=WARNING_AMBER, opacity=0.2, row=1, col=1)
+
     # MR-Chart
-    fig.add_trace(go.Scatter(x=df.index, y=df['MR'], name='Moving Range', mode='lines+markers', marker_color=WARNING_AMBER), row=2, col=1)
     MR_UCL = 3.267 * MR_CL
+    fig.add_trace(go.Scatter(x=df.index, y=df['MR'], name='Moving Range', mode='lines+markers', marker_color=WARNING_AMBER), row=2, col=1)
     fig.add_hline(y=MR_CL, line_dash="dash", line_color=SUCCESS_GREEN, row=2, col=1, annotation_text="CL")
     fig.add_hline(y=MR_UCL, line_dash="dot", line_color=ERROR_RED, row=2, col=1, annotation_text="UCL")
     
-    fig.update_layout(height=400, showlegend=False, title_text="<b>Process Stability (I-MR Chart) for PQ Run 1 Titer</b>", title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
+    fig.update_layout(height=400, showlegend=False, title_text="<b>Process Stability (I-MR Chart) with Guardbands</b>", title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
     
     # Analyze for SPC rule violations
     alerts = analyze_spc_rules(df, I_UCL, I_LCL, I_CL)
@@ -1321,7 +1347,10 @@ def render_e2e_validation_hub_page() -> None:
                 
             with c2: 
                 st.markdown("###### Process Stability (SPC)")
-                st.info("**Purpose:** The I-MR chart verifies that the process is stable and predictable over time. A stable process is a prerequisite for a valid Cpk calculation.")
+                st.info("**Purpose:** The I-MR chart is a fundamental SPC tool used to monitor a process over time. It answers the question: "Is our process stable and predictable, or is it being influenced by unexpected, special causes of variation?"
+                
+                - **Control Limits (UCL/LCL):** The red dotted lines at ±3σ (standard deviations) are the voice of the process. A point outside these limits indicates a statistically significant event has occurred.
+                - **Guardbanding:** The yellow shaded areas represent **warning limits** set at ±2σ. This is a proactive control strategy. Points falling in this zone are not yet failures, but they serve as an early warning that the process may be drifting towards an out-of-control state.")
                 spc_fig, spc_alerts = plot_process_stability_chart("pq_spc")
                 st.plotly_chart(spc_fig, use_container_width=True)
             
