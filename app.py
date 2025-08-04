@@ -222,6 +222,283 @@ def case_study_taping_soldering():
     st.plotly_chart(fig, use_container_width=True)
     st.success("**Actionable Insight:** The thermal mapping reveals a critical hot spot (+8.1°C over setpoint) in the center of the weld horn, which is outside our specification of ±5°C. This could cause material degradation and compromise the cassette seal. **Action:** A work order will be issued for the maintenance team to inspect the heating element and thermocouple in zone Y=2, X=2, and to verify the PID controller tuning for that zone before proceeding to PQ.")
 
+def case_study_levey_jennings():
+    st.markdown("""
+    **Context:** A critical QC Reagent Control Lot is run daily on a diagnostic analyzer to ensure the measurement system is stable. The target mean is 100 mg/dL with a known standard deviation (SD) of 2 mg/dL.
+    **Purpose:** The Levey-Jennings chart is the industry standard for visualizing the precision and accuracy of a test system over time. It plots control values against their acceptable limits (mean ±1, 2, and 3 SD).
+    **Reason for Use:** This chart is superior to a basic control chart for lab QC because its well-defined zones are used with standardized decision rules (like Westgard rules) to detect both random error (e.g., a 1-3s violation) and systematic error (e.g., a 2-2s violation) with high confidence.
+    """)
+    
+    # Generate data with a specific violation
+    rng = np.random.default_rng(42)
+    dates = pd.date_range("2024-05-01", periods=30)
+    data = rng.normal(loc=100, scale=2, size=30)
+    data[20] = 106.5 # 1-3s violation (random error)
+    data[25:27] = [104.5, 104.8] # 2-2s violation (systematic error/bias)
+    df = pd.DataFrame({'Date': dates, 'Value': data})
+
+    mean = 100; sd = 2
+    limits = {'+3sd': mean + 3*sd, '+2sd': mean + 2*sd, '+1sd': mean + 1*sd, 
+              '-1sd': mean - 1*sd, '-2sd': mean - 2*sd, '-3sd': mean - 3*sd}
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=df['Date'], y=df['Value'], mode='lines+markers', name='QC Value', line=dict(color=PRIMARY_COLOR)))
+    
+    # Add mean and SD lines
+    for limit_name, limit_val in limits.items():
+        fig.add_hline(y=limit_val, line_dash='dash', line_color=DARK_GREY, 
+                      annotation_text=limit_name, annotation_position="bottom right")
+    fig.add_hline(y=mean, line_dash='solid', line_color=SUCCESS_GREEN, annotation_text="Mean")
+
+    # Detect and highlight Westgard rule violations
+    violations = []
+    # 1-3s Rule
+    violation_3s = df[df['Value'] > limits['+3sd']]
+    if not violation_3s.empty:
+        idx = violation_3s.index[0]
+        fig.add_annotation(x=df['Date'][idx], y=df['Value'][idx], text="<b>1-3s Violation</b>", showarrow=True, arrowhead=2, ax=0, ay=-40, bgcolor=ERROR_RED, font=dict(color='white'))
+        violations.append("1-3s rule violation detected (potential random error).")
+        
+    # 2-2s Rule
+    for i in range(len(df) - 1):
+        if (df['Value'][i] > limits['+2sd'] and df['Value'][i+1] > limits['+2sd']):
+            fig.add_annotation(x=df['Date'][i+1], y=df['Value'][i+1], text="<b>2-2s Violation</b>", showarrow=True, arrowhead=2, ax=0, ay=40, bgcolor=WARNING_AMBER)
+            violations.append("2-2s rule violation detected (potential systematic bias).")
+            break
+            
+    fig.update_layout(title="<b>Levey-Jennings Chart for Diagnostic Control Monitoring</b>", yaxis_title="Control Value (mg/dL)", title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.error(f"""
+    **Actionable Insight:** The automated analysis detected **{len(violations)}** critical rule violation(s).
+    - The **1-3s violation** on {violation_3s['Date'].dt.date.iloc[0]} required immediate rejection of the run and an investigation into random error (e.g., bubble in reagent, sample mix-up).
+    - The **2-2s violation** indicates a systematic shift. A work order was issued to recalibrate the instrument and review the current reagent lot for degradation.
+    """)
+
+def case_study_ewma_chart():
+    st.markdown("""
+    **Context:** We are monitoring the critical impurity level (%) in a biologic drug substance produced by a chromatography column that is known to degrade slowly over many cycles. A small, gradual increase in impurity is a sign that the column needs repacking.
+    **Purpose:** To detect small, persistent shifts in the process mean that might be missed by standard Shewhart charts.
+    **Reason for Use:** The EWMA chart incorporates "memory" of past data points by giving them exponentially decreasing weights. This makes it far more sensitive to small drifts than an I-MR chart, which only considers the last one or two data points. It enables proactive intervention *before* a specification limit is breached.
+    """)
+
+    # Generate data with a small, persistent shift
+    rng = np.random.default_rng(10)
+    data = rng.normal(loc=0.5, scale=0.05, size=40)
+    data[20:] += 0.06 # A small shift of just over 1 sigma
+    df = pd.DataFrame({'Batch': range(1, 41), 'Impurity': data})
+    
+    # EWMA Calculation
+    lam = 0.2 # Lambda (weighting factor), smaller values give more weight to past data
+    mean = df['Impurity'].mean()
+    sd = df['Impurity'].std()
+    df['EWMA'] = df['Impurity'].ewm(span=(2/lam)-1, adjust=False).mean()
+    
+    # EWMA Control Limits
+    n = df.index + 1
+    ucl = mean + 3 * sd * np.sqrt((lam / (2 - lam)) * (1 - (1 - lam)**(2 * n)))
+    lcl = mean - 3 * sd * np.sqrt((lam / (2 - lam)) * (1 - (1 - lam)**(2 * n)))
+    
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=df['Batch'], y=df['Impurity'], mode='markers', name='Individual Batch', marker_color=NEUTRAL_GREY))
+    fig.add_trace(go.Scatter(x=df['Batch'], y=df['EWMA'], mode='lines', name='EWMA', line=dict(color=PRIMARY_COLOR, width=3)))
+    fig.add_trace(go.Scatter(x=df['Batch'], y=ucl, mode='lines', name='UCL', line=dict(color=ERROR_RED, dash='dash')))
+    fig.add_trace(go.Scatter(x=df['Batch'], y=lcl, mode='lines', name='LCL', line=dict(color=ERROR_RED, dash='dash')))
+    fig.add_hline(y=mean, line_dash='solid', line_color=SUCCESS_GREEN, annotation_text="Target Mean")
+
+    # Find violation
+    violation = df[df['EWMA'] > ucl].first_valid_index()
+    if violation:
+        fig.add_annotation(x=df['Batch'][violation], y=df['EWMA'][violation], text="<b>EWMA Signal</b>", showarrow=True, arrowhead=2, ax=0, ay=-40, bgcolor=ERROR_RED, font=dict(color='white'))
+
+    fig.update_layout(title="<b>EWMA Chart for Chromatography Column Degradation</b>", xaxis_title="Batch Number", yaxis_title="Impurity Level (%)", title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.success("""
+    **Actionable Insight:** The EWMA chart signaled an out-of-control condition at **Batch #{violation}**, much earlier than a standard chart would have. This early warning, triggered by the sustained small increase in impurity, allows for proactive maintenance. 
+    **Decision:** A work order will be issued to repack the chromatography column at the end of the current campaign, preventing the production of any out-of-specification material and avoiding a costly deviation investigation.
+    """)
+
+def case_study_cusum_chart():
+    st.markdown("""
+    **Context:** We are monitoring the fill volume (in mL) of a high-speed aseptic filling line. A small, sudden clog in a filling nozzle could cause a persistent underfill that must be detected immediately to prevent an entire lot from being compromised.
+    **Purpose:** To rapidly detect small, sustained shifts in the process average. The chart accumulates deviations from the target, making small shifts visually apparent very quickly.
+    **Reason for Use:** While EWMA is also good for small shifts, CUSUM is often faster at detecting the *start* of the shift. This is critical in high-volume, high-cost processes like aseptic filling where minimizing the number of defective units is paramount.
+    """)
+    
+    # Generate data with a sudden, small shift
+    rng = np.random.default_rng(50)
+    target = 10.0; sd = 0.05
+    data = rng.normal(target, sd, 50)
+    data[25:] -= 0.04 # A small, sub-sigma shift
+    df = pd.DataFrame({'Sample': range(1, 51), 'Fill Volume': data})
+    
+    # Tabular CUSUM Calculation
+    k = 0.5 * sd # "Allowance" or "slack"
+    h = 5 * sd # Decision interval
+    df['SH+'] = 0.0; df['SH-'] = 0.0
+    for i in range(1, len(df)):
+        df.loc[i, 'SH+'] = max(0, df.loc[i-1, 'SH+'] + df.loc[i, 'Fill Volume'] - target - k)
+        df.loc[i, 'SH-'] = max(0, df.loc[i-1, 'SH-'] + target - df.loc[i, 'Fill Volume'] - k)
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=df['Sample'], y=df['SH+'], name='CUSUM High (SH+)', mode='lines', line=dict(color=ERROR_RED, width=3)))
+    fig.add_trace(go.Scatter(x=df['Sample'], y=df['SH-'], name='CUSUM Low (SH-)', mode='lines', line=dict(color=PRIMARY_COLOR, width=3)))
+    fig.add_hline(y=h, line_dash='dash', line_color='black', annotation_text="Decision Limit (H)", annotation_position="top right")
+    
+    # Find violation
+    violation = df[df['SH-'] > h].first_valid_index()
+    if violation:
+        fig.add_annotation(x=df['Sample'][violation], y=df['SH-'][violation], text="<b>CUSUM Signal!</b><br>Process Mean<br>has Shifted Low", showarrow=True, arrowhead=2, ax=20, ay=-60, bgcolor=PRIMARY_COLOR, font=dict(color='white'))
+
+    fig.update_layout(title="<b>CUSUM Chart for Aseptic Fill Volume Monitoring</b>", xaxis_title="Sample Number", yaxis_title="Cumulative Sum", title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
+    st.plotly_chart(fig, use_container_width=True)
+    
+    st.success(f"""
+    **Actionable Insight:** The CUSUM chart rapidly detected a persistent downward shift in the process mean, signaling an alarm at **Sample #{violation}**. The SH- (low-side) plot crossed the decision limit (H), confirming the underfill condition.
+    **Decision:** The filling line was immediately halted. An investigation traced the issue to a partial blockage in filling head #4. By detecting the issue quickly, only a small number of units required quarantine, saving the majority of the batch.
+    """)
+
+def case_study_advanced_imr():
+    st.markdown("""
+    **Context:** Continuous monitoring of the differential pressure (DP) between a Grade A aseptic processing area and the surrounding Grade B area. Maintaining a positive pressure gradient is a critical control parameter to prevent ingress of contaminants.
+    **Purpose:** To monitor the stability and variability of a critical environmental parameter over time, detecting any special cause variation that could indicate a breach of containment.
+    **Reason for Use:** The I-MR chart is the ideal tool for this application because we are dealing with individual measurements taken at regular intervals. The I-chart tracks the DP level itself, while the MR-chart tracks its short-term variability. A sudden change in variability (a spike on the MR chart) is often the first sign of a problem, even before the I-chart goes out of control.
+    """)
+    rng = np.random.default_rng(25)
+    data = rng.normal(15, 0.5, 48) # Target: 15 Pa
+    data[30] = 10 # Sudden drop - e.g., door opened
+    df = pd.DataFrame({'Pressure (Pa)': data})
+    df['MR'] = df['Pressure (Pa)'].diff().abs()
+    
+    I_CL = df['Pressure (Pa)'].mean()
+    MR_CL = df['MR'].mean()
+    I_UCL = I_CL + 2.66 * MR_CL; I_LCL = I_CL - 2.66 * MR_CL
+    MR_UCL = 3.267 * MR_CL
+    
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1, subplot_titles=("<b>Individuals (I) Chart - Differential Pressure</b>", "<b>Moving Range (MR) Chart - Variability</b>"))
+    
+    # I-Chart
+    fig.add_trace(go.Scatter(x=df.index, y=df['Pressure (Pa)'], name='Pressure (Pa)', mode='lines+markers', marker_color=PRIMARY_COLOR), row=1, col=1)
+    fig.add_hline(y=I_CL, line_dash="dash", line_color=SUCCESS_GREEN, row=1, col=1, annotation_text="CL")
+    fig.add_hline(y=I_UCL, line_dash="dot", line_color=ERROR_RED, row=1, col=1, annotation_text="UCL")
+    fig.add_hline(y=I_LCL, line_dash="dot", line_color=ERROR_RED, row=1, col=1, annotation_text="LCL")
+
+    # MR-Chart
+    fig.add_trace(go.Scatter(x=df.index, y=df['MR'], name='Moving Range', mode='lines+markers', marker_color=WARNING_AMBER), row=2, col=1)
+    fig.add_hline(y=MR_CL, line_dash="dash", line_color=SUCCESS_GREEN, row=2, col=1, annotation_text="CL")
+    fig.add_hline(y=MR_UCL, line_dash="dot", line_color=ERROR_RED, row=2, col=1, annotation_text="UCL")
+
+    # Find violations
+    i_violation = df[df['Pressure (Pa)'] < I_LCL].first_valid_index()
+    mr_violation = df[df['MR'] > MR_UCL].first_valid_index()
+    if i_violation: fig.add_annotation(x=i_violation, y=df['Pressure (Pa)'][i_violation], text="<b>Loss of Pressure!</b>", row=1, col=1, showarrow=True, bgcolor=ERROR_RED, font=dict(color='white'))
+    if mr_violation: fig.add_annotation(x=mr_violation, y=df['MR'][mr_violation], text="<b>Variability Spike!</b>", row=2, col=1, showarrow=True, bgcolor=WARNING_AMBER)
+
+    fig.update_layout(height=450, showlegend=False, title_text="<b>I-MR Chart for Aseptic Area Differential Pressure</b>", title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
+    fig.update_xaxes(title_text="Time (Hourly Reading)", row=2, col=1)
+    st.plotly_chart(fig, use_container_width=True)
+    
+    st.error("""
+    **Actionable Insight:** At hour 30, the MR chart shows a massive spike in variability, followed immediately by an out-of-control signal on the I-chart as the pressure dropped below the lower control limit. This dual alarm provides conclusive evidence of a special cause event.
+    **Decision:** An immediate investigation was triggered. The Building Management System (BMS) alarm logs and security access records were reviewed, correlating the event to a service door being propped open at hour 30 for unauthorized material transfer. Corrective action involves retraining all staff on cleanroom gowning and material transfer procedures.
+    """)
+
+def case_study_zone_chart():
+    st.markdown("""
+    **Context:** Monitoring the seal strength (in Newtons) of a medical device pouch on a high-speed, validated heat-sealing line. The process is mature and highly capable, so we need a sensitive tool to detect early signs of drift.
+    **Purpose:** To analyze process stability with greater sensitivity than a standard chart by dividing the area between control limits into sigma-based zones (A, B, C).
+    **Reason for Use:** For a mature, well-understood process, simply staying within +/- 3 SD is not enough. The Zone Chart allows for the application of pattern-based rules (e.g., Westgard or Nelson rules) to detect unnatural patterns *within* the control limits, such as runs, trends, or stratification. This provides a much earlier warning of potential issues.
+    """)
+    rng = np.random.default_rng(33)
+    mean = 20; sd = 0.5
+    data = rng.normal(mean, sd, 25)
+    data[15:] -= 0.4 # A small systematic shift, causing a run
+    df = pd.DataFrame({'Sample': range(1, 26), 'Seal Strength (N)': data})
+
+    fig = go.Figure()
+    # Define zones
+    zones = {'UCL (3s)': [mean + 2*sd, mean + 3*sd], 'Zone A': [mean + 1*sd, mean + 2*sd], 
+             'Zone B': [mean, mean + 1*sd], 'Zone C (Center)': [mean - 1*sd, mean], 
+             'Zone B-': [mean - 2*sd, mean - 1*sd], 'Zone A-': [mean - 3*sd, mean - 2*sd]}
+    colors = {'UCL (3s)': 'rgba(211, 47, 47, 0.2)', 'Zone A': 'rgba(255, 193, 7, 0.2)',
+              'Zone B': 'rgba(76, 175, 80, 0.2)', 'Zone C (Center)': 'rgba(76, 175, 80, 0.2)',
+              'Zone B-': 'rgba(255, 193, 7, 0.2)', 'Zone A-': 'rgba(211, 47, 47, 0.2)'}
+
+    for name, y_range in zones.items():
+        fig.add_hrect(y0=y_range[0], y1=y_range[1], line_width=0, fillcolor=colors[name], 
+                      annotation_text=name.split(' ')[0], annotation_position="top left", layer="below")
+    
+    fig.add_trace(go.Scatter(x=df['Sample'], y=df['Seal Strength (N)'], mode='lines+markers', name='Seal Strength', line=dict(color=PRIMARY_COLOR)))
+    fig.add_hline(y=mean, line_color='black')
+    
+    # Detect 8-point run rule (8 consecutive points on one side of the mean)
+    for i in range(len(df) - 7):
+        subset = df['Seal Strength (N)'][i:i+8]
+        if all(subset < mean):
+            fig.add_annotation(x=i+4, y=mean - 0.7, text="<b>Westgard Rule Violation!</b><br>8 consecutive points below mean.", showarrow=False, bgcolor=WARNING_AMBER, borderpad=4)
+            break
+            
+    fig.update_layout(title="<b>Zone Chart for Heat Sealer Performance</b>", xaxis_title="Sample Number", yaxis_title="Seal Strength (N)", title_x=0.5, plot_bgcolor='rgba(0,0,0,0)', showlegend=False)
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.warning("""
+    **Actionable Insight:** Although no single point is outside the +/- 3 sigma control limits, the Zone Chart's automated rule analysis detected a run of 8 consecutive points below the center line. This is a statistically significant, non-random pattern indicating a systematic process shift.
+    **Decision:** This early warning triggers a non-emergency investigation. The maintenance team will check the calibration of the sealing platen's thermocouple and inspect for heater element degradation during the next scheduled planned maintenance, addressing the drift before it can cause a failure.
+    """)
+
+def case_study_hotelling_t2():
+    st.markdown("""
+    **Context:** We are validating a new automated buffer preparation skid. Two critical, and inherently correlated, quality attributes are the final **Salt Concentration** and the **pH**. An error in weighing the primary salt component will affect both variables.
+    **Purpose:** To simultaneously monitor the stability of two or more correlated process variables. It condenses the multivariate information into a single, easy-to-interpret value (T²).
+    **Reason for Use:** This chart is vastly superior to running two separate I-MR charts for Concentration and pH. A small, simultaneous shift in both variables might not trigger an alarm on either individual chart, but the *combined state* of the system is out of control. The T² chart is specifically designed to detect these joint-shifts, preventing the release of a subtly incorrect but non-compliant buffer.
+    """)
+    
+    # 1. Generate correlated multivariate data
+    rng = np.random.default_rng(123)
+    mean_vector = [150, 7.4] # Target: 150 mM Concentration, 7.4 pH
+    covariance_matrix = [[1.0, 0.6], [0.6, 0.01]] # Positive correlation
+    in_control_data = rng.multivariate_normal(mean_vector, covariance_matrix, size=30)
+    
+    # Introduce a joint shift that would be hard to catch on individual charts
+    outlier_point = [151.8, 7.34] # Conc is high (+1.8s), pH is low (-1.6s)
+    data = np.vstack([in_control_data[:24], outlier_point, in_control_data[24:]])
+    df = pd.DataFrame(data, columns=['Concentration (mM)', 'pH'])
+    
+    # 2. Calculate T-squared values (for demonstration, we simulate the spike)
+    # In a real scenario, this involves matrix algebra. Here we simulate the result.
+    t_squared_values = rng.chisquare(2, size=len(df)) * 0.8
+    ucl = 9.21 # Upper Control Limit from F-distribution for p=2, n=30, alpha=0.01
+    t_squared_values[24] = 15.5 # Manually insert the spike for the outlier point
+
+    # 3. Create the plots
+    col1, col2 = st.columns([3, 2])
+    with col1:
+        # T-Squared Chart
+        fig_t2 = go.Figure()
+        fig_t2.add_trace(go.Scatter(x=df.index, y=t_squared_values, mode='lines+markers', name='T² Value', line=dict(color=PRIMARY_COLOR)))
+        fig_t2.add_hline(y=ucl, line_dash='dash', line_color=ERROR_RED, annotation_text="UCL")
+        
+        # Highlight violation
+        fig_t2.add_annotation(x=24, y=15.5, text="<b>Multivariate Anomaly!</b>", showarrow=True, arrowhead=2, ax=0, ay=-40, bgcolor=ERROR_RED, font=dict(color='white'))
+        fig_t2.update_layout(title="<b>Hotelling's T² Chart</b>", xaxis_title="Buffer Batch Number", yaxis_title="T² Statistic", title_x=0.5, plot_bgcolor=BACKGROUND_GREY)
+        st.plotly_chart(fig_t2, use_container_width=True)
+
+    with col2:
+        # Scatter plot to visually explain the "why"
+        fig_scatter = px.scatter(df, x='Concentration (mM)', y='pH', title="<b>Process Variable Correlation</b>")
+        fig_scatter.add_trace(go.Scatter(x=[outlier_point[0]], y=[outlier_point[1]], mode='markers', marker=dict(color=ERROR_RED, size=12, symbol='x'), name='Anomaly'))
+        fig_scatter.update_layout(plot_bgcolor=BACKGROUND_GREY)
+        st.plotly_chart(fig_scatter, use_container_width=True)
+
+    st.error("""
+    **Actionable Insight:** The T² chart successfully identified a multivariate out-of-control condition at **Batch #25**. 
+    The crucial insight comes from the scatter plot: while the anomalous point's Concentration was only slightly high and its pH only slightly low, its position *relative to the normal process correlation* was a significant deviation.
+    **This is a classic failure mode that two separate univariate charts would likely have missed.**
+    
+    **Decision:** An investigation was launched. The root cause was determined to be the use of an incorrect grade of a secondary buffer salt, which subtly altered both the final concentration and the solution's buffering capacity (pH). This confirms the power of multivariate monitoring for complex formulations.
+    """)
+
 # --- END: New Helper functions ---
 def display_rpn_table(key: str) -> None:
     """
@@ -1421,7 +1698,12 @@ def render_specialized_validation_page() -> None:
             case_study_taping_soldering()
         with st.expander("⚡ **Case Study: Validating Electrostatic Charge Control**"):
             case_study_electrostatic_control()
-            
+        with st.expander("⚙️ **Case Study: Validating Process Stability (Zone Chart)**"):
+            case_study_zone_chart()
+        with st.expander("🔬 **Case Study: Validating Multivariate Process Control (T² Chart)**"):
+            case_study_hotelling_t2()
+        
+        
     with tab3:
         st.header("System & Environmental Validation")
         with st.expander("🖥️ **Case Study: Computer System Validation (CSV)**", expanded=True):
@@ -1430,7 +1712,8 @@ def render_specialized_validation_page() -> None:
             case_study_cleaning_validation()
         with st.expander("📦 **Case Study: Shipping Lane Performance Qualification**"):
             case_study_shipping()
-            
+        with st.expander("⚡ **Case Study: Validating Environmental Control (I-MR Chart)**"):
+            case_study_advanced_imr()
 def render_validation_program_health_page() -> None:
     st.title("⚕️ 5. Validation Program Health & Continuous Improvement")
     render_manager_briefing(title="Maintaining the Validated State", content="This dashboard demonstrates the ongoing oversight required to manage the site's validation program health. It showcases a data-driven approach to **Periodic Review**, the development of a risk-based **Revalidation Strategy**, and the execution of **Continuous Improvement Initiatives**.", reg_refs="FDA 21 CFR 820.75(c) (Revalidation), ISO 13485:2016 (Sec 8.4)", business_impact="Ensures long-term compliance, prevents costly process drifts, optimizes resource allocation for revalidation, and supports uninterrupted supply of medicine to patients.", quality_pillar="Lifecycle Management & Continuous Improvement.", risk_mitigation="Guards against compliance drift and ensures systems remain in a validated state throughout their operational life, preventing production holds or recalls.")
@@ -1453,7 +1736,16 @@ def render_validation_program_health_page() -> None:
         with col2:
             st.plotly_chart(plot_deviation_trend_chart("deviation_trend"), use_container_width=True)
         st.success("**Actionable Insight:** The rising deviation trend in the Bioreactor Suite C directly validates the focus of our Kaizen efforts (e.g., 'Implement PAT Sensor'). The ROI tracker provides a strong business case to leadership for continuing these improvement projects.")
-
+        with st.container(border=True):
+            st.subheader("Assay Performance Monitoring (Levey-Jennings Chart)")
+            case_study_levey_jennings()
+        with st.container(border=True):
+            st.subheader("Small-Shift Detection (EWMA Chart)")
+            case_study_ewma_chart()
+        with st.container(border=True):
+            st.subheader("Rapid Shift Detection (CUSUM Chart)")
+            case_study_cusum_chart()
+        
 def render_documentation_hub_page() -> None:
     st.title("🗂️ 6. Validation Documentation & Audit Defense Hub")
     render_manager_briefing(title="Orchestrating Compliant Validation Documentation", content="This hub demonstrates the ability to generate and manage the compliant, auditable documentation that forms the core of a successful validation package. The templates and simulations below prove expertise in creating documents that meet the stringent requirements of **21 CFR Part 820** and **ISO 13485**.", reg_refs="21 CFR 820.40 (Document Controls), GAMP 5 Good Documentation Practice, 21 CFR Part 11", business_impact="Ensures audit-proof documentation, accelerates review cycles by providing clear templates, and fosters seamless collaboration between Engineering, Manufacturing, Quality, and Regulatory.", quality_pillar="Good Documentation Practice (GDP) & Audit Readiness.", risk_mitigation="Minimizes review cycles and audit findings by ensuring documentation is attributable, legible, contemporaneous, original, and accurate (ALCOA+).")
