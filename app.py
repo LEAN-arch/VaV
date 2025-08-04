@@ -1303,12 +1303,17 @@ def render_e2e_validation_hub_page() -> None:
                 spc_fig, spc_alerts = plot_process_stability_chart("pq_spc")
                 st.plotly_chart(spc_fig, use_container_width=True)
                 
+                # --- CORRECTED and DYNAMIC INSIGHT ---
                 if spc_alerts:
                     st.error(f"**🚨 Automated SPC Alert:** {spc_alerts[0]}")
-                    st.success("**Actionable Insight:** The automated rule check has detected a process shift, indicating the process is **not stable**. The Cpk result from the other chart cannot be considered valid until the root cause of this instability is identified and corrected.")
+                    st.success(f"""
+                    **Actionable Insight:** The automated rule check has detected a process shift, indicating the process is **not stable**. A process that is not in a state of statistical control is unpredictable. Therefore, the calculated Cpk of **{cpk_value:.2f} is statistically meaningless**. 
+                    **Action:** The top priority is to investigate the root cause of the instability (the process shift) *before* assessing capability.
+                    """)
                 else:
+                    # This case won't be hit with the current simulated data, but is here for robustness
                     st.success("**Actionable Insight:** No out-of-control signals were detected. This confirms the process is in a state of statistical control, which validates the Cpk result and demonstrates the process is both stable and capable.")
-
+                    
 def render_specialized_validation_page() -> None:
     st.title("🧪 4. Specialized Validation Hubs")
     render_manager_briefing(title="Demonstrating Breadth of Expertise", content="Beyond standard equipment qualification, a Validation Manager must be fluent in specialized validation disciplines critical to GMP manufacturing. This hub showcases expertise across a wide range of complex, real-world MedTech and Biopharma applications.", reg_refs="21 CFR Part 11, GAMP 5, ISO 14971, PDA Technical Reports", business_impact="Ensures all aspects of the manufacturing process, including novel and complex systems, are fully compliant and controlled, preventing common sources of regulatory findings and production delays.", quality_pillar="Cross-functional Technical Leadership.", risk_mitigation="Ensures compliance in niche, high-risk areas like data integrity (CSV), sterility (lyophilization), and microfluidics that are frequent targets of audits.")
