@@ -606,11 +606,25 @@ def case_study_hotelling_t2():
     # 1. Generate correlated multivariate data
     rng = np.random.default_rng(123)
     mean_vector = [150, 7.4] # Target: 150 mM Concentration, 7.4 pH
-    covariance_matrix = [[1.0, 0.6], [0.6, 0.01]] # Positive correlation
+    
+    # --- FIX: Create a statistically valid covariance matrix ---
+    # Define standard deviations and a valid correlation coefficient
+    std_devs = [1.5, 0.05] # SD for Concentration = 1.5 mM, SD for pH = 0.05
+    correlation = 0.7       # A strong but valid positive correlation
+    
+    # Build the valid covariance matrix
+    # var = std_dev^2; cov = corr * sd_1 * sd_2
+    covariance_matrix = [
+        [std_devs[0]**2, correlation * std_devs[0] * std_devs[1]],
+        [correlation * std_devs[0] * std_devs[1], std_devs[1]**2]
+    ]
+    # This matrix is now guaranteed to be positive-semidefinite.
+    # --- END FIX ---
+
     in_control_data = rng.multivariate_normal(mean_vector, covariance_matrix, size=30)
     
     # Introduce a joint shift that would be hard to catch on individual charts
-    outlier_point = [151.8, 7.34] # Conc is high (+1.8s), pH is low (-1.6s)
+    outlier_point = [152.5, 7.32] # Conc is high (~+1.7s), pH is low (~-1.6s)
     data = np.vstack([in_control_data[:24], outlier_point, in_control_data[24:]])
     df = pd.DataFrame(data, columns=['Concentration (mM)', 'pH'])
     
