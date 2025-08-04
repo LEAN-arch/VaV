@@ -1303,7 +1303,15 @@ def render_e2e_validation_hub_page() -> None:
 
         st.subheader("Phase 4: Performance Qualification", divider='blue')
         with st.container(border=True):
-            st.info("**Context:** PQ is the final qualification step, designed to prove the equipment can consistently and repeatably produce quality product under normal, real-world manufacturing conditions.")
+            # --- MODIFICATION: Enhanced context to introduce the core principle ---
+            st.info("""
+            **Context:** PQ is the final qualification step, designed to prove the equipment can consistently and repeatably produce quality product under normal manufacturing conditions. It answers two fundamental questions: 
+            1. Is the process **stable** and predictable over time? 
+            2. Is the process **capable** of consistently meeting its quality specifications? 
+            
+            A process **must satisfy both conditions** to be considered validated.
+            """)
+            
             c1, c2 = st.columns(2)
             with c1: 
                 st.markdown("###### Process Capability (Cpk)")
@@ -1318,23 +1326,40 @@ def render_e2e_validation_hub_page() -> None:
                 st.plotly_chart(spc_fig, use_container_width=True)
             
             st.markdown("---")
-            st.subheader("Overall PQ Conclusion")
-            # --- DEFINITIVE FIX: Logically connected, hierarchical insights ---
+            # --- MODIFICATION: New subheader for the overall analysis ---
+            st.subheader("Overall PQ Analysis & Conclusion")
+
+            # --- MODIFICATION: Added individual observations before the final conclusion ---
+            st.markdown(f"""
+            - **Observation (Stability):** The automated SPC analysis of the I-MR chart has detected **{len(spc_alerts)} out-of-control signal(s)**.
+            - **Observation (Capability):** The calculated Cpk for the dataset is **{cpk_value:.2f}**. The required acceptance criterion is ≥ 1.33.
+            """)
+            
+            # --- MODIFICATION: Renamed sections for clarity and added more detail ---
             if spc_alerts:
                 st.error(f"**Finding:** The automated SPC analysis detected an out-of-control signal: **{spc_alerts[0]}**.")
                 st.warning(f"""
-                **Actionable Insight:** The process is **NOT STABLE**. A process that is not in a state of statistical control is unpredictable. Therefore, the calculated Cpk of **{cpk_value:.2f} is statistically meaningless** and cannot be used to qualify the system. 
-                **Decision:** **PQ Failed.** An investigation must be launched with Process Engineering to identify the root cause of the process shift. The PQ must be re-executed after corrective actions are implemented.
+                **Overall Conclusion: Not Stable, Cpk is Statistically Invalid.**
+
+                **Significance:** The process is **NOT in a state of statistical control**. The presence of special cause variation (the process shift) means the process is unpredictable. Because stability is a prerequisite for capability, the calculated Cpk of **{cpk_value:.2f} is meaningless** and cannot be used to make a decision. The primary issue is the lack of control.
+                
+                **Decision:** **PQ Failed.** An investigation must be launched with Process Engineering to identify the root cause of the process shift. The PQ protocol must be re-executed after corrective actions are implemented and verified.
                 """)
             elif cpk_value < 1.33:
                  st.error(f"**Finding:** The process is stable, but the Cpk of **{cpk_value:.2f}** is **BELOW** the required target of ≥1.33.")
                  st.warning("""
-                 **Actionable Insight:** The process is stable but **NOT CAPABLE**. It consistently produces product that is too close to the specification limits.
-                 **Decision:** **PQ Failed.** An investigation is required with Process Engineering to reduce process variability (e.g., through DOE or raw material analysis) before re-executing the PQ.
+                 **Overall Conclusion: Stable but Not Capable.**
+
+                 **Significance:** The process is predictable and consistent, but it consistently produces product that is too close to the specification limits, guaranteeing a certain percentage of future batches will fail. The process as designed cannot meet the quality standard.
+                 
+                 **Decision:** **PQ Failed.** An investigation is required with Process Engineering to fundamentally reduce process variability (e.g., through DOE, raw material improvements, or equipment modification) before re-executing the PQ.
                  """)
             else:
                 st.success(f"""
-                **Actionable Insight:** The process is demonstrated to be both **STABLE** (no SPC alerts) and **CAPABLE** (Cpk of {cpk_value:.2f} ≥ 1.33). 
+                **Overall Conclusion: Stable and Capable.**
+
+                **Significance:** The process is demonstrated to be both in a state of statistical control (predictable) and highly capable of meeting its critical quality attributes (Cpk of {cpk_value:.2f} ≥ 1.33).
+                
                 **Decision:** **PQ Passed.** The system is officially qualified and can be released for commercial manufacturing.
                 """)
 
