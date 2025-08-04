@@ -1172,15 +1172,21 @@ def render_specialized_validation_page() -> None:
     # --- Helper functions are defined directly inside for self-containment ---
     
     def case_study_csv():
-        st.info("**Purpose:** This dashboard tracks the validation status of all GxP computerized systems, ensuring compliance with data integrity principles (ALCOA+) and 21 CFR Part 11 requirements for electronic records and signatures.")
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("21 CFR Part 11 Compliance Status", "PASS", "✔️")
-            st.metric("Data Integrity Risk Score", "Low", "-5% vs Last Quarter")
-        with col2:
-            alcoa_data = {'Principle': ['Attributable', 'Legible', 'Contemporaneous', 'Original', 'Accurate'], 'Status': ['✔️', '✔️', '✔️', '✔️', '✔️']}
-            st.dataframe(pd.DataFrame(alcoa_data), use_container_width=True, hide_index=True)
-        st.success("**Actionable Insight:** The successful completion of the ALCOA+ checklist provides objective evidence that the system's data is trustworthy, a foundational requirement for any GMP computerized system and a key focus during regulatory audits.")
+        st.info("**Purpose:** A compliant Computer System Validation (CSV) project follows a structured lifecycle from planning to retirement. This Gantt chart visualizes the execution of a CSV project for a new system, including critical parallel workstreams for IT infrastructure and ERES testing.")
+        df = pd.DataFrame([
+            dict(Task="Validation Plan (VP)", Start='2023-01-01', Finish='2023-01-31', Phase='Planning'),
+            dict(Task="Risk Assessment (RA)", Start='2023-02-01', Finish='2023-02-15', Phase='Planning'),
+            dict(Task="IT Infrastructure Qual (Server)", Start='2023-02-16', Finish='2023-03-15', Phase='IT Qualification'),
+            dict(Task="IQ/OQ/PQ Protocol Authoring", Start='2023-02-16', Finish='2023-03-31', Phase='Documentation'),
+            dict(Task="ERES Testing (21 CFR Part 11)", Start='2023-04-01', Finish='2023-04-15', Phase='Execution'),
+            dict(Task="IQ/OQ/PQ Execution", Start='2023-04-16', Finish='2023-05-31', Phase='Execution'),
+            dict(Task="Traceability Matrix (RTM)", Start='2023-06-01', Finish='2023-06-15', Phase='Documentation'),
+            dict(Task="Validation Summary Report (VSR)", Start='2023-06-16', Finish='2023-06-30', Phase='Documentation'),
+        ])
+        fig = px.timeline(df, x_start="Start", x_end="Finish", y="Task", color="Phase", title="<b>CSV Project Timeline: GAMP 5 Lifecycle</b>")
+        fig.update_yaxes(categoryorder='total ascending')
+        st.plotly_chart(fig, use_container_width=True)
+        st.success("**Actionable Insight:** This Gantt chart demonstrates a holistic understanding of CSV project management. It correctly places IT infrastructure qualification as a prerequisite for formal execution and shows that ERES (Electronic Records, Electronic Signatures) testing is a distinct, critical activity for ensuring Part 11 compliance. This structured approach de-risks the project and ensures audit readiness.")
 
     def case_study_cleaning_validation():
         st.info("**Purpose:** This chart validates the cleaning procedure using the 'worst-case' product (most difficult to clean) to demonstrate effectiveness for all products made on the equipment. This is a critical step in preventing cross-contamination in a multi-product facility.")
@@ -1193,8 +1199,7 @@ def render_specialized_validation_page() -> None:
 
     def case_study_doe():
         st.info("**Purpose:** DOE is a powerful statistical tool used during process development to define a design space. The 2D Contour Plot visualizes this space, defining the Normal Operating Range (NOR) for routine production and the wider Proven Acceptable Range (PAR), which is the 'safe zone' where quality is assured.")
-        temp = np.linspace(30, 40, 10); ph = np.linspace(6.8, 7.6, 10); 
-        temp_grid, ph_grid = np.meshgrid(temp, ph)
+        temp = np.linspace(30, 40, 10); ph = np.linspace(6.8, 7.6, 10); temp_grid, ph_grid = np.meshgrid(temp, ph)
         signal = 100 - (temp_grid - 37)**2 - 20*(ph_grid - 7.2)**2 + np.random.rand(10, 10)*2
         col1, col2 = st.columns(2)
         with col1:
@@ -1213,9 +1218,7 @@ def render_specialized_validation_page() -> None:
 
     def case_study_shipping():
         st.info("**Purpose:** This PQ study simulates a worst-case transit route, monitoring both temperature and shock/vibration to ensure the validated packaging can protect the product integrity from both environmental and physical hazards.")
-        rng = np.random.default_rng(30); 
-        time = pd.to_datetime(pd.date_range("2023-01-01", periods=48, freq="h"))
-        temp = rng.normal(4, 0.5, 48); temp[24] = 8.5; shock = rng.random(48) * 10; shock[35] = 55
+        rng = np.random.default_rng(30); time = pd.to_datetime(pd.date_range("2023-01-01", periods=48, freq="h")); temp = rng.normal(4, 0.5, 48); temp[24] = 8.5; shock = rng.random(48) * 10; shock[35] = 55
         fig = make_subplots(specs=[[{"secondary_y": True}]])
         fig.add_trace(go.Scatter(x=time, y=temp, name='Temperature (°C)', line=dict(color=PRIMARY_COLOR)), secondary_y=False)
         fig.add_hrect(y0=2, y1=8, line_width=0, fillcolor=SUCCESS_GREEN, opacity=0.1, secondary_y=False, annotation_text="Temp Spec", annotation_position="top left")
@@ -1227,17 +1230,13 @@ def render_specialized_validation_page() -> None:
     
     def case_study_lyophilizer():
         st.info("**Context:** This plot verifies the performance of a lyophilization (freeze-drying) cycle. The OQ confirms the equipment can achieve and hold critical process parameters (shelf temperature and chamber pressure) as defined in the validated recipe. Holding a deep vacuum is essential for sublimation during primary drying.")
-        time = np.arange(120)
-        temp_set = np.concatenate([np.linspace(20, -40, 20), np.repeat(-40, 40), np.linspace(-40, 20, 60)])
-        temp_actual = temp_set + np.random.normal(0, 0.5, 120)
-        pressure_set = np.concatenate([np.repeat(1000, 20), np.linspace(1000, 0.1, 20), np.repeat(0.1, 80)])
-        pressure_actual = pressure_set + np.random.normal(0, 0.02, 120)
+        time = np.arange(120); temp_set = np.concatenate([np.linspace(20, -40, 20), np.repeat(-40, 40), np.linspace(-40, 20, 60)]); temp_actual = temp_set + np.random.normal(0, 0.5, 120)
+        pressure_set = np.concatenate([np.repeat(1000, 20), np.linspace(1000, 0.1, 20), np.repeat(0.1, 80)]); pressure_actual = pressure_set + np.random.normal(0, 0.02, 120)
         fig = make_subplots(specs=[[{"secondary_y": True}]])
         fig.add_trace(go.Scatter(x=time, y=temp_set, name='Temp Setpoint (°C)', line=dict(color=NEUTRAL_GREY, dash='dash')), secondary_y=False)
         fig.add_trace(go.Scatter(x=time, y=temp_actual, name='Temp Actual (°C)', line=dict(color=PRIMARY_COLOR)), secondary_y=False)
         fig.add_trace(go.Scatter(x=time, y=pressure_set, name='Pressure Setpoint (mbar)', line=dict(color=WARNING_AMBER, dash='dash')), secondary_y=True)
         fig.add_trace(go.Scatter(x=time, y=pressure_actual, name='Pressure Actual (mbar)', line=dict(color=ERROR_RED)), secondary_y=True)
-        # Add shaded regions for phases
         fig.add_vrect(x0=0, x1=20, fillcolor="blue", opacity=0.1, layer="below", line_width=0, annotation_text="Freezing")
         fig.add_vrect(x0=20, x1=60, fillcolor="red", opacity=0.1, layer="below", line_width=0, annotation_text="Primary Drying")
         fig.add_vrect(x0=60, x1=120, fillcolor="green", opacity=0.1, layer="below", line_width=0, annotation_text="Secondary Drying")
@@ -1249,65 +1248,68 @@ def render_specialized_validation_page() -> None:
     def case_study_nanoliter_dispenser():
         st.info("**Context:** This interactive analysis validates the precision and accuracy of a non-contact, acoustic liquid dispenser. Using a fluorescent dye, we measure the dispensed volume across the operating range to ensure it meets tight tolerances.")
         target_volume = st.select_slider("Select Target Dispense Volume (nL) to Analyze:", options=[2.5, 5.0, 10.0, 25.0], value=5.0)
-        
-        # Simulate data based on selection
-        np.random.seed(int(target_volume))
         specs = {2.5: (0.05, 0.125), 5.0: (0.05, 0.25), 10.0: (0.07, 0.3), 25.0: (0.15, 0.75)}
         std_dev, acc_limit = specs[target_volume]
         data = np.random.normal(loc=target_volume, scale=std_dev, size=100)
         
         col1, col2 = st.columns([2, 1])
         with col1:
-            fig = px.histogram(data, nbins=20, title=f"<b>Dispense Distribution for {target_volume} nL Target</b>")
+            fig = go.Figure()
+            fig.add_trace(go.Histogram(x=data, name='Distribution', marker_color=PRIMARY_COLOR, xbins=dict(size=std_dev/2)))
+            fig.add_trace(go.Box(y=data, name='Summary', marker_color=WARNING_AMBER))
             fig.add_vline(x=target_volume, line_dash="dash", annotation_text="Target")
-            fig.add_vrect(x0=target_volume - acc_limit, x1=target_volume + acc_limit, fillcolor=SUCCESS_GREEN, opacity=0.2, line_width=0, annotation_text="Spec Limit")
+            fig.add_vrect(x0=target_volume - acc_limit, x1=target_volume + acc_limit, fillcolor=SUCCESS_GREEN, opacity=0.1, line_width=0, annotation_text="Spec Limit")
+            fig.update_layout(title=f"<b>Dispense Distribution for {target_volume} nL Target</b>", showlegend=False)
             st.plotly_chart(fig, use_container_width=True)
         with col2:
             mean_val = np.mean(data); cv_val = (np.std(data) / mean_val) * 100; accuracy_val = ((mean_val - target_volume) / target_volume) * 100
             st.metric("Mean Volume (nL)", f"{mean_val:.3f}")
             st.metric("Precision (CV%)", f"{cv_val:.2f}%")
             st.metric("Accuracy", f"{accuracy_val:+.2f}%")
-        st.success("**Actionable Insight:** The interactive plot demonstrates that for the selected target volume, the dispensed population is well within the required accuracy and precision limits. This level of granular data provides extremely high confidence in the dispenser's performance across its entire range.")
+        st.success("**Actionable Insight:** The distribution plot confirms a normal distribution with no outliers. The statistical summary proves that for the selected target volume, the dispensed population is well within the required accuracy and precision limits. This level of granular data provides extremely high confidence in the dispenser's performance.")
 
     def case_study_biochip_assembly():
         st.info("**Context:** For a full production line, Overall Equipment Effectiveness (OEE) is a critical PQ metric. It measures the combined impact of Availability (uptime), Performance (speed), and Quality (yield). The target for a validated line is often >85%.")
         fig = go.Figure(go.Waterfall(orientation="v", measure=["absolute", "relative", "relative", "relative", "total"], x=["Theoretical Max Capacity", "Availability Losses (Downtime)", "Performance Losses (Speed)", "Quality Losses (Scrap)", "<b>Final OEE Output</b>"], text=["100%", "-8%", "-5%", "-2%", "85%"], y=[100, -8, -5, -2, 85], connector={"line":{"color":"rgb(63, 63, 63)"}}, totals={"marker":{"color":SUCCESS_GREEN}}, increasing={"marker":{"color":SUCCESS_GREEN}}, decreasing={"marker":{"color":ERROR_RED}}))
-        fig.update_traces(textfont_size=14)
-        fig.update_layout(title="<b>Biochip Assembly Line PQ: OEE Calculation</b>", yaxis_title="Effectiveness (%)")
+        fig.update_traces(textfont_size=14); fig.update_layout(title="<b>Biochip Assembly Line PQ: OEE Calculation</b>", yaxis_title="Effectiveness (%)")
         st.plotly_chart(fig, use_container_width=True)
         st.success("**Actionable Insight:** The assembly line achieved an OEE of 85%, meeting the acceptance criterion. The waterfall analysis clearly shows that **Availability Losses** (unplanned downtime) are the biggest detractor from performance. This provides a data-driven focus for the first Kaizen event: root cause analysis of the top 3 downtime reasons.")
 
     def case_study_vision_system():
-        st.info("**Context:** A confusion matrix is a key validation artifact for any AI/ML-based vision system. It challenges the system with a large set of known good and bad parts to quantify its real-world performance and identify specific failure modes.")
+        st.info("**Context:** A confusion matrix is a key validation artifact for any AI/ML-based vision system. It challenges the system with a large set of known good and bad parts to quantify its real-world performance.")
         cm_data = np.array([[998, 2], [5, 95]])
         accuracy = (cm_data[0,0] + cm_data[1,1]) / np.sum(cm_data) * 100
         sensitivity = cm_data[1,1] / (cm_data[1,1] + cm_data[1,0]) * 100
         specificity = cm_data[0,0] / (cm_data[0,0] + cm_data[0,1]) * 100
-        fig = px.imshow(cm_data, text_auto=True, color_continuous_scale='Greens', labels=dict(x="Predicted Class", y="Actual Class", color="Count"), x=['Good', 'Defect'], y=['Good', 'Defect'], title="<b>Vision System PQ: Confusion Matrix</b>")
-        fig.add_annotation(x=0, y=0, text="True Negative", showarrow=False, font=dict(color="white")); fig.add_annotation(x=1, y=1, text="True Positive", showarrow=False, font=dict(color="white"))
-        fig.add_annotation(x=1, y=0, text="False Positive", showarrow=False, font=dict(color="black")); fig.add_annotation(x=0, y=1, text="False Negative", showarrow=False, font=dict(color="black"))
+        
+        cm_percent = np.array([[specificity/100, (1-specificity/100)], [(1-sensitivity/100), sensitivity/100]])
+        
+        fig = px.imshow(cm_percent, text_auto=True, color_continuous_scale='Greens', labels=dict(x="Predicted Class", y="Actual Class", color="Rate"), x=['Good', 'Defect'], y=['Good', 'Defect'], title="<b>Vision System PQ: Normalized Confusion Matrix</b>")
+        fig.update_traces(texttemplate="%{z:.2%}<br>(%{customdata})", customdata=cm_data)
         st.plotly_chart(fig, use_container_width=True)
-        st.success(f"**Actionable Insight:** The system achieved **{accuracy:.2f}%** overall accuracy. Critically, the **Sensitivity (ability to find defects) is {sensitivity:.1f}%**, exceeding the 95% requirement. The **Specificity (ability to ignore good parts) is {specificity:.2f}%**. The 2 False Positives will be analyzed to reduce unnecessary scrap, while the 5 False Negatives are critical to review with Process Engineering to determine if they represent a new, previously untrained defect type.")
+        st.success(f"**Actionable Insight:** The system's **Sensitivity is {sensitivity:.1f}%** (it correctly identifies 95% of real defects), which meets our primary goal of preventing escapes to the customer. However, the 2 False Positives represent a direct cost in unnecessary scrap. The 5 False Negatives are the most critical to investigate, as they represent potential escapes. **Action:** A review of these 5 parts is required to determine if the AI model needs retraining on a new defect type.")
 
     def case_study_electrostatic_control():
-        st.info("**Context:** For plastic biochips and cassettes, uncontrolled electrostatic discharge (ESD) can damage sensitive onboard electronics or cause latent failures. This validation study measures surface voltage at critical assembly stages to prove the ionizer's effectiveness.")
-        df = pd.DataFrame({'Stage': ["Cassette Unmolding", "Biochip Placement", "Lid Taping", "Final Packaging"], 'Without Ionizer (V)': [1850, 2200, 2550, 1900], 'With Ionizer (V)': [85, 45, 60, 50]})
+        st.info("**Context:** For plastic biochips, uncontrolled electrostatic discharge (ESD) can damage sensitive electronics or cause handling errors. This study compares two mitigation strategies against an uncontrolled baseline.")
+        df = pd.DataFrame({'Stage': ["Cassette Unmolding", "Biochip Placement", "Lid Taping", "Final Packaging"], 'Uncontrolled (V)': [1850, 2200, 2550, 1900], 'Anti-Static Coating (V)': [450, 520, 600, 480], 'Ionizer System (V)': [85, 45, 60, 50]})
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=df['Without Ionizer (V)'], y=df['Stage'], name='Without Ionizer', mode='markers', marker=dict(color=ERROR_RED, size=15)))
+        fig.add_trace(go.Scatter(x=df['Uncontrolled (V)'], y=df['Stage'], name='Uncontrolled', mode='markers', marker=dict(color=ERROR_RED, size=15)))
+        fig.add_trace(go.Scatter(x=df['Anti-Static Coating (V)'], y=df['Stage'], name='Anti-Static Coating', mode='markers', marker=dict(color=WARNING_AMBER, size=15)))
         fig.add_trace(go.Scatter(x=df['With Ionizer (V)'], y=df['Stage'], name='With Ionizer', mode='markers', marker=dict(color=SUCCESS_GREEN, size=15)))
         for i, row in df.iterrows():
-            fig.add_shape(type="line", x0=row['With Ionizer (V)'], y0=row['Stage'], x1=row['Without Ionizer (V)'], y1=row['Stage'], line=dict(color=NEUTRAL_GREY, width=2))
+            fig.add_shape(type="line", x0=row['With Ionizer (V)'], y0=row['Stage'], x1=row['Uncontrolled (V)'], y1=row['Stage'], line=dict(color=NEUTRAL_GREY, width=2))
         fig.add_vline(x=100, line_dash="dash", annotation_text="Acceptance Limit (<100V)")
-        fig.update_layout(title_text="<b>OQ: Ionizer System Effectiveness for ESD Control (Dumbbell Plot)</b>", title_x=0.5, xaxis_title="Surface Voltage (V)")
+        fig.update_layout(title_text="<b>OQ: Comparison of ESD Control Methods</b>", title_x=0.5, xaxis_title="Surface Voltage (V)")
         st.plotly_chart(fig, use_container_width=True)
-        st.success("**Actionable Insight:** The dumbbell plot dramatically visualizes the effectiveness of the ionizer system. It reduces the surface charge by over 95% at every stage, bringing it well below the <100V damage threshold. The ionizer is now a required, critical utility for the production line to prevent latent product failures.")
+        st.success("**Actionable Insight:** This comparative study definitively proves the Ionizer System is the superior control method, reducing surface voltage by over 95% and staying well below the <100V damage threshold. The Anti-Static Coating is insufficient. **Decision:** The Ionizer system is a required, critical utility for this production line.")
 
     def case_study_taping_soldering():
         st.info("**Context:** For thermal processes like heat staking or ultrasonic soldering, the OQ must prove that critical parameters are precisely and uniformly controlled across the entire operational surface to ensure a consistent seal.")
-        data = np.random.normal(250, 1.5, (5, 5)); data[2,2] = 258.1 # Simulate a hot spot
-        fig = px.imshow(data, text_auto=".1f", color_continuous_scale='Reds', aspect="auto", title="<b>OQ: Thermal Uniformity of Cassette Weld Horn (°C)</b>")
+        data = np.random.normal(250.5, 0.5, (5, 5)); data[2,2] = 258.1 # Simulate a hot spot
+        fig = px.imshow(data, text_auto=".1f", color_continuous_scale='Reds', aspect="auto", title="<b>OQ: Thermal Uniformity of Cassette Weld Horn (°C)</b>", labels=dict(x="Weld Point (X-axis)", y="Weld Point (Y-axis)", color="Temp (°C)"))
+        fig.add_annotation(x=2, y=2, text="<b>HOT SPOT!</b>", showarrow=True, arrowhead=1, ax=0, ay=-40, font=dict(color="white"))
         st.plotly_chart(fig, use_container_width=True)
-        st.success("**Actionable Insight:** The thermal mapping reveals a hot spot (+8.1°C over setpoint) in the center of the weld horn, which is outside our specification of ±5°C. This could cause material degradation and compromise the cassette seal. **Action:** A work order will be issued for the maintenance team to inspect the heating element and thermocouple in that zone before proceeding to PQ.")
+        st.success("**Actionable Insight:** The thermal mapping reveals a critical hot spot (+8.1°C over setpoint) in the center of the weld horn, which is outside our specification of ±5°C. This could cause material degradation and compromise the cassette seal. **Action:** A work order will be issued for the maintenance team to inspect the heating element and thermocouple in zone Y=2, X=2, and to verify the PID controller tuning for that zone before proceeding to PQ.")
 
     # --- Main Tab Layout ---
     tab1, tab2, tab3 = st.tabs(["🔬 Process & Equipment", "⚙️ Assembly & QC", "🛡️ System & Environmental"])
