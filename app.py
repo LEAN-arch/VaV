@@ -102,27 +102,23 @@ def case_study_power_analysis_calculator():
     col1, col2 = st.columns(2)
     with col1:
         confidence_level = st.slider(
-            "Confidence Level (%) - How sure do you want to be?",
+            "Confidence Level (C) - How sure do you want to be?",
             min_value=80.0, max_value=99.9, value=95.0, step=0.1, format="%.1f%%"
         )
     with col2:
         reliability = st.slider(
-            "Required Reliability (Success Rate, %)",
+            "Required Reliability (R) - Minimum success rate",
             min_value=90.0, max_value=99.9, value=99.0, step=0.1, format="%.1f%%"
         )
     
     # Calculation
-    # Formula for zero failures: n = ln(1-C) / ln(R)
-    # where C is confidence and R is reliability
     c = confidence_level / 100
     r = reliability / 100
     
-    sample_size = "N/A"
     if r < 1.0:
-        # Use numpy for log and ceiling functions to avoid adding a new import
         n_float = np.log(1 - c) / np.log(r)
         sample_size = int(np.ceil(n_float))
-    else: # Cannot demonstrate 100% reliability with a finite sample
+    else:
         sample_size = "Infinite"
 
     st.metric(
@@ -130,16 +126,56 @@ def case_study_power_analysis_calculator():
         value=f"{sample_size} units",
         help="This is the minimum number of units you must test and find zero failures to make your statistical claim."
     )
-    
+
+    with st.expander("View the Statistical Methodology"):
+        st.markdown(f"""
+        #### Mathematical Basis
+        This calculation is rooted in the **Binomial Distribution**, which models the probability of observing a certain number of successes in a fixed number of independent trials. For validation, we are interested in a specific scenario: observing **zero failures** (`k=0`) in a sample of size `n`.
+
+        The core statistical question is: "If our process *was actually* at the minimum acceptable reliability (R), what is the probability of us being lucky and still observing zero failures?" We want this probability to be very low. This low probability is our statistical risk, `α`, where `α = 1 - C`.
+
+        ---
+        #### Formula Derivation
+        1.  The probability of observing `k` failures in `n` samples from a process with a true defect rate `p` is given by the Binomial Probability Mass Function:
+        """)
+        st.latex(r''' P(X=k) = \binom{n}{k} p^k (1-p)^{n-k} ''')
+        
+        st.markdown("""
+        2.  We are planning for the case of observing **zero failures** (`k=0`). The formula simplifies significantly, as `\binom{n}{0}=1` and `p^0=1`:
+        """)
+        st.latex(r''' P(X=0) = (1-p)^n ''')
+
+        st.markdown(f"""
+        3.  Our goal is to be confident that the true reliability is *at least* `R`. We test against the worst-case scenario at this boundary, where the process just barely meets this requirement (i.e., its true reliability is exactly `R`, which means its defect rate `p` is `1-R`). The probability of seeing zero failures from such a process is:
+        """)
+        st.latex(r''' P(X=0) = (1 - (1-R))^n = R^n ''')
+
+        st.markdown(f"""
+        4.  We set this probability to be less than or equal to our acceptable risk of making a Type I error (`α = 1 - C`). This gives us our core relationship:
+        """)
+        st.latex(r''' R^n \le 1 - C ''')
+        
+        st.markdown("""
+        5.  To find the required sample size `n`, we solve for it using the natural logarithm (`ln`):
+        """)
+        st.latex(r''' \ln(R^n) \le \ln(1 - C) ''')
+        st.latex(r''' n \cdot \ln(R) \le \ln(1 - C) ''')
+        st.markdown("""
+        Because `R` is less than 1, `ln(R)` is a negative number. Therefore, when we divide, we must **reverse the inequality sign**:
+        """)
+        st.latex(r''' n \ge \frac{\ln(1 - C)}{\ln(R)} ''')
+        st.markdown("""
+        Since `n` must be a whole number, we take the ceiling of the result to get our final sample size.
+        """)
+
     st.success(f"""
     **Actionable Insight & Interpretation:**
 
     To demonstrate with **{confidence_level:.1f}% confidence** that your process is at least **{reliability:.1f}% reliable** (i.e., has a defect rate of no more than {100-reliability:.1f}%), you must randomly sample and test **{sample_size} units** from a stable process and have **zero failures**.
 
-    This statement and its parameters should be documented directly in your Validation Plan (VP) to proactively address auditor questions regarding your sampling strategy. This tool enables a data-driven discussion on the trade-off between statistical risk and the cost of testing.
+    This statement, along with the statistical basis above, should be documented directly in your Validation Plan (VP) to proactively address auditor questions regarding your sampling strategy. This tool enables a data-driven discussion on the trade-off between statistical risk and the cost of testing.
     """)
 
-    st.info("Note: This common calculation is based on the binomial distribution and assumes you are testing for attribute data and will accept zero failures in your sample.", icon="ℹ️")
 def case_study_csv():
     st.info("**Purpose:** A compliant Computer System Validation (CSV) project follows a structured lifecycle. This Gantt chart visualizes the execution of a CSV project, including critical parallel workstreams for IT infrastructure and ERES testing.")
     df = pd.DataFrame([
