@@ -15,6 +15,7 @@ from scipy.stats import norm
 import shap
 import matplotlib.pyplot as plt
 from typing import Tuple
+import math
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -81,17 +82,19 @@ def plot_kpi_sparkline(data: list, unit: str, x_axis_label: str, is_good_down: b
     return fig
 
 # --- DATA GENERATORS & VISUALIZATIONS ---
-def case_study_power_analysis_calculator():
+import math # Make sure to add this to your imports at the top of app.py
+
+def case_study_power_analysis_calculator_enhanced():
     briefing_card = f"""
     <div style="background-color: #E3F2FD; border: 1px solid {PRIMARY_COLOR}; border-radius: 5px; padding: 15px; margin-bottom: 20px; color: {DARK_GREY};">
         <p style="margin-bottom: 10px;">
-            <strong style="color: {PRIMARY_COLOR};">Context:</strong> Before executing a Performance Qualification (PQ), we must define and justify the number of samples to test. This is especially critical for attribute data (e.g., pass/fail, conforming/non-conforming).
+            <strong style="color: {PRIMARY_COLOR};">Context:</strong> Before executing a Performance Qualification (PQ), we must define and justify the number of samples to test. The statistical model used depends on whether we are qualifying a continuous process or accepting a finite lot.
         </p>
         <p style="margin-bottom: 10px;">
-            <strong style="color: {DARK_GREY};">Purpose:</strong> This interactive calculator determines the required sample size (n) to demonstrate a specific process success rate (Reliability) with a given statistical Confidence, assuming zero failures are found in the sample.
+            <strong style="color: {DARK_GREY};">Purpose:</strong> This advanced calculator determines the required sample size (n) to demonstrate a specific Reliability with a given Confidence, allowing the user to select the appropriate statistical model for their situation.
         </p>
         <p style="margin-bottom: 0;">
-            <strong style="color: {SUCCESS_GREEN};">Reason for Use:</strong> This tool replaces arbitrary sample sizes with a statistically defensible method, a frequent target of auditor questions. It provides the objective evidence required for Validation Plans and aligns with risk management principles from **ICH Q9** and **ISO 14971**.
+            <strong style="color: {SUCCESS_GREEN};">Reason for Use:</strong> This tool demonstrates a deep, first-principles understanding of statistical sampling. It correctly applies either the Binomial (for large lots/processes) or the more precise Hypergeometric (for finite lots) model, providing robust, audit-proof justification for sampling plans.
         </p>
     </div>
     """
@@ -99,30 +102,71 @@ def case_study_power_analysis_calculator():
 
     st.subheader("Interactive Sample Size Calculator")
     
+    calc_method = st.radio(
+        "Select the appropriate statistical model:",
+        ["Binomial (For a Continuous Process or Very Large Lot)", "Hypergeometric (For a Finite Lot of a Known Size)"],
+        horizontal=True,
+    )
+
     col1, col2 = st.columns(2)
     with col1:
-        confidence_level = st.slider(
-            "Confidence Level (C) - How sure do you want to be?",
-            min_value=80.0, max_value=99.9, value=95.0, step=0.1, format="%.1f%%"
-        )
+        confidence_level = st.slider("Confidence Level (C)", 80.0, 99.9, 95.0, 0.1, format="%.1f%%")
     with col2:
-        reliability = st.slider(
-            "Required Reliability (R) - Minimum success rate",
-            min_value=90.0, max_value=99.9, value=99.0, step=0.1, format="%.1f%%"
+        reliability = st.slider("Required Reliability (R)", 90.0, 99.9, 99.0, 0.1, format="%.1f%%")
+
+    lot_size = None
+    if "Hypergeometric" in calc_method:
+        lot_size = st.number_input(
+            "Enter the total Lot Size (M)", 
+            min_value=10, max_value=100000, value=1000, step=10,
+            help="The total number of units in the discrete batch you are sampling from."
         )
-    
-    # Calculation
+
+    # --- Calculation ---
     c = confidence_level / 100
     r = reliability / 100
+    sample_size = "N/A"
+    model_used = ""
+
+    if "Binomial" in calc_method:
+        model_used = "Binomial"
+        if r < 1.0:
+            n_float = np.log(1 - c) / np.log(r)
+            sample_size = int(np.ceil(n_float))
+        else:
+            sample_size = "Infinite"
     
-    if r < 1.0:
-        n_float = np.log(1 - c) / np.log(r)
-        sample_size = int(np.ceil(n_float))
-    else:
-        sample_size = "Infinite"
+    elif lot_size is not None:
+        model_used = "Hypergeometric"
+        # Max allowable defects in lot to still meet Reliability
+        D = math.floor((1 - r) * lot_size) 
+        
+        # Cache the iterative calculation for performance
+        @st.cache_data
+        def find_hypergeometric_n(M, D, C):
+            # If the number of allowable defects is already larger than the lot, any sample is fine.
+            if M <= D: return 1
+            
+            log_alpha = math.log(1 - C) # Target log probability
+            
+            # Iterate to find the smallest n that satisfies the condition
+            for n in range(1, M - D + 1):
+                # We use log-gamma for numerical stability with large numbers
+                # log(P(X=0)) = log(comb(M-D, n)) - log(comb(M, n))
+                log_prob_zero_defect = (
+                    math.lgamma(M - D + 1) - math.lgamma(n + 1) - math.lgamma(M - D - n + 1)
+                ) - (
+                    math.lgamma(M + 1) - math.lgamma(n + 1) - math.lgamma(M - n + 1)
+                )
+                
+                if log_prob_zero_defect <= log_alpha:
+                    return n
+            return M - D # If no smaller n works, you must test all non-defective units.
+
+        sample_size = find_hypergeometric_n(lot_size, D, c)
 
     st.metric(
-        label="Statistically Required Sample Size (n)",
+        label=f"Statistically Required Sample Size (n) via {model_used} Model",
         value=f"{sample_size} units",
         help="This is the minimum number of units you must test and find zero failures to make your statistical claim."
     )
@@ -130,50 +174,39 @@ def case_study_power_analysis_calculator():
     with st.expander("View the Statistical Methodology"):
         st.markdown(f"""
         #### Mathematical Basis
-        This calculation is rooted in the **Binomial Distribution**, which models the probability of observing a certain number of successes in a fixed number of independent trials. For validation, we are interested in a specific scenario: observing **zero failures** (`k=0`) in a sample of size `n`.
-
-        The core statistical question is: "If our process *was actually* at the minimum acceptable reliability (R), what is the probability of us being lucky and still observing zero failures?" We want this probability to be very low. This low probability is our statistical risk, `α`, where `α = 1 - C`.
+        This calculation is rooted in probability theory. The choice of model depends on the nature of the population being sampled.
 
         ---
-        #### Formula Derivation
-        1.  The probability of observing `k` failures in `n` samples from a process with a true defect rate `p` is given by the Binomial Probability Mass Function:
-        """)
-        st.latex(r''' P(X=k) = \binom{n}{k} p^k (1-p)^{n-k} ''')
-        
-        st.markdown("""
-        2.  We are planning for the case of observing **zero failures** (`k=0`). The formula simplifies significantly, as `\binom{n}{0}=1` and `p^0=1`:
-        """)
-        st.latex(r''' P(X=0) = (1-p)^n ''')
+        ##### 1. Binomial Model (Large Lot / Continuous Process)
+        **Assumption:** The population is effectively **infinite**. Each sample is independent, and the act of sampling does not change the underlying defect rate of the process. This is a good approximation for very large lots or continuous manufacturing lines.
 
-        st.markdown(f"""
-        3.  Our goal is to be confident that the true reliability is *at least* `R`. We test against the worst-case scenario at this boundary, where the process just barely meets this requirement (i.e., its true reliability is exactly `R`, which means its defect rate `p` is `1-R`). The probability of seeing zero failures from such a process is:
-        """)
-        st.latex(r''' P(X=0) = (1 - (1-R))^n = R^n ''')
-
-        st.markdown(f"""
-        4.  We set this probability to be less than or equal to our acceptable risk of making a Type I error (`α = 1 - C`). This gives us our core relationship:
-        """)
-        st.latex(r''' R^n \le 1 - C ''')
-        
-        st.markdown("""
-        5.  To find the required sample size `n`, we solve for it using the natural logarithm (`ln`):
-        """)
-        st.latex(r''' \ln(R^n) \le \ln(1 - C) ''')
-        st.latex(r''' n \cdot \ln(R) \le \ln(1 - C) ''')
-        st.markdown("""
-        Because `R` is less than 1, `ln(R)` is a negative number. Therefore, when we divide, we must **reverse the inequality sign**:
+        **Formula:** We solve for `n` in the inequality `R^n <= 1 - C`, which gives:
         """)
         st.latex(r''' n \ge \frac{\ln(1 - C)}{\ln(R)} ''')
+        
+        st.markdown("---")
+        
         st.markdown("""
-        Since `n` must be a whole number, we take the ceiling of the result to get our final sample size.
+        ##### 2. Hypergeometric Model (Finite Lot)
+        **Assumption:** Sampling is done **without replacement** from a discrete lot of a known, finite size `M`. This model is more accurate for smaller batches, as it accounts for the fact that each unit removed changes the composition of the remaining lot.
+        
+        **Formula:** We cannot directly solve for `n`. Instead, this calculator iterates to find the smallest integer `n` that satisfies the following condition:
+        """)
+        st.latex(r''' P(X=0) = \frac{\binom{M-D}{n}}{\binom{M}{n}} \le 1 - C ''')
+        st.markdown("""
+        Where:
+        - `M`: The total number of items in the lot (Lot Size).
+        - `D`: The maximum number of defective items allowed in the lot to still meet the reliability `R`. Calculated as `D = floor((1-R) * M)`.
+        - `n`: The sample size.
+        - `P(X=0)`: The probability of drawing zero defective items in our sample of size `n`.
         """)
 
     st.success(f"""
     **Actionable Insight & Interpretation:**
 
-    To demonstrate with **{confidence_level:.1f}% confidence** that your process is at least **{reliability:.1f}% reliable** (i.e., has a defect rate of no more than {100-reliability:.1f}%), you must randomly sample and test **{sample_size} units** from a stable process and have **zero failures**.
+    Using the **{model_used} model**, to demonstrate with **{confidence_level:.1f}% confidence** that your process or lot is at least **{reliability:.1f}% reliable**, you must randomly sample and test **{sample_size} units** and find **zero failures**.
 
-    This statement, along with the statistical basis above, should be documented directly in your Validation Plan (VP) to proactively address auditor questions regarding your sampling strategy. This tool enables a data-driven discussion on the trade-off between statistical risk and the cost of testing.
+    This statement, along with the selected statistical basis, should be documented in your Validation Plan (VP). For a finite lot, using the more accurate Hypergeometric model often results in a slightly smaller required sample size, saving time and resources while maintaining statistical rigor.
     """)
 
 def case_study_csv():
@@ -1844,8 +1877,8 @@ def render_specialized_validation_page() -> None:
 
     with tab1:
         st.header("Process & Equipment Validation")
-        with st.expander("📊 **Case Study: Statistical Sample Size Justification (Binomial Power Analysis)**"):
-            case_study_power_analysis_calculator()
+        with st.expander("📊 **Case Study: Statistical Sample Size Justification (Binomial & Hypergeometric)**"):
+            case_study_power_analysis_calculator_enhanced()
         with st.expander("🔬 **Case Study: Process Characterization (DOE)**", expanded=True):
             case_study_doe()
         with st.expander("❄️ **Case Study: Validating a Lyophilizer Equipment Cycle & Drying**"):
