@@ -224,15 +224,15 @@ def case_study_taping_soldering():
 
 def case_study_levey_jennings():
     briefing_card = f"""
-    <div style="border: 1px solid {BACKGROUND_GREY}; border-radius: 5px; padding: 15px; margin-bottom: 20px; background-color: #FFFFFF;">
+    <div style="background-color: {PRIMARY_COLOR}; color: white; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
         <p style="margin-bottom: 10px;">
-            <strong style="color: {PRIMARY_COLOR};">Context:</strong> A critical QC Reagent Control Lot is run daily on a diagnostic analyzer to ensure the measurement system is stable. The target mean is 100 mg/dL with a known standard deviation (SD) of 2 mg/dL.
+            <strong>Context:</strong> A critical QC Reagent Control Lot is run daily on a diagnostic analyzer to ensure the measurement system is stable. The target mean is 100 mg/dL with a known standard deviation (SD) of 2 mg/dL.
         </p>
         <p style="margin-bottom: 10px;">
-            <strong style="color: {DARK_GREY};">Purpose:</strong> To visualize the precision and accuracy of a test system over time by plotting control values against their acceptable limits (mean ±1, 2, and 3 SD).
+            <strong>Purpose:</strong> To visualize the precision and accuracy of a test system over time by plotting control values against their acceptable limits (mean ±1, 2, and 3 SD).
         </p>
         <p style="margin-bottom: 0;">
-            <strong style="color: {SUCCESS_GREEN};">Reason for Use:</strong> This chart is the industry standard for lab QC. Its well-defined zones, combined with Westgard rules, provide a powerful, standardized system for detecting both random error (e.g., a 1-3s violation) and systematic error (e.g., a 2-2s violation) with high confidence.
+            <strong>Reason for Use:</strong> This chart is the industry standard for lab QC. Its well-defined zones, combined with Westgard rules, provide a powerful, standardized system for detecting both random error (e.g., a 1-3s violation) and systematic error (e.g., a 2-2s violation) with high confidence.
         </p>
     </div>
     """
