@@ -914,7 +914,10 @@ def render_strategic_management_page() -> None:
     st.subheader("Strategic Value Analysis")
     with st.container(border=True):
         st.plotly_chart(plot_cost_of_quality(key="coq"), use_container_width=True)
-        st.success("**Actionable Insight:** The CoQ model proves that for every **$1 spent on proactive validation**, we prevent an estimated **$4 in failure costs** (rework, deviations, batch loss). This data provides a powerful justification for our departmental budget and headcount.")
+        # --- FIX: Escape dollar signs to prevent LaTeX rendering ---
+        st.success("""
+        **Actionable Insight:** The CoQ model proves that for every **\\$1 spent on proactive validation**, we prevent an estimated **\\$4 in failure costs** (rework, deviations, batch loss). This data provides a powerful justification for our departmental budget and headcount.
+        """)
     
     with st.container(border=True):
         st.subheader("AI-Powered Capital Project Duration Forecaster")
