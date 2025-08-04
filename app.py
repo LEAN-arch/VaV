@@ -285,7 +285,7 @@ def case_study_levey_jennings():
     """)
 def case_study_ewma_chart():
     briefing_card = f"""
-    <div style="border: 1px solid {BACKGROUND_GREY}; border-radius: 5px; padding: 15px; margin-bottom: 20px; background-color: #FFFFFF;">
+    <div style="background-color: #E3F2FD; border: 1px solid {PRIMARY_COLOR}; border-radius: 5px; padding: 15px; margin-bottom: 20px; color: {DARK_GREY};">
         <p style="margin-bottom: 10px;">
             <strong style="color: {PRIMARY_COLOR};">Context:</strong> We are monitoring the critical impurity level (%) in a biologic drug substance produced by a chromatography column that is known to degrade slowly over many cycles. A small, gradual increase in impurity is a leading indicator of column failure.
         </p>
@@ -338,7 +338,7 @@ def case_study_ewma_chart():
     
 def case_study_cusum_chart():
     briefing_card = f"""
-    <div style="border: 1px solid {BACKGROUND_GREY}; border-radius: 5px; padding: 15px; margin-bottom: 20px; background-color: #FFFFFF;">
+    <div style="background-color: #E3F2FD; border: 1px solid {PRIMARY_COLOR}; border-radius: 5px; padding: 15px; margin-bottom: 20px; color: {DARK_GREY};">
         <p style="margin-bottom: 10px;">
             <strong style="color: {PRIMARY_COLOR};">Context:</strong> We are monitoring the fill volume (in mL) of a high-speed aseptic filling line. A small, sudden clog in a filling nozzle could cause a persistent underfill that must be detected immediately to prevent an entire lot from being compromised.
         </p>
@@ -387,7 +387,7 @@ def case_study_cusum_chart():
 
 def case_study_advanced_imr():
     briefing_card = f"""
-    <div style="border: 1px solid {BACKGROUND_GREY}; border-radius: 5px; padding: 15px; margin-bottom: 20px; background-color: #FFFFFF;">
+    <div style="background-color: #E3F2FD; border: 1px solid {PRIMARY_COLOR}; border-radius: 5px; padding: 15px; margin-bottom: 20px; color: {DARK_GREY};">
         <p style="margin-bottom: 10px;">
             <strong style="color: {PRIMARY_COLOR};">Context:</strong> Continuous monitoring of the differential pressure (DP) between a Grade A aseptic processing area and the surrounding Grade B area. Maintaining a positive pressure gradient is a critical control parameter to prevent the ingress of contaminants.
         </p>
@@ -439,10 +439,10 @@ def case_study_advanced_imr():
     **Actionable Insight:** At hour 30, the MR chart shows a massive spike in variability, followed immediately by an out-of-control signal on the I-chart as the pressure dropped below the lower control limit. This dual alarm provides conclusive evidence of a special cause event.
     **Decision:** An immediate investigation was triggered. The Building Management System (BMS) alarm logs and security access records were reviewed, correlating the event to a service door being propped open at hour 30 for unauthorized material transfer. Corrective action involves retraining all staff on cleanroom gowning and material transfer procedures.
     """)
-
+    
 def case_study_zone_chart():
     briefing_card = f"""
-    <div style="border: 1px solid {BACKGROUND_GREY}; border-radius: 5px; padding: 15px; margin-bottom: 20px; background-color: #FFFFFF;">
+    <div style="background-color: #E3F2FD; border: 1px solid {PRIMARY_COLOR}; border-radius: 5px; padding: 15px; margin-bottom: 20px; color: {DARK_GREY};">
         <p style="margin-bottom: 10px;">
             <strong style="color: {PRIMARY_COLOR};">Context:</strong> Monitoring the seal strength (in Newtons) of a medical device pouch on a high-speed, validated heat-sealing line. The process is mature and highly capable, so we need a sensitive tool to detect early signs of drift.
         </p>
@@ -495,7 +495,7 @@ def case_study_zone_chart():
     
 def case_study_hotelling_t2():
     briefing_card = f"""
-    <div style="border: 1px solid {BACKGROUND_GREY}; border-radius: 5px; padding: 15px; margin-bottom: 20px; background-color: #FFFFFF;">
+    <div style="background-color: #E3F2FD; border: 1px solid {PRIMARY_COLOR}; border-radius: 5px; padding: 15px; margin-bottom: 20px; color: {DARK_GREY};">
         <p style="margin-bottom: 10px;">
             <strong style="color: {PRIMARY_COLOR};">Context:</strong> We are validating a new automated buffer preparation skid. Two critical, and inherently correlated, quality attributes are the final **Salt Concentration** and the **pH**. An error in weighing the primary salt component will affect both variables simultaneously.
         </p>
