@@ -1018,26 +1018,30 @@ def render_e2e_validation_hub_page() -> None:
             st.info("**Context:** PQ is the final qualification step, designed to prove the equipment can consistently and repeatably produce quality product under normal, real-world manufacturing conditions using production personnel and materials.")
             c1, c2 = st.columns(2)
             with c1: 
-                st.markdown("###### Process Capability")
+                st.markdown("###### Process Capability (Cpk)")
+                st.info("**Purpose:** The Cpk analysis measures if the process output is well within its specification limits. A value ≥ 1.33 is typically required.")
                 cpk_fig, cpk_value = plot_cpk_analysis("pq_cpk")
                 st.plotly_chart(cpk_fig, use_container_width=True)
                 
-                # --- DYNAMIC AND CONDITIONAL INSIGHT ---
                 if cpk_value >= 1.33:
                     st.success(f"""
-                    **Actionable Insight:** The Cpk of **{cpk_value:.2f}** is above the industry standard target of ≥1.33. This high value indicates that the process is well-centered with low variability, meaning it is highly capable of consistently meeting the Titer specification.
+                    **Actionable Insight:** The Cpk of **{cpk_value:.2f}** exceeds the target of ≥1.33. This indicates the process is highly capable of meeting the Titer specification.
                     """)
                 else:
                     st.error(f"""
-                    **Actionable Insight:** The Cpk of **{cpk_value:.2f}** is **BELOW** the required target of ≥1.33. This indicates the process is not capable of consistently meeting the Titer specification. **Action:** An investigation is required with Process Engineering to reduce process variability before the system can be qualified.
+                    **Actionable Insight:** The Cpk of **{cpk_value:.2f}** is **BELOW** the required target of ≥1.33. This indicates the process is not capable. **Action:** An investigation is required to reduce process variability.
                     """)
             with c2: 
-                st.markdown("###### Process Stability")
+                st.markdown("###### Process Stability (SPC)")
+                st.info("**Purpose:** The I-MR chart verifies that the process is stable and predictable over time. A stable process is a prerequisite for a valid Cpk calculation.")
                 spc_fig, spc_alerts = plot_process_stability_chart("pq_spc")
                 st.plotly_chart(spc_fig, use_container_width=True)
+                
                 if spc_alerts:
-                    st.error(f"**🚨 Automated SPC Alert Detected:** {spc_alerts[0]}")
-                    st.success("**Actionable Insight:** The automated rule check has detected a process shift. This would trigger an immediate investigation with Process Engineering to identify the root cause (e.g., raw material change, sensor drift) before the final validation report can be signed.")
+                    st.error(f"**🚨 Automated SPC Alert:** {spc_alerts[0]}")
+                    st.success("**Actionable Insight:** The automated rule check has detected a process shift, indicating the process is **not stable**. The Cpk result from the other chart cannot be considered valid until the root cause of this instability is identified and corrected.")
+                else:
+                    st.success("**Actionable Insight:** No out-of-control signals were detected. This confirms the process is in a state of statistical control, which validates the Cpk result and demonstrates the process is both stable and capable.")
 def render_specialized_validation_page() -> None:
     st.title("🧪 4. Specialized Validation Hubs")
     render_manager_briefing(title="Demonstrating Breadth of Expertise", content="Beyond standard equipment qualification, a Validation Manager must be fluent in specialized validation disciplines critical to GMP manufacturing. This hub showcases expertise in Computer System Validation (CSV), Cleaning Validation, and Process Characterization.", reg_refs="21 CFR Part 11, GAMP 5, PDA TR 29 (Cleaning Validation)", business_impact="Ensures all aspects of the manufacturing process, including supporting systems and processes, are fully compliant and controlled, preventing common sources of regulatory findings.", quality_pillar="Cross-functional Technical Leadership.", risk_mitigation="Ensures compliance in niche, high-risk areas like data integrity (CSV) and cross-contamination (Cleaning) that are frequent targets of audits.")
