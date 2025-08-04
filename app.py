@@ -669,6 +669,75 @@ def plot_csv_dashboard_enhanced(key: str) -> None:
         st.markdown("###### ALCOA+ Compliance Checklist")
         st.dataframe(df_alcoa, use_container_width=True, hide_index=True)
 
+def plot_lyophilizer_cycle_validation() -> go.Figure:
+    """Plots a simulated lyophilizer cycle validation (OQ)."""
+    st.info("**Context:** This plot verifies the performance of a lyophilization (freeze-drying) cycle. The OQ confirms the equipment can achieve and hold critical process parameters (shelf temperature and chamber pressure) as defined in the validated recipe.")
+    time = np.arange(120)
+    temp_set = np.concatenate([np.linspace(20, -40, 20), np.repeat(-40, 40), np.linspace(-40, 20, 60)])
+    temp_actual = temp_set + np.random.normal(0, 0.5, 120)
+    pressure_set = np.concatenate([np.repeat(1000, 20), np.linspace(1000, 0.1, 20), np.repeat(0.1, 80)])
+    pressure_actual = pressure_set + np.random.normal(0, 0.02, 120)
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    fig.add_trace(go.Scatter(x=time, y=temp_set, name='Temp Setpoint (°C)', line=dict(color=NEUTRAL_GREY, dash='dash')), secondary_y=False)
+    fig.add_trace(go.Scatter(x=time, y=temp_actual, name='Temp Actual (°C)', line=dict(color=PRIMARY_COLOR)), secondary_y=False)
+    fig.add_trace(go.Scatter(x=time, y=pressure_set, name='Pressure Setpoint (mbar)', line=dict(color=WARNING_AMBER, dash='dash')), secondary_y=True)
+    fig.add_trace(go.Scatter(x=time, y=pressure_actual, name='Pressure Actual (mbar)', line=dict(color=ERROR_RED)), secondary_y=True)
+    fig.update_layout(title_text='<b>Lyophilizer OQ: Cycle Parameter Verification</b>', title_x=0.5, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+    fig.update_xaxes(title_text="Time (minutes)")
+    fig.update_yaxes(title_text="Shelf Temperature (°C)", secondary_y=False)
+    fig.update_yaxes(title_text="Chamber Pressure (mbar)", type="log", secondary_y=True)
+    st.plotly_chart(fig, use_container_width=True)
+    st.success("**Actionable Insight:** The actual shelf temperature and chamber pressure tracked the setpoints precisely throughout all phases (Freezing, Primary Drying, Secondary Drying). This OQ data confirms the lyophilizer is performing as specified and is ready for PQ runs with product.")
+
+def display_nanoliter_dispenser_validation():
+    """Displays PQ data for a nanoliter liquid dispenser."""
+    st.info("**Context:** This analysis validates the precision and accuracy of a non-contact, acoustic liquid dispenser. Using a fluorescent dye, we measure the dispensed volume at multiple setpoints across the operating range to ensure it meets the tight tolerances required for biochip spotting or PCR plate preparation.")
+    df = pd.DataFrame({'Setpoint (nL)': [2.5, 5.0, 10.0, 25.0], 'Mean Dispensed (nL)': [2.51, 5.03, 10.01, 24.98], 'CV (%)': [1.8, 1.5, 1.1, 0.9], 'Accuracy Spec': ['±5%', '±5%', '±3%', '±3%'], 'Precision Spec (CV)': ['<2%', '<2%', '<1.5%', '<1.5%']})
+    st.dataframe(style_dataframe(df), use_container_width=True)
+    st.success("**Actionable Insight:** The dispenser meets all accuracy and precision (CV%) specifications across its full operating range. The data confirms its suitability for the most demanding low-volume applications. The system is qualified for use in production.")
+
+def display_biochip_assembly_validation():
+    """Displays a waterfall chart for OEE of a biochip assembly line."""
+    st.info("**Context:** For a full production line, Overall Equipment Effectiveness (OEE) is a critical PQ metric. It measures the combined impact of Availability (uptime), Performance (speed), and Quality (yield). The target for a validated line is often >85%.")
+    fig = go.Figure(go.Waterfall(
+        orientation = "v",
+        measure = ["absolute", "relative", "relative", "relative", "total"],
+        x = ["Theoretical Max Capacity", "Availability Losses (Downtime)", "Performance Losses (Speed)", "Quality Losses (Scrap)", "<b>Final OEE Output</b>"],
+        text = ["100%", "-8%", "-5%", "-2%", "85%"],
+        y = [100, -8, -5, -2, 85],
+        connector = {"line":{"color":"rgb(63, 63, 63)"}},
+        totals={"marker":{"color":SUCCESS_GREEN}},
+        increasing={"marker":{"color":SUCCESS_GREEN}},
+        decreasing={"marker":{"color":ERROR_RED}},
+    ))
+    fig.update_layout(title="<b>Biochip Assembly Line PQ: OEE Calculation</b>", yaxis_title="Effectiveness (%)")
+    st.plotly_chart(fig, use_container_width=True)
+    st.success("**Actionable Insight:** The assembly line achieved an OEE of 85%, meeting the acceptance criterion. The waterfall analysis clearly shows that Availability Losses (unplanned downtime) are the biggest detractor from performance. This provides a data-driven focus for future continuous improvement (Kaizen) events.")
+
+def display_vision_system_validation():
+    """Displays a confusion matrix for a vision system validation."""
+    st.info("**Context:** A confusion matrix is a key validation artifact for any AI/ML-based vision system. It challenges the system with a large set of known good and bad parts (a 'golden sample' set) to quantify its real-world performance and identify specific failure modes.")
+    cm_data = np.array([[998, 2], [5, 95]]) # True Neg, False Pos, False Neg, True Pos
+    fig = px.imshow(cm_data, text_auto=True, color_continuous_scale='Greens', labels=dict(x="Predicted Class", y="Actual Class", color="Count"), x=['Good', 'Defect'], y=['Good', 'Defect'], title="<b>Vision System PQ: Confusion Matrix</b>")
+    st.plotly_chart(fig, use_container_width=True)
+    accuracy = (cm_data[0,0] + cm_data[1,1]) / np.sum(cm_data) * 100
+    sensitivity = cm_data[1,1] / (cm_data[1,1] + cm_data[1,0]) * 100 # True Positive Rate
+    st.success(f"""
+    **Actionable Insight:** The system achieved **{accuracy:.2f}%** overall accuracy. Critically, the **Sensitivity (True Defect detection rate) is {sensitivity:.1f}%**, exceeding the 95% requirement. The 5 false negatives (defects classified as good) will be reviewed with Process Engineering to determine if they represent a new, previously untrained defect type. The system is qualified, with a CAPA to expand the training set.
+    """)
+
+def display_electrostatic_control_validation():
+    """Displays a chart for validating electrostatic charge control."""
+    st.info("**Context:** For plastic biochips and cassettes, uncontrolled electrostatic discharge (ESD) can damage sensitive onboard electronics or cause handling errors. This validation study measures surface voltage at critical assembly stages, both with and without the ionizer system active, to prove its effectiveness.")
+    df = pd.DataFrame({'Assembly Stage': ["Cassette Unmolding", "Biochip Placement", "Lid Taping/Soldering", "Final Packaging"], 'Surface Voltage without Ionizer (V)': [1850, 2200, 2550, 1900], 'Surface Voltage with Ionizer (V)': [85, 45, 60, 50]})
+    fig = go.Figure()
+    fig.add_trace(go.Bar(name='Without Ionizer', x=df['Assembly Stage'], y=df['Surface Voltage without Ionizer (V)'], marker_color=ERROR_RED))
+    fig.add_trace(go.Bar(name='With Ionizer', x=df['Assembly Stage'], y=df['Surface Voltage with Ionizer (V)'], marker_color=SUCCESS_GREEN))
+    fig.add_hline(y=100, line_dash="dash", annotation_text="Acceptance Limit (<100V)")
+    fig.update_layout(title_text="<b>OQ: Ionizer System Effectiveness for ESD Control</b>", title_x=0.5, yaxis_title="Surface Voltage (V)")
+    st.plotly_chart(fig, use_container_width=True)
+    st.success("**Actionable Insight:** The data provides conclusive evidence that the ionizer system is essential and effective. Without it, surface voltages far exceed the <100V damage threshold. With the system active, all surfaces are well within the safe limit. The ionizer is now a required, critical utility for the production line.")
+
 def plot_cleaning_validation_results_enhanced(key: str) -> go.Figure:
     """Enhanced Cleaning Validation chart for a multi-product scenario."""
     locations = ['Swab 1 (Reactor Wall)', 'Swab 2 (Agitator Blade)', 'Swab 3 (Fill Nozzle)', 'Final Rinse']
@@ -1095,36 +1164,60 @@ def render_e2e_validation_hub_page() -> None:
                     st.success("**Actionable Insight:** The automated rule check has detected a process shift, indicating the process is **not stable**. The Cpk result from the other chart cannot be considered valid until the root cause of this instability is identified and corrected.")
                 else:
                     st.success("**Actionable Insight:** No out-of-control signals were detected. This confirms the process is in a state of statistical control, which validates the Cpk result and demonstrates the process is both stable and capable.")
+
 def render_specialized_validation_page() -> None:
     st.title("🧪 4. Specialized Validation Hubs")
-    render_manager_briefing(title="Demonstrating Breadth of Expertise", content="Beyond standard equipment qualification, a Validation Manager must be fluent in specialized validation disciplines critical to GMP manufacturing. This hub showcases expertise in Computer System Validation (CSV), Cleaning Validation, and Process Characterization.", reg_refs="21 CFR Part 11, GAMP 5, PDA TR 29 (Cleaning Validation)", business_impact="Ensures all aspects of the manufacturing process, including supporting systems and processes, are fully compliant and controlled, preventing common sources of regulatory findings.", quality_pillar="Cross-functional Technical Leadership.", risk_mitigation="Ensures compliance in niche, high-risk areas like data integrity (CSV) and cross-contamination (Cleaning) that are frequent targets of audits.")
+    render_manager_briefing(title="Demonstrating Breadth of Expertise", content="Beyond standard equipment qualification, a Validation Manager must be fluent in specialized validation disciplines critical to GMP manufacturing. This hub showcases expertise across a wide range of complex, real-world MedTech and Biopharma applications.", reg_refs="21 CFR Part 11, GAMP 5, ISO 14971, PDA Technical Reports", business_impact="Ensures all aspects of the manufacturing process, including novel and complex systems, are fully compliant and controlled, preventing common sources of regulatory findings and production delays.", quality_pillar="Cross-functional Technical Leadership.", risk_mitigation="Ensures compliance in niche, high-risk areas like data integrity (CSV), sterility (lyophilization), and microfluidics that are frequent targets of audits.")
     
-    tab1, tab2, tab3, tab4 = st.tabs(["🖥️ Computer System Validation (CSV)", "🧼 Cleaning Validation", "🔬 Process Characterization (DOE)", "📦 Shipping Validation"])
+    tab1, tab2, tab3, tab4 = st.tabs(["🖥️ Computer System & Vision", "🧼 Cleaning & Sterilization", "🔬 Process & Assembly", "📦 Shipping & Environment"])
 
     with tab1:
         st.subheader("GAMP 5 CSV for Automated Systems")
         plot_csv_dashboard_enhanced(key="csv")
-        st.success("""
-        **Actionable Insight:** The successful completion of the ALCOA+ checklist provides objective evidence that the system's data is trustworthy, a foundational requirement for any GMP computerized system. This detailed verification is critical for defending the system during regulatory audits.
-        """)
+        st.success("**Actionable Insight:** The successful completion of the ALCOA+ checklist provides objective evidence that the system's data is trustworthy, a foundational requirement for any GMP computerized system. This detailed verification is critical for defending the system during regulatory audits.")
+        st.divider()
+        with st.expander("🔬 **Case Study: Validating a Vision System for QC**"):
+            display_vision_system_validation()
 
     with tab2:
         st.subheader("Cleaning Validation for Multi-Product Facility")
         st.info("**Purpose:** This chart shows results from a cleaning validation study for a multi-product facility. The strategy is to validate the cleaning procedure using the 'worst-case' product (most difficult to clean, most toxic, or lowest solubility) to demonstrate effectiveness for all products made on the equipment.")
         st.plotly_chart(plot_cleaning_validation_results_enhanced(key="cleaning"), use_container_width=True)
         st.success("**Actionable Insight:** The results for the 'worst-case' Product A are well below acceptance limits. As expected, the results for the easier-to-clean Product B are even lower. This data robustly proves the cleaning procedure is effective for the entire product family, allowing for efficient product changeover.")
+        st.divider()
+        with st.expander("❄️ **Case Study: Validating a Lyophilizer Equipment Cycle & Drying**"):
+            plot_lyophilizer_cycle_validation()
 
     with tab3:
         st.subheader("Process Characterization using Design of Experiments (DOE)")
         st.info("**Purpose:** DOE is a powerful statistical tool used during process development to define a design space. The 2D Contour Plot visualizes this space, defining the Normal Operating Range (NOR) for routine production and the wider Proven Acceptable Range (PAR), which is the 'safe zone' where quality is assured.")
         plot_doe_optimization_enhanced(key="doe")
         st.success("**Actionable Insight:** The established PAR provides manufacturing with operational flexibility. As long as the process remains within this wider range, minor fluctuations do not constitute a deviation or require re-validation. This data-driven approach, aligned with ICH Q8, significantly reduces quality overhead and supports continuous improvement.")
+        st.divider()
+        with st.expander("💧 **Case Study: Validating a Nanoliter Liquid Dispenser**"):
+            display_nanoliter_dispenser_validation()
+        with st.expander("⚙️ **Case Study: Validating Automatic Assembly of a Biochip**"):
+            display_biochip_assembly_validation()
+        with st.expander("⚡ **Case Study: Validating Electrostatic Charge Control on Plastic Surfaces**"):
+            display_electrostatic_control_validation()
+        with st.expander("🔥 **Case Study: Validating Taping/Soldering of a Plastic Cassette**"):
+            # This is conceptually similar to assembly, but we'll focus on the specific heat/pressure parameters.
+            st.info("**Context:** For thermal processes like heat staking or ultrasonic soldering, the OQ must prove that critical parameters (Temperature, Dwell Time, Pressure) are precisely controlled across the entire operational surface.")
+            st.table(pd.DataFrame({
+                'Parameter': ['Weld Temperature (°C)', 'Dwell Time (s)', 'Weld Pressure (psi)'],
+                'Setpoint': ['250', '2.0', '80'],
+                'Actual (Avg of 5 pts)': ['250.8 ± 0.5', '2.01 ± 0.02', '80.5 ± 0.9'],
+                'Acceptance Criteria': ['250 ± 5°C', '2.0 ± 0.1s', '80 ± 2 psi'],
+                'Result': ['PASS', 'PASS', 'PASS']
+            }))
+            st.success("**Actionable Insight:** The system demonstrates uniform and accurate control over all critical thermal welding parameters, ensuring a consistent and robust seal for the cassette. The process is qualified.")
 
     with tab4:
         st.subheader("Shipping Lane Performance Qualification")
         st.info("**Purpose:** This PQ study simulates a worst-case transit route, monitoring both temperature and shock/vibration to ensure the validated packaging can protect the product integrity from both environmental and physical hazards.")
         st.plotly_chart(plot_shipping_validation_temp_enhanced(key="shipping"), use_container_width=True)
         st.success("**Actionable Insight:** The data confirms two key findings: 1) The insulated shipper successfully maintained the internal product temperature within the required 2-8°C range despite an external excursion. 2) A significant shock event of 55G was recorded but remained below the product's known fragility limit of 80G. **Conclusion:** The shipping configuration is validated as robust against both thermal and physical hazards for this lane.")
+
 def render_validation_program_health_page() -> None:
     st.title("⚕️ 5. Validation Program Health & Continuous Improvement")
     render_manager_briefing(title="Maintaining the Validated State", content="This dashboard demonstrates the ongoing oversight required to manage the site's validation program health. It showcases a data-driven approach to **Periodic Review**, the development of a risk-based **Revalidation Strategy**, and the execution of **Continuous Improvement Initiatives**.", reg_refs="FDA 21 CFR 820.75(c) (Revalidation), ISO 13485:2016 (Sec 8.4)", business_impact="Ensures long-term compliance, prevents costly process drifts, optimizes resource allocation for revalidation, and supports uninterrupted supply of medicine to patients.", quality_pillar="Lifecycle Management & Continuous Improvement.", risk_mitigation="Guards against compliance drift and ensures systems remain in a validated state throughout their operational life, preventing production holds or recalls.")
